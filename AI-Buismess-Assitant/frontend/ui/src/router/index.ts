@@ -13,7 +13,11 @@ const routes = [
     component: DashboardView,
     meta: { requiresAuth: true }
   },
-  { path: "/", redirect: "/login" }
+  { path: "/", redirect: "/login" },
+  {
+    path: "/confirm",
+    component: () => import("@/views/ConfirmView.vue")
+  },
 ]
 
 const router = createRouter({

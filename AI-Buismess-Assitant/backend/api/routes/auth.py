@@ -1,25 +1,38 @@
 from fastapi import APIRouter, HTTPException, Response, Depends
-from pydantic import BaseModel
 from db.supabase_client import supabase
 from core.security import get_current_user
+from pydantic import BaseModel, EmailStr, Field
 
 router = APIRouter()
 
 class LoginRequest(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: str = Field(min_length=6)
+
 
 class RegisterRequest(BaseModel):
-    email: str
-    password: str
-    full_name: str
-
+    email: EmailStr
+    password: str = Field(min_length=6)
+    full_name: str = Field(min_length=6)
+    
 @router.post("/register")
 def register(data: RegisterRequest):
+
     res = supabase.auth.sign_up({
         "email": data.email,
-        "password": data.password
+        "password": data.password,
+        "options": {
+            "data": {
+                "full_name": data.full_name
+            },
+            "email_redirect_to": "http://localhost:5173/confirm"
+        }
     })
+
+    if res.error:
+        if "already registered" in res.error.message.lower():
+            raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail=res.error.message)
 
     if not res.user:
         raise HTTPException(status_code=400, detail="Registration failed")
@@ -31,6 +44,14 @@ def register(data: RegisterRequest):
 
     return {"message": "Registered successfully"}
 
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("access_token")
+    return {"message": "Logged out"}
+
+@router.get("/dashboard")
+def dashboard(user_id: str = Depends(get_current_user)):
+    return {"message": "Protected data"}
 
 @router.post("/login")
 def login(data: LoginRequest, response: Response):
@@ -45,18 +66,13 @@ def login(data: LoginRequest, response: Response):
 
     access_token = res.session.access_token
 
+ 
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=True,  
+        secure=False,  
         samesite="lax"
     )
 
     return {"message": "Logged in successfully"}
-
-
-@router.post("/logout")
-def logout(response: Response):
-    response.delete_cookie("access_token")
-    return {"message": "Logged out"}
