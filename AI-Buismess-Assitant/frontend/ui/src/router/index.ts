@@ -3,13 +3,11 @@ import { useAuthStore } from "@/stores/auth"
 
 import LoginView from "@/views/Auth/Login.vue"
 import RegisterView from "@/views/Auth/Register.vue"
-import ConfirmEmail from "@/views/Auth/ConfirmEmail.vue"
 import AppLayout from "@/layouts/AppLayout.vue"
 
 const routes = [
   { path: "/login", component: LoginView },
   { path: "/register", component: RegisterView },
-  { path: "/confirm", component: ConfirmEmail },
 
   {
     path: "/",
