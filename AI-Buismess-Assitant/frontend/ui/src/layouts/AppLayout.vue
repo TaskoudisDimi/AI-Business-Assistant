@@ -1,32 +1,28 @@
 <script setup lang="ts">
+import Sidebar from "@/components/Sidebar.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useRouter } from "vue-router"
+import Topbar from "@/components/Topbar.vue"
 
 const auth = useAuthStore()
 const router = useRouter()
 
 const logout = async () => {
-  await auth.logout()
-  router.push("/login")
+  await auth.logout(router)   
 }
 </script>
 
 <template>
   <div class="app-wrapper">
-    <aside>
-      <h2>AI Assistant</h2>
-      <nav>
-        <router-link to="/dashboard">Dashboard</router-link>
-      </nav>
-    </aside>
-
+    <Sidebar />
+    <topbar />
     <div class="content">
       <header>
         <button @click="logout">Logout</button>
       </header>
 
       <main>
-        <slot />
+        <router-view />
       </main>
     </div>
   </div>

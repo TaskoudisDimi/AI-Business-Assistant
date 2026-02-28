@@ -22,8 +22,10 @@ const submit = async () => {
 
   try {
     loading.value = true
-    await auth.login(email.value, password.value)
-    router.push("/dashboard")
+    const success = await auth.login(email.value, password.value)
+    if (success) {
+      router.push('/dashboard')
+    }
   } catch (err: any) {
     error.value = err.response?.data?.detail || "Invalid credentials"
   } finally {

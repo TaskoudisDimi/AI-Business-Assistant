@@ -1,23 +1,32 @@
 import { createRouter, createWebHistory } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 
-import LoginView from "@/views/LoginView.vue"
-import RegisterView from "@/views/RegisterView.vue"
-import DashboardView from "@/views/DashboardView.vue"
+import LoginView from "@/views/Auth/Login.vue"
+import RegisterView from "@/views/Auth/Register.vue"
+import ConfirmEmail from "@/views/Auth/ConfirmEmail.vue"
+import AppLayout from "@/layouts/AppLayout.vue"
 
 const routes = [
   { path: "/login", component: LoginView },
   { path: "/register", component: RegisterView },
+  { path: "/confirm", component: ConfirmEmail },
+
   {
-    path: "/dashboard",
-    component: DashboardView,
-    meta: { requiresAuth: true }
+    path: "/",
+    component: AppLayout,
+    meta: { requiresAuth: true },
+    children: [
+      { path: "dashboard", component: () => import("@/views/Dashboard.vue") },
+      { path: "sales", component: () => import("@/views/SalesForecast.vue") },
+      { path: "customers", component: () => import("@/views/CustomerAnalysis.vue") },
+      { path: "marketing", component: () => import("@/views/MarketingAI.vue") },
+      { path: "datasets", component: () => import("@/views/Datasets.vue") },
+      { path: "history", component: () => import("@/views/History.vue") },
+      { path: "settings", component: () => import("@/views/Settings.vue") }
+    ]
   },
-  { path: "/", redirect: "/login" },
-  {
-    path: "/confirm",
-    component: () => import("@/views/ConfirmView.vue")
-  },
+
+  { path: "/", redirect: "/dashboard" }
 ]
 
 const router = createRouter({
