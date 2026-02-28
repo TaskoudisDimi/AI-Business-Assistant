@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* background: #0f172a; */
+  background-color: #0f172a;
 }
 
 .auth-card {

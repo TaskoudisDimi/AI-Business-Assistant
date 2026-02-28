@@ -1,49 +1,44 @@
 <script setup lang="ts">
 import Sidebar from "@/components/Sidebar.vue"
 import Topbar from "@/components/Topbar.vue"
-
 </script>
 
 <template>
-  <div class="app-wrapper">
+  <div class="layout">
     <Sidebar />
-    <topbar />
-    <div class="content">
-      <main>
+
+    <div class="main">
+      <Topbar />
+      <div class="page">
         <router-view />
-      </main>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.app-wrapper {
+.layout {
   display: flex;
   min-height: 100vh;
   background: #0f172a;
   color: white;
 }
 
-aside {
-  width: 240px;
-  padding: 2rem;
-  background: #111827;
-}
-
-.content {
+.main {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-header {
-  padding: 1rem;
-  border-bottom: 1px solid #1f2937;
-  display: flex;
-  justify-content: flex-end;
+.page {
+  padding: 2rem;
+  flex: 1;
 }
 
-main {
-  padding: 2rem;
+/* Mobile */
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
 }
 </style>

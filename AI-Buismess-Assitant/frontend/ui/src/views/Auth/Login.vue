@@ -79,13 +79,13 @@ button {
   padding: 0.8rem;
   border-radius: 8px;
   border: none;
-  background: #3b82f6;
+  background: #404853;
   color: white;
   cursor: pointer;
 }
 
 button:hover {
-  background: #2563eb;
+  background: #1c212b;
 }
 
 .error {
