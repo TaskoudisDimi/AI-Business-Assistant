@@ -30,10 +30,6 @@ const logout = async () => {
 
 <template>
   <header class="topbar">
-    <!-- LEFT -->
-    <div class="left">
-      <h2>{{ pageTitle }}</h2>
-    </div>
 
     <!-- CENTER -->
     <div class="center">

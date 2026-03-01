@@ -4,7 +4,7 @@ from db.supabase_client import supabase
 from core.security import get_current_user
 
 
-router = APIRouter(tags=["auth"]) 
+router = APIRouter(prefix="/api/auth", tags=["Auth"]) 
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -81,13 +81,27 @@ async def logout(response: Response):
 
 @router.get("/me")
 async def get_me(user_id: str = Depends(get_current_user)):
-    try:
-        profile = supabase.table("users").select("*").eq("id", user_id).single().execute()
-        if not profile.data:
-            return {"id": user_id, "full_name": "No profile found", "plan": "free"}
-        return profile.data  
-    except Exception as e:
-        import traceback
-        print(traceback.format_exc()) 
-        raise HTTPException(500, detail=f"Error fetching user: {str(e)}")
-    
+
+    user = supabase.table("users") \
+        .select("*") \
+        .eq("id", user_id) \
+        .single() \
+        .execute()
+
+    memberships = supabase.table("business_members") \
+        .select("business_id, role") \
+        .eq("user_id", user_id) \
+        .execute()
+
+    business_ids = [m["business_id"] for m in memberships.data]
+
+    businesses = supabase.table("businesses") \
+        .select("*") \
+        .in_("id", business_ids) \
+        .execute()
+
+    return {
+        "user": user.data,
+        "businesses": businesses.data,
+        "memberships": memberships.data
+    }
