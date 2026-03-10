@@ -1,131 +1,107 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue"
-import { useI18n } from "vue-i18n"
+import { ref, computed, watch } from "vue"
+import { useAuthStore } from "@/stores/auth"
 import { api } from "@/services/api"
 
-const { t, locale } = useI18n()
-
-// =======================
-// Types
-// =======================
-
-interface Business {
-  id: string
-  name: string
-  industry: string | null
-}
-
-interface User {
-  id: string
-  full_name: string
-  username: string
-  email: string
-  language: string | null
-}
-
-// =======================
-// State
-// =======================
+const auth = useAuthStore()
 
 const loading = ref(false)
 
-const fullName = ref<string>("")
-const username = ref<string>("")
-const email = ref<string>("")
-const language = ref<string>("en")
-const newPassword = ref<string>("")
+/* =========================
+   ACCOUNT
+========================= */
 
-const businesses = ref<Business[]>([])
-const activeBusinessId = ref<string>("")
-const businessName = ref<string>("")
-const industry = ref<string>("")
+const fullName = ref("")
+const username = ref("")
+const email = ref("")
+const language = ref("en")
+const newPassword = ref("")
 
-// =======================
-// Load Data
-// =======================
-
-onMounted(async () => {
-  const { data } = await api.get("/api/me")
-
-  const user: User = data.user
-
-  fullName.value = user.full_name ?? ""
-  username.value = user.username ?? ""
-  email.value = user.email ?? ""
-  language.value = user.language ?? "en"
-
-  businesses.value = data.businesses ?? []
-
-  if (businesses.value.length > 0) {
-    const first = businesses.value[0]
-    activeBusinessId.value = first?.id ?? ""
-    businessName.value = first?.id ?? ""
-    industry.value = first?.id ?? ""
-  }
-})
-
-// =======================
-// Watch Business Switch
-// =======================
-
-watch(activeBusinessId, (newId) => {
-  const selected = businesses.value.find(b => b.id === newId)
-  if (selected) {
-    businessName.value = selected.name ?? ""
-    industry.value = selected.industry ?? ""
-  }
-})
-
-// =======================
-// Actions
-// =======================
+watch(
+  () => auth.user,
+  (u) => {
+    if (!u) return
+    fullName.value = u.full_name ?? ""
+    username.value = u.username ?? ""
+    email.value = u.email ?? ""
+    language.value = u.language ?? "en"
+  },
+  { immediate: true }
+)
 
 const saveAccount = async () => {
   loading.value = true
-
-  await api.patch("/api/user", {
+  await api.patch("/user", {
     full_name: fullName.value,
     username: username.value,
     language: language.value
   })
 
-  locale.value = language.value
+  if (auth.user) {
+    auth.user.full_name = fullName.value
+    auth.user.username = username.value
+    auth.user.language = language.value
+  }
+
   loading.value = false
 }
 
 const changeEmail = async () => {
-  await api.patch("/api/user/email", {
-    email: email.value
-  })
+  await api.patch("/user/email", { email: email.value })
+  if (auth.user) auth.user.email = email.value
 }
 
 const changePassword = async () => {
-  if (!newPassword.value) return
-
-  await api.patch("/api/user/password", {
-    password: newPassword.value
-  })
-
+  await api.patch("/user/password", { password: newPassword.value })
   newPassword.value = ""
 }
 
-const saveBusiness = async () => {
-  if (!activeBusinessId.value) return
+const deleteAccount = async () => {
+  if (!confirm("Are you sure?")) return
+  await api.delete("/user")
+  window.location.href = "/login"
+}
 
+/* =========================
+   BUSINESS
+========================= */
+
+const businesses = ref<any[]>([])
+const activeBusinessId = ref("")
+const businessName = ref("")
+const industry = ref("")
+
+watch(activeBusinessId, () => {
+  const b = businesses.value.find(b => b.id === activeBusinessId.value)
+  if (!b) return
+  businessName.value = b.name
+  industry.value = b.industry
+})
+
+const saveBusiness = async () => {
   loading.value = true
 
-  await api.patch(`/api/businesses/${activeBusinessId.value}`, {
+  await api.patch(`/businesses/${activeBusinessId.value}`, {
     name: businessName.value,
     industry: industry.value
   })
 
+  
   loading.value = false
+}
+
+const createBusiness = async () => {
+  const { data } = await api.post("/businesses", {
+    name: "New Business",
+    industry: ""
+  })
+
+  activeBusinessId.value = data.id
 }
 </script>
 
 <template>
   <div class="settings">
-    <h1>{{ t("settings") }}</h1>
 
     <!-- ACCOUNT -->
     <div class="card">
@@ -147,20 +123,18 @@ const saveBusiness = async () => {
         <option value="el">Ελληνικά</option>
       </select>
 
-      <button @click="saveAccount" :disabled="loading">
-        Save Account
-      </button>
+      <button @click="saveAccount">Save Account</button>
 
       <hr />
 
       <h3>Change Password</h3>
-      <input
-        type="password"
-        v-model="newPassword"
-        placeholder="New password"
-      />
-      <button @click="changePassword">
-        Change Password
+      <input type="password" v-model="newPassword" />
+      <button @click="changePassword">Change Password</button>
+
+      <hr />
+
+      <button class="danger" @click="deleteAccount">
+        Delete Account
       </button>
     </div>
 
@@ -170,31 +144,27 @@ const saveBusiness = async () => {
 
       <label>Select Business</label>
       <select v-model="activeBusinessId">
-        <option
-          v-for="b in businesses"
-          :key="b.id"
-          :value="b.id"
-        >
+        <option v-for="b in businesses" :key="b.id" :value="b.id">
           {{ b.name }}
         </option>
       </select>
 
-      <label>Business Name</label>
+      <label>Name</label>
       <input v-model="businessName" />
 
       <label>Industry</label>
       <input v-model="industry" />
 
-      <button @click="saveBusiness" :disabled="loading">
-        Save Business
-      </button>
+      <button @click="saveBusiness">Save Business</button>
+      <button @click="createBusiness">Create New Business</button>
     </div>
+
   </div>
 </template>
 
 <style scoped>
 .settings {
-  max-width: 800px;
+  max-width: 900px;
 }
 
 .card {
@@ -216,12 +186,15 @@ input, select {
 }
 
 button {
-  margin-top: 10px;
   padding: 10px;
   border-radius: 8px;
   background: #344149;
   border: none;
   color: white;
   cursor: pointer;
+}
+
+.danger {
+  background: #7f1d1d;
 }
 </style>

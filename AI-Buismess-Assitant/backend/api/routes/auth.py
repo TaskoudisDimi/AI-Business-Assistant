@@ -81,7 +81,6 @@ async def logout(response: Response):
 
 @router.get("/me")
 async def get_me(user_id: str = Depends(get_current_user)):
-
     user = supabase.table("users") \
         .select("*") \
         .eq("id", user_id) \

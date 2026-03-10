@@ -3,6 +3,7 @@ import { computed, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 
+
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
@@ -26,11 +27,11 @@ const pageTitle = computed(() => {
 const logout = async () => {
   await auth.logout(router)
 }
+
 </script>
 
 <template>
   <header class="topbar">
-
     <!-- CENTER -->
     <div class="center">
       <input placeholder="Search..." />

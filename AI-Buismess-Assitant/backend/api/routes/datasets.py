@@ -11,3 +11,17 @@
 #         .execute()
 
 #     return datasets.data
+
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from typing import List
+from core.security import get_current_user
+from db.supabase_client import supabase
+
+router = APIRouter(prefix="/datasets", tags=["Datasets"])
+
+class UploadDatasetSchema(BaseModel):
+    name: str
+    description: str | None = None
+    
