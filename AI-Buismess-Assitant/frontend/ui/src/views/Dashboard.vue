@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
-import { api } from "@/services/api"
 
 const stats = ref({
   totalRevenue: 0,

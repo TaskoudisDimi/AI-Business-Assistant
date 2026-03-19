@@ -1,18 +1,16 @@
+// src/main.ts
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './App.vue'
 import router from './router'
-import { useAuthStore } from './stores/auth'
-import './assets/main.css'   
 import { i18n } from './i18n'
 
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)  // ← πρέπει να είναι εδώ, πριν app.use(pinia)
+
 const app = createApp(App)
-
-app.use(createPinia())
-app.use(router)
 app.use(i18n)
-const auth = useAuthStore()
-await auth.initialize()
-
+app.use(pinia)                        // ← μετά το plugin
+app.use(router)
 app.mount('#app')
-

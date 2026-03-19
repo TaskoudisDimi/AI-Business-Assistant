@@ -28,6 +28,13 @@ const logout = async () => {
   await auth.logout(router)
 }
 
+const authStore = useAuthStore()
+
+const switchBusiness = (id: string) => {
+  authStore.setCurrentBusiness(id)
+  router.push(router.currentRoute.value.path) 
+}
+
 </script>
 
 <template>
@@ -36,6 +43,25 @@ const logout = async () => {
     <div class="center">
       <input placeholder="Search..." />
     </div>
+    <div v-if="authStore.hasBusinesses" class="dropdown dropdown-end">
+        <label tabindex="0" class="btn btn-ghost">
+          <span class="font-medium">
+            {{ authStore.currentBusiness?.name || 'Επιλογή επιχείρησης' }}
+          </span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </label>
+        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+          <li v-for="biz in authStore.businesses" :key="biz.id">
+            <a @click="switchBusiness(biz.id)" :class="{ 'bg-base-200': biz.id === authStore.currentBusinessId }">
+              {{ biz.name }}
+              <span v-if="biz.id === authStore.currentBusinessId" class="badge badge-sm badge-success ml-auto">Τρέχον</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
 
     <!-- RIGHT -->
     <div class="right">

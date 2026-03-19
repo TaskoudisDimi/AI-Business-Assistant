@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "@supabase/supabase-js": "^2.97.0",
+    "pinia-plugin-persistedstate": "^4.7.1",
     "vue-i18n": "^9.14.5"
   }
 }

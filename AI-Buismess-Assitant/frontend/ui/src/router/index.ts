@@ -20,7 +20,12 @@ const routes = [
       { path: "marketing", component: () => import("@/views/MarketingAI.vue") },
       { path: "datasets", component: () => import("@/views/Datasets.vue") },
       { path: "history", component: () => import("@/views/History.vue") },
-      { path: "settings", component: () => import("@/views/Settings.vue") }
+      { path: "settings", component: () => import("@/views/Settings.vue") },
+      {
+        path: '/onboarding',
+        component: () => import('@/views/CreateFirstBusiness.vue'),
+        meta: { requiresAuth: true }
+      },
     ]
   },
 
@@ -31,18 +36,27 @@ const router = createRouter({
   history: createWebHistory(),
   routes
 })
+// router/index.ts
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
+  // Περίμενε το initialization αν είναι σε εξέλιξη
   if (auth.loading) {
     await auth.initialize()
   }
 
-  if (to.meta.requiresAuth && !auth.user) {
+  // Τώρα είμαστε σίγουροι ότι έχουμε φορτώσει τον user (ή όχι)
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return '/login'
   }
 
-  if ((to.path === '/login' || to.path === '/register') && auth.user) {
+  // Αν authenticated αλλά ΔΕΝ έχει business → onboarding
+  if (to.meta.requiresAuth && auth.isAuthenticated && !auth.hasBusinesses && to.path !== '/onboarding') {
+    return '/onboarding'
+  }
+
+  // Αν πάει login/register ενώ είναι συνδεδεμένος → dashboard
+  if ((to.path === '/login' || to.path === '/register') && auth.isAuthenticated) {
     return '/dashboard'
   }
 })

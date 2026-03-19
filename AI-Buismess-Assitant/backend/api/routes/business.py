@@ -4,7 +4,7 @@ from typing import List
 from core.security import get_current_user
 from db.supabase_client import supabase
 
-router = APIRouter(prefix="/businesses", tags=["Businesses"])
+router = APIRouter(prefix="/api/businesses", tags=["Businesses"])
 
 
 # =========================
@@ -58,7 +58,7 @@ async def get_my_businesses(user_id: str = Depends(get_current_user)):
 @router.post("")
 async def create_business(data: CreateBusinessSchema,
                           user_id: str = Depends(get_current_user)):
-
+    print("USER ID:", user_id)
     business = supabase.table("businesses").insert({
         "owner_id": user_id,
         "name": data.name,
@@ -73,7 +73,7 @@ async def create_business(data: CreateBusinessSchema,
         "user_id": user_id,
         "role": "owner"
     }).execute()
-
+    
     return created_business
 
 

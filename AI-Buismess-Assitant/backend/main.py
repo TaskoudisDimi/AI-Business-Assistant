@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import auth, user, business
+from api.routes import auth, user, business, datasets
 from core.middleware import RefreshSessionMiddleware
 
 app = FastAPI()
@@ -19,3 +19,4 @@ app.add_middleware(RefreshSessionMiddleware)
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(business.router)
+app.include_router(datasets.router)
