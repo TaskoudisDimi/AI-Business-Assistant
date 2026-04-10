@@ -3,177 +3,311 @@ import { computed, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 
+const auth      = useAuthStore()
+const route     = useRoute()
+const router    = useRouter()
 
-const auth = useAuthStore()
-const route = useRoute()
-const router = useRouter()
-
-const showMenu = ref(false)
+const showUserMenu = ref(false)
+const showBizMenu  = ref(false)
 
 const pageTitle = computed(() => {
   const map: Record<string, string> = {
     "/dashboard": "Dashboard",
-    "/sales": "Sales Forecast",
+    "/sales":     "Sales Forecast",
     "/customers": "Customer Analysis",
     "/marketing": "Marketing AI",
-    "/datasets": "Datasets",
-    "/history": "History",
-    "/settings": "Settings"
+    "/datasets":  "Datasets",
+    "/history":   "History",
+    "/settings":  "Settings"
   }
-
   return map[route.path] || "AI Assistant"
 })
 
+const pageSub = computed(() => {
+  const map: Record<string, string> = {
+    "/dashboard": "Επισκόπηση επιχείρησης",
+    "/sales":     "Πρόβλεψη πωλήσεων",
+    "/customers": "Ανάλυση πελατολογίου",
+    "/marketing": "Αυτοματοποιημένες καμπάνιες",
+    "/datasets":  "Διαχείριση αρχείων",
+    "/history":   "Ιστορικό προβλέψεων",
+    "/settings":  "Ρυθμίσεις λογαριασμού"
+  }
+  return map[route.path] || ""
+})
+
+const initials = computed(() => {
+  const name = auth.user?.full_name ?? ""
+  return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2) || "U"
+})
+
 const logout = async () => {
+  showUserMenu.value = false
   await auth.logout(router)
 }
 
-const authStore = useAuthStore()
-
 const switchBusiness = (id: string) => {
-  authStore.setCurrentBusiness(id)
-  router.push(router.currentRoute.value.path) 
+  auth.setCurrentBusiness(id)
+  showBizMenu.value = false
 }
 
+const closeAll = () => {
+  showUserMenu.value = false
+  showBizMenu.value  = false
+}
 </script>
 
 <template>
-  <header class="topbar">
-    <!-- CENTER -->
-    <div class="center">
-      <input placeholder="Search..." />
+  <header class="topbar" @click="closeAll">
+
+    <!-- Left: page title -->
+    <div class="topbar-left">
+      <h1 class="page-title">{{ pageTitle }}</h1>
+      <span v-if="pageSub" class="page-sub">{{ pageSub }}</span>
     </div>
-    <div v-if="authStore.hasBusinesses" class="dropdown dropdown-end">
-        <label tabindex="0" class="btn btn-ghost">
-          <span class="font-medium">
-            {{ authStore.currentBusiness?.name || 'Επιλογή επιχείρησης' }}
-          </span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+
+    <!-- Right: actions -->
+    <div class="topbar-right" @click.stop>
+
+      <!-- Business switcher -->
+      <div v-if="auth.hasBusinesses" class="biz-wrap">
+        <button class="biz-btn" @click="showBizMenu = !showBizMenu">
+          <div class="biz-dot" />
+          <span>{{ auth.currentBusiness?.name || 'Επιλογή' }}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            :style="{ transform: showBizMenu ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }">
+            <polyline points="6 9 12 15 18 9"/>
           </svg>
-        </label>
-        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
-          <li v-for="biz in authStore.businesses" :key="biz.id">
-            <a @click="switchBusiness(biz.id)" :class="{ 'bg-base-200': biz.id === authStore.currentBusinessId }">
+        </button>
+
+        <Transition name="menu-pop">
+          <div v-if="showBizMenu" class="dropdown">
+            <p class="dropdown-label">Επιχειρήσεις</p>
+            <button
+              v-for="biz in auth.businesses"
+              :key="biz.id"
+              class="dropdown-item"
+              :class="{ 'dropdown-item--active': biz.id === auth.currentBusinessId }"
+              @click="switchBusiness(biz.id)"
+            >
+              <span class="dropdown-item-dot" :class="{ on: biz.id === auth.currentBusinessId }" />
               {{ biz.name }}
-              <span v-if="biz.id === authStore.currentBusinessId" class="badge badge-sm badge-success ml-auto">Τρέχον</span>
-            </a>
-          </li>
-        </ul>
+              <span v-if="biz.id === auth.currentBusinessId" class="current-tag">Τρέχον</span>
+            </button>
+          </div>
+        </Transition>
       </div>
 
+      <!-- Divider -->
+      <div class="topbar-sep" />
 
-    <!-- RIGHT -->
-    <div class="right">
-      <div class="user" @click="showMenu = !showMenu">
-        <div class="avatar">
-          {{ auth.user?.full_name?.charAt(0) || "U" }}
-        </div>
-        <span class="name">
-          {{ auth.user?.full_name || "User" }}
-        </span>
+      <!-- User -->
+      <div class="user-wrap">
+        <button class="user-btn" @click="showUserMenu = !showUserMenu">
+          <div class="avatar">{{ initials }}</div>
+          <span class="user-name">{{ auth.user?.full_name?.split(" ")[0] || "User" }}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            :style="{ transform: showUserMenu ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+
+        <Transition name="menu-pop">
+          <div v-if="showUserMenu" class="dropdown dropdown--right">
+            <div class="user-info">
+              <div class="avatar avatar--lg">{{ initials }}</div>
+              <div>
+                <p class="user-info-name">{{ auth.user?.full_name }}</p>
+                <p class="user-info-email">{{ auth.user?.email }}</p>
+              </div>
+            </div>
+            <div class="dropdown-divider" />
+            <button class="dropdown-item" @click="router.push('/settings'); showUserMenu = false">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              Ρυθμίσεις
+            </button>
+            <div class="dropdown-divider" />
+            <button class="dropdown-item dropdown-item--danger" @click="logout">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Αποσύνδεση
+            </button>
+          </div>
+        </Transition>
       </div>
 
-      <div v-if="showMenu" class="dropdown">
-        <button @click="router.push('/settings')">Settings</button>
-        <button @click="logout">Logout</button>
-      </div>
     </div>
   </header>
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap');
+
 .topbar {
-  height: 70px;
-  background: #111827;
+  height: 64px;
+  background: #060c18;
+  border-bottom: 1px solid #0e1e33;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
-  border-bottom: 1px solid #1f2937;
-  position: relative;
+  padding: 0 1.75rem;
+  font-family: 'Sora', sans-serif;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
-.left h2 {
-  font-size: 1.2rem;
-  font-weight: 600;
+/* Left */
+.topbar-left { display: flex; align-items: baseline; gap: .75rem; }
+.page-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #c8daf5;
+  margin: 0;
+  letter-spacing: -.02em;
+}
+.page-sub {
+  font-size: .72rem;
+  color: #1e3a5a;
+  font-family: 'DM Mono', monospace;
 }
 
-.center input {
-  width: 300px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #334155;
-  background: #1e293b;
-  color: white;
-}
+/* Right */
+.topbar-right { display: flex; align-items: center; gap: .75rem; }
+.topbar-sep { width: 1px; height: 24px; background: #0e1e33; }
 
-.center input:focus {
-  outline: none;
-  border-color: #3b82f6;
-}
-
-.right {
-  position: relative;
-}
-
-.user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* Business button */
+.biz-wrap { position: relative; }
+.biz-btn {
+  display: flex; align-items: center; gap: .5rem;
+  background: #0a1525;
+  border: 1px solid #122040;
+  border-radius: 9px;
+  color: #5a8acc;
+  font-size: .78rem;
+  font-weight: 500;
+  font-family: 'Sora', sans-serif;
+  padding: .4rem .8rem;
   cursor: pointer;
+  transition: background .15s, border-color .15s;
+  white-space: nowrap;
 }
-
-.avatar {
-  width: 35px;
-  height: 35px;
+.biz-btn:hover { background: #0d1f38; border-color: #1a3460; color: #7ab0e0; }
+.biz-dot {
+  width: 6px; height: 6px;
+  background: #3a9a60;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
+  box-shadow: 0 0 6px #3a9a6088;
 }
 
-.name {
-  font-size: 0.9rem;
+/* User button */
+.user-wrap { position: relative; }
+.user-btn {
+  display: flex; align-items: center; gap: .5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #5a8acc;
+  font-family: 'Sora', sans-serif;
+  padding: .3rem .4rem;
+  border-radius: 9px;
+  transition: background .15s;
 }
+.user-btn:hover { background: #0a1525; }
+.user-name { font-size: .8rem; font-weight: 500; }
 
+/* Avatar */
+.avatar {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, #1a3460, #0d244a);
+  border: 1px solid #1e3a5f;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .7rem; font-weight: 700; color: #7ab8ff;
+  flex-shrink: 0;
+}
+.avatar--lg { width: 38px; height: 38px; font-size: .8rem; }
+
+/* Dropdown shared */
 .dropdown {
   position: absolute;
-  top: 55px;
-  right: 0;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 10px;
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  min-width: 150px;
+  top: calc(100% + 8px);
+  left: 0;
+  background: #0a1525;
+  border: 1px solid #122040;
+  border-radius: 12px;
+  padding: .4rem;
+  min-width: 200px;
+  z-index: 100;
+  box-shadow: 0 16px 40px rgba(0,0,0,.6);
 }
+.dropdown--right { left: auto; right: 0; }
 
-.dropdown button {
-  background: none;
+.dropdown-label {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #1e3a5a;
+  padding: .35rem .6rem .2rem;
+  font-family: 'DM Mono', monospace;
+}
+.dropdown-divider { height: 1px; background: #0e1e33; margin: .3rem 0; }
+
+.dropdown-item {
+  display: flex; align-items: center; gap: .55rem;
+  width: 100%;
+  background: transparent;
   border: none;
-  color: white;
-  padding: 8px;
-  text-align: left;
+  color: #5a8acc;
+  font-size: .8rem;
+  font-family: 'Sora', sans-serif;
+  padding: .5rem .65rem;
+  border-radius: 8px;
   cursor: pointer;
-  border-radius: 6px;
+  transition: background .1s, color .1s;
+  text-align: left;
+}
+.dropdown-item:hover { background: #0d1f38; color: #a0c8f0; }
+.dropdown-item--active { background: #0d2040; color: #7ab8ff; }
+.dropdown-item--danger { color: #7a3030; }
+.dropdown-item--danger:hover { background: #1a0a0a; color: #f07070; }
+
+.dropdown-item-dot {
+  width: 5px; height: 5px;
+  background: #1e3a5a;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dropdown-item-dot.on { background: #3a9a60; box-shadow: 0 0 6px #3a9a6088; }
+
+.current-tag {
+  margin-left: auto;
+  background: #0d2a1a;
+  border: 1px solid #1a4a30;
+  color: #3a9a60;
+  font-size: .65rem;
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  font-family: 'DM Mono', monospace;
 }
 
-.dropdown button:hover {
-  background: #334155;
+/* User info header */
+.user-info {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .5rem .65rem .65rem;
 }
+.user-info-name { font-size: .82rem; font-weight: 600; color: #a0c0e8; margin: 0; }
+.user-info-email { font-size: .7rem; color: #2a4060; margin: .1rem 0 0; font-family: 'DM Mono', monospace; }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .center {
-    display: none;
-  }
+/* Transitions */
+.menu-pop-enter-active { transition: all .15s cubic-bezier(.2,.8,.3,1); }
+.menu-pop-leave-active { transition: all .1s ease; }
+.menu-pop-enter-from { opacity: 0; transform: scale(.93) translateY(-6px); }
+.menu-pop-leave-to   { opacity: 0; transform: scale(.96); }
 
-  .name {
-    display: none;
-  }
+@media (max-width: 640px) {
+  .page-sub, .user-name { display: none; }
+  .topbar { padding: 0 1rem; }
 }
 </style>
