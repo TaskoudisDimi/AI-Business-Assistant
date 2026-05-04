@@ -15,10 +15,8 @@ const pageTitle = computed(() => {
     "/dashboard": "Dashboard",
     "/sales":     "Sales Forecast",
     "/customers": "Customer Analysis",
-    "/marketing": "Marketing AI",
     "/datasets":  "Datasets",
-    "/history":   "History",
-    "/settings":  "Settings"
+    "/settings":  "Settings",
   }
   return map[route.path] || "AI Assistant"
 })
@@ -28,10 +26,8 @@ const pageSub = computed(() => {
     "/dashboard": "Επισκόπηση επιχείρησης",
     "/sales":     "Πρόβλεψη πωλήσεων",
     "/customers": "Ανάλυση πελατολογίου",
-    "/marketing": "Αυτοματοποιημένες καμπάνιες",
-    "/datasets":  "Διαχείριση αρχείων",
-    "/history":   "Ιστορικό προβλέψεων",
-    "/settings":  "Ρυθμίσεις λογαριασμού"
+    "/datasets":  "Datasets & Ιστορικό",
+    "/settings":  "Ρυθμίσεις λογαριασμού",
   }
   return map[route.path] || ""
 })
