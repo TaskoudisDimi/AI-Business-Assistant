@@ -1,31 +1,35 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import { useAuthStore } from "@/stores/auth"
-import { useRouter } from "vue-router"
+import { ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { setLocale } from '@/i18n'
 
-const fullName = ref("")
-const email    = ref("")
-const password = ref("")
-const loading  = ref(false)
-const error    = ref("")
-const success  = ref("")
-const showPass = ref(false)
-
+const { t, locale } = useI18n()
+const toggleLocale = () => setLocale(locale.value === 'el' ? 'en' : 'el')
 const auth   = useAuthStore()
 const router = useRouter()
 
+const fullName = ref('')
+const email    = ref('')
+const password = ref('')
+const loading  = ref(false)
+const error    = ref('')
+const success  = ref('')
+const showPass = ref(false)
+
 const submit = async () => {
-  error.value   = ""
-  success.value = ""
-  if (fullName.value.trim().length < 3) { error.value = "Το όνομα πρέπει να έχει τουλάχιστον 3 χαρακτήρες"; return }
-  if (password.value.length < 6)        { error.value = "Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες"; return }
+  error.value   = ''
+  success.value = ''
+  if (fullName.value.trim().length < 3) { error.value = t('auth.nameTooShort'); return }
+  if (password.value.length < 6)        { error.value = t('auth.passwordTooShort'); return }
   loading.value = true
   try {
     const ok = await (auth as any).register(email.value, password.value, fullName.value)
-    if (ok) success.value = "Ο λογαριασμός δημιουργήθηκε! Έλεγξε το email σου για επιβεβαίωση."
-    else    error.value   = (auth as any).error || "Αποτυχία εγγραφής"
+    if (ok) success.value = t('auth.accountCreated')
+    else    error.value   = (auth as any).error || t('auth.registerFailed')
   } catch (e: any) {
-    error.value = e.response?.data?.detail || "Αποτυχία εγγραφής"
+    error.value = e.response?.data?.detail || t('auth.registerFailed')
   } finally {
     loading.value = false
   }
@@ -35,6 +39,13 @@ const submit = async () => {
 <template>
   <div class="auth-root">
     <div class="bg-grid" />
+
+    <button class="lang-btn" @click="toggleLocale">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+      </svg>
+      {{ locale === 'el' ? 'EN' : 'EL' }}
+    </button>
 
     <div class="auth-panel">
       <div class="brand">
@@ -46,22 +57,22 @@ const submit = async () => {
         <span class="brand-name">AI Assistant</span>
       </div>
 
-      <h1 class="auth-title">Δημιουργία λογαριασμού</h1>
-      <p class="auth-sub">Ξεκίνα δωρεάν σήμερα</p>
+      <h1 class="auth-title">{{ t('auth.register') }}</h1>
+      <p class="auth-sub">{{ t('auth.startFree') }}</p>
 
       <div class="form">
         <div class="field">
-          <label>Πλήρες όνομα</label>
-          <input v-model="fullName" placeholder="Γιώργης Παπαδόπουλος" @keydown.enter="submit" />
+          <label>{{ t('auth.fullName') }}</label>
+          <input v-model="fullName" placeholder="John Doe" @keydown.enter="submit" />
         </div>
         <div class="field">
-          <label>Email</label>
+          <label>{{ t('auth.email') }}</label>
           <input v-model="email" type="email" placeholder="name@company.com" @keydown.enter="submit" />
         </div>
         <div class="field">
-          <label>Κωδικός</label>
+          <label>{{ t('auth.password') }}</label>
           <div class="input-wrap">
-            <input v-model="password" :type="showPass ? 'text' : 'password'" placeholder="min. 6 χαρακτήρες" @keydown.enter="submit" />
+            <input v-model="password" :type="showPass ? 'text' : 'password'" :placeholder="`min. 6`" @keydown.enter="submit" />
             <button class="toggle-pass" @click="showPass = !showPass" tabindex="-1">
               <svg v-if="!showPass" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -71,81 +82,112 @@ const submit = async () => {
 
         <Transition name="msg">
           <p v-if="error"   class="msg msg--error">{{ error }}</p>
-          <p v-else-if="success" class="msg msg--success">✓ {{ success }}</p>
+          <p v-else-if="success" class="msg msg--success">{{ success }}</p>
         </Transition>
 
         <button class="btn-submit" :disabled="loading || !!success" @click="submit">
           <span v-if="loading" class="spinner" />
-          {{ loading ? "Δημιουργία…" : "Δημιουργία λογαριασμού" }}
+          {{ loading ? t('auth.creatingAccount') : t('auth.signUp') }}
         </button>
       </div>
 
       <p class="switch-link">
-        Έχεις ήδη λογαριασμό;
-        <router-link to="/login">Σύνδεση</router-link>
+        {{ t('auth.hasAccount') }}
+        <router-link to="/login">{{ t('auth.signIn') }}</router-link>
       </p>
     </div>
   </div>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap');
 .auth-root {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: #050a12; font-family: 'Sora', sans-serif; padding: 1rem;
+  background: var(--bg); padding: 1rem;
   position: relative; overflow: hidden;
 }
+
+.lang-btn {
+  position: absolute;
+  top: 1.25rem; right: 1.25rem;
+  z-index: 10;
+  display: flex; align-items: center; gap: .35rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text-muted);
+  font-size: .72rem; font-weight: 600;
+  padding: .32rem .65rem;
+  cursor: pointer; letter-spacing: .04em;
+  transition: border-color .15s, color .15s;
+}
+.lang-btn:hover { border-color: var(--border-mid); color: var(--teal); }
 .bg-grid {
   position: absolute; inset: 0; pointer-events: none;
-  background-image: linear-gradient(rgba(30,48,80,.25) 1px, transparent 1px), linear-gradient(90deg, rgba(30,48,80,.25) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(62,207,191,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(62,207,191,.04) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
 }
 .auth-panel {
-  background: #080f1e; border: 1px solid #0e1e33; border-radius: 20px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl);
   padding: 2.5rem; width: 100%; max-width: 400px;
-  box-shadow: 0 30px 80px rgba(0,0,0,.6); position: relative; z-index: 1;
+  box-shadow: var(--shadow-lg); position: relative; z-index: 1;
 }
 .brand { display: flex; align-items: center; gap: .65rem; margin-bottom: 2rem; }
 .brand-icon {
-  width: 38px; height: 38px; background: linear-gradient(135deg, #1a3460, #0d1f3e);
-  border: 1px solid #1e3a5f; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center; color: #4a9eff;
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--teal-dark), #0a3a3a);
+  border: 1px solid var(--border-mid); border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center; color: var(--teal);
 }
-.brand-name { font-size: .92rem; font-weight: 700; color: #c8daf5; letter-spacing: -.02em; }
-.auth-title { font-size: 1.4rem; font-weight: 700; color: #e8f0fe; margin: 0; letter-spacing: -.03em; }
-.auth-sub   { font-size: .8rem; color: #2a4060; margin: .3rem 0 2rem; }
+.brand-name { font-size: .92rem; font-weight: 700; color: var(--text); letter-spacing: -.02em; }
+.auth-title { font-size: 1.4rem; font-weight: 700; color: var(--text); margin: 0; letter-spacing: -.03em; }
+.auth-sub   { font-size: .8rem; color: var(--text-muted); margin: .3rem 0 2rem; }
 .form { display: flex; flex-direction: column; gap: 1rem; }
 .field { display: flex; flex-direction: column; gap: .4rem; }
-label { font-size: .68rem; font-weight: 600; color: #2a4060; letter-spacing: .07em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+
+label {
+  font-size: .68rem; font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: .07em; text-transform: uppercase;
+}
+
 input {
-  background: #050a12; border: 1px solid #0e1e33; border-radius: 10px;
-  color: #c8d6e8; padding: .7rem .95rem; font-size: .85rem;
-  font-family: 'Sora', sans-serif; outline: none; width: 100%; box-sizing: border-box;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r);
+  color: var(--text); padding: .7rem .95rem; font-size: .85rem;
+  outline: none; width: 100%; box-sizing: border-box;
   transition: border-color .15s, box-shadow .15s;
 }
-input:focus { border-color: #2a5299; box-shadow: 0 0 0 3px #2a529920; }
-input::placeholder { color: #1e3a5a; }
+input:focus { border-color: var(--teal-dark); box-shadow: 0 0 0 3px var(--teal-glow); }
+input::placeholder { color: var(--text-muted); opacity: .5; }
 .input-wrap { position: relative; }
 .input-wrap input { padding-right: 2.8rem; }
-.toggle-pass { position: absolute; right: .8rem; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #2a4060; cursor: pointer; transition: color .15s; padding: 0; }
-.toggle-pass:hover { color: #5a8acc; }
-.msg { font-size: .78rem; border-radius: 8px; padding: .55rem .8rem; margin: 0; }
-.msg--error   { color: #f07070; background: #1f0a0a; border: 1px solid #3d1515; }
-.msg--success { color: #4ade80; background: #0d2a1a; border: 1px solid #1a4a30; }
+.toggle-pass {
+  position: absolute; right: .8rem; top: 50%; transform: translateY(-50%);
+  background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+  transition: color .15s; padding: 0;
+}
+.toggle-pass:hover { color: var(--teal); }
+
+.msg { font-size: .78rem; border-radius: var(--r); padding: .55rem .8rem; margin: 0; }
+.msg--error   { color: var(--red);   background: var(--red-bg);   border: 1px solid rgba(224,85,85,.3); }
+.msg--success { color: var(--green); background: var(--green-bg); border: 1px solid rgba(58,184,122,.3); }
+
 .btn-submit {
   display: flex; align-items: center; justify-content: center; gap: .5rem;
-  background: linear-gradient(135deg, #1a3a6a, #1a2a58); border: 1px solid #2a4a8a; color: #a0c8ff;
-  border-radius: 10px; padding: .75rem; font-size: .88rem; font-weight: 600; font-family: 'Sora', sans-serif;
-  cursor: pointer; transition: background .15s, box-shadow .15s; box-shadow: 0 4px 20px rgba(74,158,255,.15);
+  background: var(--teal); border: none; color: #0a0a0a;
+  border-radius: var(--r); padding: .75rem; font-size: .88rem; font-weight: 600;
+  cursor: pointer; transition: opacity .15s;
 }
-.btn-submit:hover:not(:disabled) { background: linear-gradient(135deg, #22448a, #1a3468); box-shadow: 0 4px 24px rgba(74,158,255,.3); }
-.btn-submit:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
-.switch-link { text-align: center; margin-top: 1.5rem; font-size: .8rem; color: #2a4060; }
-.switch-link a { color: #4a9eff; text-decoration: none; font-weight: 600; }
-.switch-link a:hover { color: #7ab8ff; }
+.btn-submit:hover:not(:disabled) { opacity: .85; }
+.btn-submit:disabled { opacity: .35; cursor: not-allowed; }
+
+.switch-link { text-align: center; margin-top: 1.5rem; font-size: .8rem; color: var(--text-muted); }
+.switch-link a { color: var(--teal); text-decoration: none; font-weight: 600; }
+.switch-link a:hover { color: var(--teal-dim); }
+
 .spinner { width: 13px; height: 13px; border-radius: 50%; border: 2px solid transparent; border-top-color: currentColor; animation: spin .6s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
 .msg-enter-active { transition: all .2s ease; }
 .msg-leave-active { transition: all .15s ease; }
 .msg-enter-from, .msg-leave-to { opacity: 0; transform: translateY(-4px); }

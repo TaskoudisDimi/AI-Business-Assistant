@@ -1,35 +1,18 @@
 import { createI18n } from 'vue-i18n'
+import el from './el.json'
+import en from './en.json'
 
-const messages = {
-  en: {
-    settings: "Settings",
-    account: "Account",
-    business: "Business",
-    fullName: "Full Name",
-    language: "Language",
-    theme: "Theme",
-    save: "Save Changes",
-    deleteAccount: "Delete Account",
-    businessName: "Business Name",
-    industry: "Industry"
-  },
-  el: {
-    settings: "Ρυθμίσεις",
-    account: "Λογαριασμός",
-    business: "Επιχείρηση",
-    fullName: "Ονοματεπώνυμο",
-    language: "Γλώσσα",
-    theme: "Θέμα",
-    save: "Αποθήκευση",
-    deleteAccount: "Διαγραφή Λογαριασμού",
-    businessName: "Όνομα Επιχείρησης",
-    industry: "Κλάδος"
-  }
-}
+const savedLocale = localStorage.getItem('locale') ?? 'el'
 
 export const i18n = createI18n({
   legacy: false,
-  locale: "en",
-  fallbackLocale: "en",
-  messages
+  locale: savedLocale,
+  fallbackLocale: 'el',
+  messages: { el, en },
 })
+
+export const setLocale = (locale: 'el' | 'en') => {
+  (i18n.global.locale as any).value = locale
+  localStorage.setItem('locale', locale)
+  document.documentElement.lang = locale
+}

@@ -1,0 +1,196 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "salesForecast": "Sales Forecast",
+    "customerAnalysis": "Customer Analysis",
+    "datasets": "Datasets",
+    "settings": "Settings"
+  },
+  "topbar": {
+    "sub": {
+      "dashboard": "Business overview",
+      "sales": "Sales prediction",
+      "customers": "Customer analytics",
+      "datasets": "Datasets & History",
+      "settings": "Account settings"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "preview": "Preview",
+    "loading": "Loading…",
+    "noData": "No data",
+    "select": "Select",
+    "businesses": "Businesses",
+    "current": "Current",
+    "error": "Error"
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "register": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "wrongCredentials": "Invalid credentials",
+    "minPassword": "At least 6 characters",
+    "welcomeBack": "Welcome back",
+    "platformSignIn": "Sign in to your account",
+    "loginFailed": "Login failed",
+    "signingIn": "Signing in…",
+    "startFree": "Start for free today",
+    "creatingAccount": "Creating…",
+    "nameTooShort": "Name must be at least 3 characters",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "accountCreated": "Account created! Check your email for confirmation.",
+    "registerFailed": "Registration failed"
+  },
+  "dashboard": {
+    "greeting": "Welcome back, {name}",
+    "business": "Overview for {business}",
+    "live": "Live",
+    "kpi": {
+      "totalRevenue": "Total Revenue",
+      "forecastNextMonth": "Forecast Next Month",
+      "customers": "Customers",
+      "growth": "Growth"
+    },
+    "quickActions": "Quick Actions",
+    "actions": {
+      "uploadDataset": "Upload Dataset",
+      "uploadDatasetDesc": "Import a CSV file",
+      "salesForecastDesc": "Run a sales prediction",
+      "customersDesc": "Customer analytics"
+    }
+  },
+  "datasets": {
+    "uploadBtn": "Upload CSV",
+    "errorLoad": "Failed to load datasets",
+    "errorUpload": "Upload failed",
+    "errorDelete": "Delete failed",
+    "errorSave": "Save failed",
+    "errorNoBusiness": "No business selected",
+    "tabs": {
+      "datasets": "Datasets",
+      "history": "History"
+    },
+    "dropZone": {
+      "idle": "Drag & drop CSV or click to select",
+      "active": "Drop the file here",
+      "hint": ".csv files"
+    },
+    "table": {
+      "filename": "File",
+      "date": "Date",
+      "rows": "Rows",
+      "status": "Status"
+    },
+    "actions": {
+      "preview": "Preview",
+      "rename": "Rename"
+    },
+    "empty": {
+      "title": "No datasets yet",
+      "hint": "Upload a CSV to get started"
+    },
+    "delete": {
+      "title": "Delete Dataset",
+      "body": "Are you sure you want to delete {name}? This cannot be undone."
+    },
+    "rename": {
+      "title": "Rename",
+      "body": "New name for {name}",
+      "placeholder": "Dataset name…"
+    }
+  },
+  "history": {
+    "all": "All",
+    "salesForecast": "Sales Forecast",
+    "empty": "No results"
+  },
+  "customers": {
+    "title": "Customer Analysis",
+    "subtitle": "Customer analytics & segmentation",
+    "kpi": {
+      "total": "Total Customers",
+      "active": "Active",
+      "churnRate": "Churn Rate",
+      "avgLtv": "Avg LTV"
+    },
+    "segments": {
+      "title": "Customer Segments",
+      "subtitle": "Distribution by category"
+    },
+    "insight": {
+      "title": "Insight",
+      "highChurn": "{count} customers show high churn probability. Consider a targeted retention campaign.",
+      "healthyChurn": "Churn rate is healthy. Keep focusing on your Loyal customers."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "account": "Account",
+      "security": "Security",
+      "business": "Business"
+    },
+    "account": {
+      "fullName": "Full Name",
+      "username": "Username",
+      "email": "Email",
+      "language": "Language",
+      "languageEl": "Ελληνικά",
+      "languageEn": "English",
+      "saveChanges": "Save Changes",
+      "updateEmail": "Update Email",
+      "accountInfo": "Account information",
+      "accountInfoSub": "Update your name and preferences",
+      "emailSub": "Change your email address",
+      "emailUpdated": "Email updated",
+      "saved": "Saved"
+    },
+    "security": {
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "showPassword": "Show",
+      "updatePassword": "Update Password",
+      "passwordMismatch": "Passwords don't match",
+      "dangerZone": "Danger Zone",
+      "deleteAccount": "Delete Account",
+      "deleteWarning": "Irreversible action. Type DELETE to confirm.",
+      "deleteConfirmPlaceholder": "Type DELETE",
+      "confirmDelete": "Delete Account",
+      "changePassword": "Change password",
+      "changePasswordSub": "Use at least 8 characters",
+      "deleteConfirmLabel": "Type DELETE to confirm",
+      "passwordChanged": "Password changed"
+    },
+    "business": {
+      "name": "Business Name",
+      "industry": "Industry",
+      "saveChanges": "Save Changes",
+      "newBusiness": "New Business",
+      "newBusinessName": "New business name",
+      "createBusiness": "Create",
+      "select": "Select business",
+      "edit": "Edit business",
+      "noIndustry": "No industry",
+      "selected": "Selected",
+      "deleteBusiness": "Delete Business",
+      "deleteBusinessWarning": "Permanently deletes this business and all its data.",
+      "businessSaved": "Business saved",
+      "businessCreated": "Business created",
+      "businessDeleted": "Business deleted"
+    }
+  }
+}

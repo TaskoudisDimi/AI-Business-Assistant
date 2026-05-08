@@ -18,9 +18,10 @@ import Topbar  from '@/components/Topbar.vue'
 <style scoped>
 .layout {
   display: flex;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
   overflow: hidden;
-  background: #080d16;
 }
 
 .main {

@@ -1,0 +1,196 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "salesForecast": "Sales Forecast",
+    "customerAnalysis": "Ανάλυση Πελατών",
+    "datasets": "Datasets",
+    "settings": "Ρυθμίσεις"
+  },
+  "topbar": {
+    "sub": {
+      "dashboard": "Επισκόπηση επιχείρησης",
+      "sales": "Πρόβλεψη πωλήσεων",
+      "customers": "Ανάλυση πελατολογίου",
+      "datasets": "Datasets & Ιστορικό",
+      "settings": "Ρυθμίσεις λογαριασμού"
+    }
+  },
+  "common": {
+    "save": "Αποθήκευση",
+    "cancel": "Άκυρο",
+    "delete": "Διαγραφή",
+    "edit": "Επεξεργασία",
+    "upload": "Ανέβασμα",
+    "uploading": "Ανέβασμα…",
+    "preview": "Προβολή",
+    "loading": "Φόρτωση…",
+    "noData": "Δεν υπάρχουν δεδομένα",
+    "select": "Επιλογή",
+    "businesses": "Επιχειρήσεις",
+    "current": "Τρέχον",
+    "error": "Σφάλμα"
+  },
+  "auth": {
+    "login": "Σύνδεση",
+    "logout": "Αποσύνδεση",
+    "register": "Εγγραφή",
+    "email": "Email",
+    "password": "Κωδικός",
+    "fullName": "Ονοματεπώνυμο",
+    "forgotPassword": "Ξέχασες τον κωδικό;",
+    "noAccount": "Δεν έχεις λογαριασμό;",
+    "hasAccount": "Έχεις ήδη λογαριασμό;",
+    "signIn": "Σύνδεση",
+    "signUp": "Δημιουργία λογαριασμού",
+    "wrongCredentials": "Λάθος στοιχεία",
+    "minPassword": "Τουλάχιστον 6 χαρακτήρες",
+    "welcomeBack": "Καλώς ήρθες",
+    "platformSignIn": "Σύνδεση στην πλατφόρμα",
+    "loginFailed": "Αποτυχία σύνδεσης",
+    "signingIn": "Σύνδεση…",
+    "startFree": "Ξεκίνα δωρεάν σήμερα",
+    "creatingAccount": "Δημιουργία…",
+    "nameTooShort": "Το όνομα πρέπει να έχει τουλάχιστον 3 χαρακτήρες",
+    "passwordTooShort": "Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες",
+    "accountCreated": "Ο λογαριασμός δημιουργήθηκε! Έλεγξε το email σου για επιβεβαίωση.",
+    "registerFailed": "Αποτυχία εγγραφής"
+  },
+  "dashboard": {
+    "greeting": "Καλώς ήρθες, {name}",
+    "business": "Επισκόπηση για {business}",
+    "live": "Live",
+    "kpi": {
+      "totalRevenue": "Συνολικά Έσοδα",
+      "forecastNextMonth": "Πρόβλεψη Επόμενου Μήνα",
+      "customers": "Πελάτες",
+      "growth": "Ανάπτυξη"
+    },
+    "quickActions": "Γρήγορες Ενέργειες",
+    "actions": {
+      "uploadDataset": "Upload Dataset",
+      "uploadDatasetDesc": "Εισαγωγή αρχείου CSV",
+      "salesForecastDesc": "Εκτέλεση πρόβλεψης πωλήσεων",
+      "customersDesc": "Ανάλυση πελατολογίου"
+    }
+  },
+  "datasets": {
+    "uploadBtn": "Upload CSV",
+    "errorLoad": "Αδυναμία φόρτωσης datasets",
+    "errorUpload": "Αποτυχία upload",
+    "errorDelete": "Αποτυχία διαγραφής",
+    "errorSave": "Αποτυχία αποθήκευσης",
+    "errorNoBusiness": "Δεν έχει επιλεγεί επιχείρηση",
+    "tabs": {
+      "datasets": "Datasets",
+      "history": "Ιστορικό"
+    },
+    "dropZone": {
+      "idle": "Drag & drop CSV ή κλικ για επιλογή",
+      "active": "Άσε το αρχείο εδώ",
+      "hint": ".csv αρχεία"
+    },
+    "table": {
+      "filename": "Αρχείο",
+      "date": "Ημερομηνία",
+      "rows": "Γραμμές",
+      "status": "Status"
+    },
+    "actions": {
+      "preview": "Προβολή",
+      "rename": "Μετονομασία"
+    },
+    "empty": {
+      "title": "Κανένα dataset ακόμα",
+      "hint": "Ανέβασε ένα CSV για να ξεκινήσεις"
+    },
+    "delete": {
+      "title": "Διαγραφή Dataset",
+      "body": "Σίγουρα θέλεις να διαγράψεις το {name}; Η ενέργεια δεν αναιρείται."
+    },
+    "rename": {
+      "title": "Μετονομασία",
+      "body": "Νέο όνομα για το {name}",
+      "placeholder": "Όνομα dataset…"
+    }
+  },
+  "history": {
+    "all": "Όλα",
+    "salesForecast": "Sales Forecast",
+    "empty": "Δεν υπάρχουν αποτελέσματα"
+  },
+  "customers": {
+    "title": "Ανάλυση Πελατών",
+    "subtitle": "Ανάλυση πελατολογίου & τμηματοποίηση",
+    "kpi": {
+      "total": "Σύνολο Πελατών",
+      "active": "Ενεργοί",
+      "churnRate": "Churn Rate",
+      "avgLtv": "Μέση LTV"
+    },
+    "segments": {
+      "title": "Τμηματοποίηση Πελατών",
+      "subtitle": "Κατανομή ανά κατηγορία"
+    },
+    "insight": {
+      "title": "Insight",
+      "highChurn": "{count} πελάτες δείχνουν υψηλή πιθανότητα churn. Εξέτασε στοχευμένη καμπάνια retention.",
+      "healthyChurn": "Το churn rate είναι υγιές. Συνέχισε να εστιάζεις στους Loyal πελάτες."
+    }
+  },
+  "settings": {
+    "title": "Ρυθμίσεις",
+    "tabs": {
+      "account": "Λογαριασμός",
+      "security": "Ασφάλεια",
+      "business": "Επιχείρηση"
+    },
+    "account": {
+      "fullName": "Ονοματεπώνυμο",
+      "username": "Username",
+      "email": "Email",
+      "language": "Γλώσσα",
+      "languageEl": "Ελληνικά",
+      "languageEn": "English",
+      "saveChanges": "Αποθήκευση",
+      "updateEmail": "Ενημέρωση Email",
+      "accountInfo": "Πληροφορίες λογαριασμού",
+      "accountInfoSub": "Ενημέρωσε το όνομα και τις προτιμήσεις σου",
+      "emailSub": "Αλλαγή διεύθυνσης email",
+      "emailUpdated": "Email ενημερώθηκε",
+      "saved": "Αποθηκεύτηκε"
+    },
+    "security": {
+      "newPassword": "Νέος Κωδικός",
+      "confirmPassword": "Επιβεβαίωση Κωδικού",
+      "showPassword": "Εμφάνιση",
+      "updatePassword": "Ενημέρωση Κωδικού",
+      "passwordMismatch": "Οι κωδικοί δεν ταιριάζουν",
+      "dangerZone": "Επικίνδυνη Ζώνη",
+      "deleteAccount": "Διαγραφή Λογαριασμού",
+      "deleteWarning": "Αμετάκλητη ενέργεια. Γράψε DELETE για επιβεβαίωση.",
+      "deleteConfirmPlaceholder": "Γράψε DELETE",
+      "confirmDelete": "Διαγραφή Λογαριασμού",
+      "changePassword": "Αλλαγή κωδικού",
+      "changePasswordSub": "Χρησιμοποίησε τουλάχιστον 8 χαρακτήρες",
+      "deleteConfirmLabel": "Γράψε DELETE για επιβεβαίωση",
+      "passwordChanged": "Κωδικός άλλαξε"
+    },
+    "business": {
+      "name": "Όνομα Επιχείρησης",
+      "industry": "Κλάδος",
+      "saveChanges": "Αποθήκευση",
+      "newBusiness": "Νέα Επιχείρηση",
+      "newBusinessName": "Όνομα νέας επιχείρησης",
+      "createBusiness": "Δημιουργία",
+      "select": "Επιλογή επιχείρησης",
+      "edit": "Επεξεργασία επιχείρησης",
+      "noIndustry": "Χωρίς κλάδο",
+      "selected": "Επιλεγμένο",
+      "deleteBusiness": "Διαγραφή Επιχείρησης",
+      "deleteBusinessWarning": "Διαγράφει μόνιμα αυτή την επιχείρηση και όλα τα δεδομένα της.",
+      "businessSaved": "Επιχείρηση αποθηκεύτηκε",
+      "businessCreated": "Επιχείρηση δημιουργήθηκε",
+      "businessDeleted": "Η επιχείρηση διαγράφηκε"
+    }
+  }
+}

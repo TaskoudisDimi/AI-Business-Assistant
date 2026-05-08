@@ -1,66 +1,103 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import { useRoute } from "vue-router"
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
+const { t } = useI18n()
 const collapsed = ref(false)
 
 const menu = [
-  { name: "Dashboard",         path: "/dashboard", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>` },
-  { name: "Sales Forecast",    path: "/sales",     icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>` },
-  { name: "Customer Analysis", path: "/customers", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>` },
-  { name: "Datasets",          path: "/datasets",  icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>` },
-  { name: "Settings",          path: "/settings",  icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>` },
+  {
+    key: 'nav.dashboard',
+    path: '/dashboard',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+    </svg>`,
+  },
+  {
+    key: 'nav.salesForecast',
+    path: '/sales',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+      <polyline points="16 7 22 7 22 13"/>
+    </svg>`,
+  },
+  {
+    key: 'nav.customerAnalysis',
+    path: '/customers',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+      <path d="M16 3.13a4 4 0 010 7.75"/>
+    </svg>`,
+  },
+  {
+    key: 'nav.datasets',
+    path: '/datasets',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <ellipse cx="12" cy="5" rx="9" ry="3"/>
+      <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+      <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+    </svg>`,
+  },
+  {
+    key: 'nav.settings',
+    path: '/settings',
+    icon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>`,
+  },
 ]
 </script>
 
 <template>
   <aside :class="['sidebar', { 'sidebar--collapsed': collapsed }]">
 
-    <!-- Brand -->
-    <div class="sidebar-brand">
-      <div class="brand-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
         </svg>
       </div>
-      <Transition name="fade-label">
+      <Transition name="label">
         <span v-if="!collapsed" class="brand-name">AI Assistant</span>
       </Transition>
-      <button class="collapse-btn" @click="collapsed = !collapsed" :title="collapsed ? 'Expand' : 'Collapse'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-          :style="{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform .3s' }">
+      <button class="collapse-btn" @click="collapsed = !collapsed">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          :style="{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform .25s' }">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </button>
     </div>
 
-    <!-- Divider -->
-    <div class="sidebar-divider" />
+    <div class="divider" />
 
-    <!-- Nav -->
-    <nav class="sidebar-nav">
+    <nav class="nav">
       <router-link
         v-for="item in menu"
         :key="item.path"
         :to="item.path"
-        class="nav-link"
-        :class="{ 'nav-link--active': route.path === item.path }"
-        :title="collapsed ? item.name : ''"
+        :class="['nav-link', { active: route.path === item.path }]"
+        :title="collapsed ? t(item.key) : ''"
       >
         <span class="nav-icon" v-html="item.icon" />
-        <Transition name="fade-label">
-          <span v-if="!collapsed" class="nav-label">{{ item.name }}</span>
+        <Transition name="label">
+          <span v-if="!collapsed" class="nav-label">{{ t(item.key) }}</span>
         </Transition>
-        <span v-if="!collapsed && route.path === item.path" class="active-pip" />
+        <span v-if="!collapsed && route.path === item.path" class="active-dot" />
       </router-link>
     </nav>
 
-    <!-- Bottom -->
     <div class="sidebar-bottom">
-      <div class="sidebar-divider" />
-      <div class="version-tag">
-        <Transition name="fade-label">
+      <div class="divider" />
+      <div class="version">
+        <Transition name="label">
           <span v-if="!collapsed">v1.0 · beta</span>
           <span v-else>β</span>
         </Transition>
@@ -71,45 +108,41 @@ const menu = [
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
-
 .sidebar {
-  width: 240px;
-  min-height: 100vh;
-  background: #060c18;
-  border-right: 1px solid #0e1e33;
+  width: 220px;
+  height: 100%;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 1.25rem .75rem;
-  transition: width .3s cubic-bezier(.4,0,.2,1);
+  padding: 1rem .65rem;
+  transition: width .25s cubic-bezier(.4,0,.2,1);
   overflow: hidden;
-  font-family: 'Sora', sans-serif;
   flex-shrink: 0;
 }
-.sidebar--collapsed { width: 68px; }
+.sidebar--collapsed { width: 60px; }
 
 /* Brand */
-.sidebar-brand {
+.brand {
   display: flex;
   align-items: center;
-  gap: .65rem;
-  padding: .25rem .5rem .25rem .4rem;
-  margin-bottom: .25rem;
-  position: relative;
+  gap: .6rem;
+  padding: .2rem .4rem .2rem .35rem;
+  margin-bottom: .15rem;
 }
-.brand-icon {
-  width: 34px; height: 34px;
-  background: linear-gradient(135deg, #1a3460 0%, #0d1f3e 100%);
-  border: 1px solid #1e3a5f;
-  border-radius: 9px;
+.brand-logo {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--teal-dark), #0a3a3a);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r);
   display: flex; align-items: center; justify-content: center;
-  color: #4a9eff;
+  color: var(--teal);
   flex-shrink: 0;
 }
 .brand-name {
-  font-size: .9rem;
-  font-weight: 700;
-  color: #c8daf5;
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--text);
   letter-spacing: -.02em;
   white-space: nowrap;
   flex: 1;
@@ -117,82 +150,76 @@ const menu = [
 .collapse-btn {
   background: transparent;
   border: none;
-  color: #2a4060;
+  color: var(--text-muted);
   cursor: pointer;
-  width: 24px; height: 24px;
+  width: 22px; height: 22px;
   border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
   transition: background .15s, color .15s;
   flex-shrink: 0;
 }
-.collapse-btn:hover { background: #0e1e33; color: #5a8acc; }
+.collapse-btn:hover { background: var(--bg-hover); color: var(--text-sub); }
 
 /* Divider */
-.sidebar-divider {
+.divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, #0e1e33 30%, #0e1e33 70%, transparent);
-  margin: .75rem 0;
+  background: var(--border);
+  margin: .65rem 0;
 }
 
 /* Nav */
-.sidebar-nav {
+.nav {
   display: flex;
   flex-direction: column;
-  gap: .2rem;
+  gap: .15rem;
   flex: 1;
 }
 .nav-link {
   display: flex;
   align-items: center;
-  gap: .75rem;
-  padding: .6rem .65rem;
-  border-radius: 9px;
+  gap: .7rem;
+  padding: .55rem .6rem;
+  border-radius: var(--r);
   text-decoration: none;
-  color: #3a5a80;
+  color: var(--text-muted);
   transition: background .15s, color .15s;
   position: relative;
   white-space: nowrap;
   overflow: hidden;
-}
-.nav-link:hover {
-  background: #0a1828;
-  color: #7ab0e0;
-}
-.nav-link--active {
-  background: #0d2040;
-  color: #7ab8ff;
-}
-.nav-icon {
-  width: 16px; height: 16px;
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-}
-.nav-label {
   font-size: .82rem;
   font-weight: 500;
 }
-.active-pip {
+.nav-link:hover  { background: var(--bg-hover); color: var(--text); }
+.nav-link.active { background: var(--bg-hover); color: var(--text); border-left: 2px solid var(--teal); margin-left: -2px; }
+
+.nav-icon {
+  width: 15px; height: 15px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.nav-label { font-size: .82rem; }
+
+.active-dot {
   position: absolute;
   right: .6rem;
-  width: 5px; height: 5px;
-  background: #4a9eff;
+  width: 4px; height: 4px;
+  background: var(--teal);
   border-radius: 50%;
-  box-shadow: 0 0 8px #4a9eff88;
 }
 
 /* Bottom */
 .sidebar-bottom { margin-top: auto; }
-.version-tag {
-  font-size: .68rem;
-  color: #1a3050;
+.version {
+  font-size: .65rem;
+  color: var(--text-muted);
   text-align: center;
-  padding: .25rem;
-  font-family: 'DM Mono', monospace;
+  padding: .2rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Transitions */
-.fade-label-enter-active { transition: opacity .2s .05s, transform .2s .05s; }
-.fade-label-leave-active { transition: opacity .1s, transform .1s; }
-.fade-label-enter-from   { opacity: 0; transform: translateX(-6px); }
-.fade-label-leave-to     { opacity: 0; transform: translateX(-4px); }
+.label-enter-active { transition: opacity .18s .04s, transform .18s .04s; }
+.label-leave-active { transition: opacity .08s, transform .08s; }
+.label-enter-from   { opacity: 0; transform: translateX(-5px); }
+.label-leave-to     { opacity: 0; transform: translateX(-3px); }
 </style>

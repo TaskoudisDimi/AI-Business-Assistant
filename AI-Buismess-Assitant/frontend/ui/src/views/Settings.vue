@@ -1,120 +1,146 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue"
-import { useAuthStore } from "@/stores/auth"
-import { api } from "@/services/api"
+import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { api } from '@/services/api'
+import { useI18n } from 'vue-i18n'
+import { setLocale } from '@/i18n'
 
-const auth = useAuthStore()
+const auth   = useAuthStore()
+const router = useRouter()
+const { t }  = useI18n()
 
-const loading  = ref(false)
-const toast    = ref<{ msg: string; type: "success" | "error" } | null>(null)
-const activeTab = ref<"account" | "security" | "business">("account")
+const loading   = ref(false)
+const toast     = ref<{ msg: string; type: 'success' | 'error' } | null>(null)
+const activeTab = ref<'account' | 'security' | 'business'>('account')
 
-const showToast = (msg: string, type: "success" | "error" = "success") => {
+const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
   toast.value = { msg, type }
   setTimeout(() => (toast.value = null), 3000)
 }
 
 /* ── Account ── */
-const fullName = ref("")
-const username = ref("")
-const email    = ref("")
-const language = ref("en")
+const fullName = ref('')
+const username = ref('')
+const email    = ref('')
+const language = ref('el')
 
 watch(() => auth.user, (u) => {
   if (!u) return
-  fullName.value = u.full_name ?? ""
-  username.value = u.username ?? ""
-  email.value    = u.email ?? ""
-  language.value = u.language ?? "en"
+  fullName.value = u.full_name ?? ''
+  username.value = u.username  ?? ''
+  email.value    = u.email     ?? ''
+  language.value = u.language  ?? 'el'
 }, { immediate: true })
 
 const saveAccount = async () => {
   loading.value = true
   try {
-    await api.patch("/user", { full_name: fullName.value, username: username.value, language: language.value })
+    await api.patch('/user', { full_name: fullName.value, username: username.value, language: language.value })
     if (auth.user) {
       auth.user.full_name = fullName.value
       auth.user.username  = username.value
       auth.user.language  = language.value
     }
-    showToast("Αποθηκεύτηκε!")
-  } catch { showToast("Αποτυχία αποθήκευσης", "error") }
+    setLocale(language.value as 'el' | 'en')
+    showToast(t('settings.account.saved'))
+  } catch { showToast(t('common.error'), 'error') }
   finally  { loading.value = false }
 }
 
 const changeEmail = async () => {
   try {
-    await api.patch("/user/email", { email: email.value })
+    await api.patch('/user/email', { email: email.value })
     if (auth.user) auth.user.email = email.value
-    showToast("Email ενημερώθηκε")
-  } catch { showToast("Αποτυχία", "error") }
+    showToast(t('settings.account.emailUpdated'))
+  } catch { showToast(t('common.error'), 'error') }
 }
 
 /* ── Security ── */
-const newPassword    = ref("")
-const confirmPass    = ref("")
-const showPass       = ref(false)
-const deleteConfirm  = ref("")
+const newPassword   = ref('')
+const confirmPass   = ref('')
+const showPass      = ref(false)
+const deleteConfirm = ref('')
 
 const passwordsMatch = computed(() => !confirmPass.value || newPassword.value === confirmPass.value)
 
 const changePassword = async () => {
   if (!passwordsMatch.value) return
   try {
-    await api.patch("/user/password", { password: newPassword.value })
-    newPassword.value = ""; confirmPass.value = ""
-    showToast("Κωδικός άλλαξε")
-  } catch { showToast("Αποτυχία", "error") }
+    await api.patch('/user/password', { password: newPassword.value })
+    newPassword.value = ''
+    confirmPass.value = ''
+    showToast(t('settings.security.passwordChanged'))
+  } catch { showToast(t('common.error'), 'error') }
 }
 
 const deleteAccount = async () => {
-  if (deleteConfirm.value !== "DELETE") return
-  await api.delete("/user")
-  window.location.href = "/login"
+  if (deleteConfirm.value !== 'DELETE') return
+  await api.delete('/user')
+  window.location.href = '/login'
 }
 
 /* ── Business ── */
-const activeBusinessId = ref(auth.currentBusinessId ?? "")
-const businessName     = ref("")
-const industry         = ref("")
+const activeBusinessId = ref(auth.currentBusinessId ?? '')
+const businessName     = ref('')
+const industry         = ref('')
 
 watch(activeBusinessId, () => {
   const b = auth.businesses.find(b => b.id === activeBusinessId.value)
   if (!b) return
   businessName.value = b.name
-  industry.value     = b.industry ?? ""
+  industry.value     = b.industry ?? ''
 }, { immediate: true })
 
 const saveBusiness = async () => {
   loading.value = true
   try {
     await api.patch(`/businesses/${activeBusinessId.value}`, { name: businessName.value, industry: industry.value })
-    showToast("Επιχείρηση αποθηκεύτηκε")
-  } catch { showToast("Αποτυχία", "error") }
+    const b = auth.businesses.find(b => b.id === activeBusinessId.value)
+    if (b) { b.name = businessName.value; b.industry = industry.value }
+    showToast(t('settings.business.businessSaved'))
+  } catch { showToast(t('common.error'), 'error') }
   finally  { loading.value = false }
 }
 
 const createBusiness = async () => {
   try {
-    const { data } = await api.post("/businesses", { name: "Νέα Επιχείρηση", industry: "" })
+    const { data } = await api.post('/businesses', { name: t('settings.business.newBusiness'), industry: '' })
+    auth.businesses.push(data)
     activeBusinessId.value = data.id
-    showToast("Δημιουργήθηκε!")
-  } catch { showToast("Αποτυχία", "error") }
+    showToast(t('settings.business.businessCreated'))
+  } catch { showToast(t('common.error'), 'error') }
 }
 
-const initials = computed(() => {
-  return (auth.user?.full_name ?? "U").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
-})
+const deleteBusiness = async () => {
+  if (!activeBusinessId.value) return
+  try {
+    await api.delete(`/businesses/${activeBusinessId.value}`)
+    const idx = auth.businesses.findIndex(b => b.id === activeBusinessId.value)
+    if (idx !== -1) auth.businesses.splice(idx, 1)
+    auth.resolveCurrentBusiness()
+    if (!auth.hasBusinesses) {
+      router.push('/onboarding')
+    } else {
+      activeBusinessId.value = auth.currentBusinessId ?? ''
+      showToast(t('settings.business.businessDeleted'))
+    }
+  } catch { showToast(t('common.error'), 'error') }
+}
 
-const tabs = [
-  { key: "account",  label: "Λογαριασμός", icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>` },
-  { key: "security", label: "Ασφάλεια",    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>` },
-  { key: "business", label: "Επιχείρηση",  icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>` },
-]
+const initials = computed(() =>
+  (auth.user?.full_name ?? 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+)
+
+const tabs = computed(() => [
+  { key: 'account',  label: t('settings.tabs.account'),  icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>` },
+  { key: 'security', label: t('settings.tabs.security'), icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>` },
+  { key: 'business', label: t('settings.tabs.business'), icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>` },
+])
 </script>
 
 <template>
-  <div class="settings" @click="() => {}">
+  <div class="settings">
 
     <!-- Toast -->
     <Transition name="toast-slide">
@@ -139,73 +165,76 @@ const tabs = [
     <!-- Tabs -->
     <div class="tabs">
       <button
-        v-for="t in tabs"
-        :key="t.key"
+        v-for="tab in tabs"
+        :key="tab.key"
         class="tab-btn"
-        :class="{ 'tab-btn--active': activeTab === t.key }"
-        @click="activeTab = t.key as any"
+        :class="{ 'tab-btn--active': activeTab === tab.key }"
+        @click="activeTab = tab.key as any"
       >
-        <span v-html="t.icon" />
-        {{ t.label }}
+        <span v-html="tab.icon" />
+        {{ tab.label }}
       </button>
     </div>
 
     <!-- ── Account Tab ── -->
     <Transition name="tab-fade" mode="out-in">
       <div v-if="activeTab === 'account'" key="account" class="tab-panel">
+
         <div class="card">
           <div class="card-head">
-            <h3 class="card-title">Πληροφορίες λογαριασμού</h3>
-            <p class="card-sub">Ενημέρωσε το όνομα και τις προτιμήσεις σου</p>
+            <h3 class="card-title">{{ t('settings.account.accountInfo') }}</h3>
+            <p class="card-sub">{{ t('settings.account.accountInfoSub') }}</p>
           </div>
 
           <div class="field-grid">
             <div class="field">
-              <label>Πλήρες όνομα</label>
+              <label>{{ t('settings.account.fullName') }}</label>
               <input v-model="fullName" placeholder="John Doe" />
             </div>
             <div class="field">
-              <label>Username</label>
+              <label>{{ t('settings.account.username') }}</label>
               <input v-model="username" placeholder="johndoe" />
             </div>
           </div>
 
           <div class="field">
-            <label>Γλώσσα</label>
+            <label>{{ t('settings.account.language') }}</label>
             <select v-model="language">
-              <option value="en">English</option>
-              <option value="el">Ελληνικά</option>
+              <option value="en">{{ t('settings.account.languageEn') }}</option>
+              <option value="el">{{ t('settings.account.languageEl') }}</option>
             </select>
           </div>
 
           <button class="btn-primary" :disabled="loading" @click="saveAccount">
             <span v-if="loading" class="spinner" />
-            Αποθήκευση
+            {{ t('settings.account.saveChanges') }}
           </button>
         </div>
 
         <div class="card">
           <div class="card-head">
-            <h3 class="card-title">Email</h3>
-            <p class="card-sub">Αλλαγή διεύθυνσης email</p>
+            <h3 class="card-title">{{ t('settings.account.email') }}</h3>
+            <p class="card-sub">{{ t('settings.account.emailSub') }}</p>
           </div>
           <div class="field-row">
             <input v-model="email" type="email" placeholder="email@example.com" class="flex-1" />
-            <button class="btn-outline" @click="changeEmail">Ενημέρωση</button>
+            <button class="btn-outline" @click="changeEmail">{{ t('settings.account.updateEmail') }}</button>
           </div>
         </div>
+
       </div>
 
       <!-- ── Security Tab ── -->
       <div v-else-if="activeTab === 'security'" key="security" class="tab-panel">
+
         <div class="card">
           <div class="card-head">
-            <h3 class="card-title">Αλλαγή κωδικού</h3>
-            <p class="card-sub">Χρησιμοποίησε τουλάχιστον 8 χαρακτήρες</p>
+            <h3 class="card-title">{{ t('settings.security.changePassword') }}</h3>
+            <p class="card-sub">{{ t('settings.security.changePasswordSub') }}</p>
           </div>
 
           <div class="field">
-            <label>Νέος κωδικός</label>
+            <label>{{ t('settings.security.newPassword') }}</label>
             <div class="input-icon-wrap">
               <input v-model="newPassword" :type="showPass ? 'text' : 'password'" placeholder="••••••••" />
               <button class="input-icon-btn" @click="showPass = !showPass">
@@ -216,45 +245,43 @@ const tabs = [
           </div>
 
           <div class="field">
-            <label>Επιβεβαίωση κωδικού</label>
+            <label>{{ t('settings.security.confirmPassword') }}</label>
             <input
               v-model="confirmPass"
               type="password"
               placeholder="••••••••"
               :class="{ 'input-error': !passwordsMatch }"
             />
-            <p v-if="!passwordsMatch" class="field-error">Οι κωδικοί δεν ταιριάζουν</p>
+            <p v-if="!passwordsMatch" class="field-error">{{ t('settings.security.passwordMismatch') }}</p>
           </div>
 
           <button class="btn-primary" :disabled="!newPassword || !passwordsMatch" @click="changePassword">
-            Αλλαγή κωδικού
+            {{ t('settings.security.updatePassword') }}
           </button>
         </div>
 
         <div class="card card--danger">
           <div class="card-head">
-            <h3 class="card-title card-title--danger">Διαγραφή λογαριασμού</h3>
-            <p class="card-sub">Αμετάκλητη ενέργεια. Όλα τα δεδομένα σου θα διαγραφούν.</p>
+            <h3 class="card-title card-title--danger">{{ t('settings.security.dangerZone') }}</h3>
+            <p class="card-sub">{{ t('settings.security.deleteWarning') }}</p>
           </div>
           <div class="field">
-            <label>Γράψε <code>DELETE</code> για επιβεβαίωση</label>
-            <input v-model="deleteConfirm" placeholder="DELETE" class="input-mono" />
+            <label>{{ t('settings.security.deleteConfirmLabel') }}</label>
+            <input v-model="deleteConfirm" :placeholder="t('settings.security.deleteConfirmPlaceholder')" class="input-mono" />
           </div>
-          <button
-            class="btn-danger"
-            :disabled="deleteConfirm !== 'DELETE'"
-            @click="deleteAccount"
-          >
-            Διαγραφή λογαριασμού
+          <button class="btn-danger" :disabled="deleteConfirm !== 'DELETE'" @click="deleteAccount">
+            {{ t('settings.security.confirmDelete') }}
           </button>
         </div>
+
       </div>
 
       <!-- ── Business Tab ── -->
       <div v-else-if="activeTab === 'business'" key="business" class="tab-panel">
+
         <div class="card">
           <div class="card-head">
-            <h3 class="card-title">Επιλογή επιχείρησης</h3>
+            <h3 class="card-title">{{ t('settings.business.select') }}</h3>
           </div>
           <div class="biz-list">
             <button
@@ -265,39 +292,48 @@ const tabs = [
               @click="activeBusinessId = b.id"
             >
               <div class="biz-avatar">{{ b.name.charAt(0).toUpperCase() }}</div>
-              <div>
+              <div class="biz-info">
                 <p class="biz-name">{{ b.name }}</p>
-                <p class="biz-industry">{{ b.industry || 'Χωρίς κλάδο' }}</p>
+                <p class="biz-industry">{{ b.industry || t('settings.business.noIndustry') }}</p>
               </div>
-              <span v-if="b.id === activeBusinessId" class="biz-active-tag">Επιλεγμένο</span>
+              <span v-if="b.id === activeBusinessId" class="biz-active-tag">{{ t('settings.business.selected') }}</span>
+            </button>
+          </div>
+
+          <button class="btn-outline btn-new-biz" @click="createBusiness">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {{ t('settings.business.newBusiness') }}
+          </button>
+        </div>
+
+        <div v-if="activeBusinessId" class="card">
+          <div class="card-head">
+            <h3 class="card-title">{{ t('settings.business.edit') }}</h3>
+          </div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label>{{ t('settings.business.name') }}</label>
+              <input v-model="businessName" :placeholder="t('settings.business.name')" />
+            </div>
+            <div class="field">
+              <label>{{ t('settings.business.industry') }}</label>
+              <input v-model="industry" placeholder="e.g. Retail, SaaS…" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <button class="btn-primary" :disabled="loading" @click="saveBusiness">
+              <span v-if="loading" class="spinner" />
+              {{ t('settings.business.saveChanges') }}
+            </button>
+            <button class="btn-danger btn-sm" @click="deleteBusiness">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              {{ t('settings.business.deleteBusiness') }}
             </button>
           </div>
         </div>
 
-        <div class="card" v-if="activeBusinessId">
-          <div class="card-head">
-            <h3 class="card-title">Επεξεργασία επιχείρησης</h3>
-          </div>
-          <div class="field-grid">
-            <div class="field">
-              <label>Όνομα</label>
-              <input v-model="businessName" placeholder="Όνομα επιχείρησης" />
-            </div>
-            <div class="field">
-              <label>Κλάδος</label>
-              <input v-model="industry" placeholder="π.χ. Retail, SaaS…" />
-            </div>
-          </div>
-          <div class="field-row">
-            <button class="btn-primary" :disabled="loading" @click="saveBusiness">
-              <span v-if="loading" class="spinner" />
-              Αποθήκευση
-            </button>
-            <button class="btn-outline" @click="createBusiness">
-              + Νέα επιχείρηση
-            </button>
-          </div>
-        </div>
       </div>
     </Transition>
 
@@ -305,14 +341,10 @@ const tabs = [
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap');
-
 .settings {
-  min-height: 100vh;
   padding: 2rem 2.5rem;
-  background: #080d16;
-  font-family: 'Sora', sans-serif;
-  color: #c8d6e8;
+  background: var(--bg);
+  color: var(--text);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -329,10 +361,10 @@ const tabs = [
   border-radius: 10px;
   font-size: .82rem;
   font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  box-shadow: var(--shadow-lg);
 }
-.toast--success { background: #0d2a1a; border: 1px solid #1a4a30; color: #4ade80; }
-.toast--error   { background: #1f0a0a; border: 1px solid #3d1515; color: #f87171; }
+.toast--success { background: var(--green-bg); border: 1px solid rgba(58,184,122,.3); color: var(--green); }
+.toast--error   { background: var(--red-bg);   border: 1px solid rgba(224,85,85,.3);  color: var(--red); }
 
 .toast-slide-enter-active { transition: all .25s cubic-bezier(.2,.8,.3,1); }
 .toast-slide-leave-active { transition: all .15s ease; }
@@ -340,64 +372,64 @@ const tabs = [
 .toast-slide-leave-to   { opacity: 0; transform: translateX(10px); }
 
 /* Header */
-.settings-header { display: flex; align-items: center; justify-content: space-between; }
+.settings-header { display: flex; align-items: center; }
 .avatar-block { display: flex; align-items: center; gap: 1rem; }
 .avatar-xl {
   width: 52px; height: 52px;
-  background: linear-gradient(135deg, #1a3460, #0d244a);
-  border: 1px solid #1e3a5f;
+  background: linear-gradient(135deg, var(--teal-dark), #0a3a3a);
+  border: 1px solid var(--border-mid);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1rem; font-weight: 700; color: #7ab8ff;
+  font-size: 1rem; font-weight: 700; color: var(--teal);
+  flex-shrink: 0;
 }
-.avatar-name  { font-size: .95rem; font-weight: 700; color: #c8daf5; margin: 0; }
-.avatar-email { font-size: .72rem; color: #2a4060; margin: .1rem 0 0; font-family: 'DM Mono', monospace; }
+.avatar-name  { font-size: .95rem; font-weight: 700; color: var(--text); margin: 0; }
+.avatar-email { font-size: .72rem; color: var(--text-muted); margin: .1rem 0 0; }
 
 /* Tabs */
 .tabs {
   display: flex;
-  gap: .35rem;
-  background: #0a1220;
-  border: 1px solid #111e33;
-  border-radius: 12px;
-  padding: .35rem;
+  gap: .3rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: .3rem;
 }
 .tab-btn {
-  display: flex; align-items: center; gap: .5rem;
+  display: flex; align-items: center; gap: .45rem;
   background: transparent;
   border: none;
-  color: #3a5a80;
+  color: var(--text-muted);
   font-size: .8rem;
   font-weight: 500;
-  font-family: 'Sora', sans-serif;
   padding: .5rem .9rem;
-  border-radius: 8px;
+  border-radius: var(--r);
   cursor: pointer;
   transition: background .15s, color .15s;
   flex: 1; justify-content: center;
 }
-.tab-btn:hover { background: #0d1f38; color: #7ab0e0; }
-.tab-btn--active { background: #0d2040; color: #7ab8ff; }
+.tab-btn:hover { background: var(--bg-hover); color: var(--text); }
+.tab-btn--active { background: var(--bg-hover); color: var(--text); border-bottom: 2px solid var(--teal); }
 
 /* Tab panel */
 .tab-panel { display: flex; flex-direction: column; gap: 1.25rem; }
 
 /* Cards */
 .card {
-  background: #0a1220;
-  border: 1px solid #111e33;
-  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
 }
-.card--danger { border-color: #1f0a0a; }
+.card--danger { border-color: rgba(224,85,85,.25); }
 
 .card-head { display: flex; flex-direction: column; gap: .2rem; }
-.card-title { font-size: .9rem; font-weight: 700; color: #b8d0ec; margin: 0; }
-.card-title--danger { color: #cc5050; }
-.card-sub { font-size: .75rem; color: #2a4060; margin: 0; }
+.card-title { font-size: .9rem; font-weight: 700; color: var(--text); margin: 0; }
+.card-title--danger { color: var(--red); }
+.card-sub { font-size: .75rem; color: var(--text-muted); margin: 0; }
 
 /* Fields */
 .field { display: flex; flex-direction: column; gap: .4rem; }
@@ -408,40 +440,31 @@ const tabs = [
 label {
   font-size: .72rem;
   font-weight: 600;
-  color: #2a4060;
+  color: var(--text-muted);
   letter-spacing: .05em;
   text-transform: uppercase;
-  font-family: 'DM Mono', monospace;
 }
+
 input, select {
-  background: #080d16;
-  border: 1px solid #111e33;
-  border-radius: 9px;
-  color: #c8d6e8;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
   padding: .6rem .85rem;
   font-size: .83rem;
-  font-family: 'Sora', sans-serif;
   outline: none;
   transition: border-color .15s, box-shadow .15s;
   width: 100%;
   box-sizing: border-box;
 }
 input:focus, select:focus {
-  border-color: #2a5299;
-  box-shadow: 0 0 0 3px #2a529922;
+  border-color: var(--teal-dark);
+  box-shadow: 0 0 0 3px var(--teal-glow);
 }
-.input-error { border-color: #5a1515 !important; }
-.input-mono { font-family: 'DM Mono', monospace; }
-.field-error { font-size: .72rem; color: #cc5050; margin: 0; }
-
-code {
-  background: #111e33;
-  color: #7ab8ff;
-  padding: .1rem .35rem;
-  border-radius: 4px;
-  font-family: 'DM Mono', monospace;
-  font-size: .78rem;
-}
+input::placeholder { color: var(--text-muted); opacity: .6; }
+.input-error { border-color: rgba(224,85,85,.5) !important; }
+.input-mono { font-family: monospace; }
+.field-error { font-size: .72rem; color: var(--red); margin: 0; }
 
 /* Input with icon */
 .input-icon-wrap { position: relative; }
@@ -450,59 +473,59 @@ code {
   position: absolute; right: .75rem; top: 50%;
   transform: translateY(-50%);
   background: transparent; border: none;
-  color: #2a4060; cursor: pointer;
+  color: var(--text-muted); cursor: pointer;
   transition: color .15s;
 }
-.input-icon-btn:hover { color: #5a8acc; }
+.input-icon-btn:hover { color: var(--teal); }
 
 /* Buttons */
 .btn-primary {
   display: inline-flex; align-items: center; gap: .4rem;
-  background: #1a3460;
-  border: 1px solid #2a4a7a;
-  color: #7ab8ff;
-  border-radius: 9px;
+  background: var(--teal);
+  border: none;
+  color: #0a0a0a;
+  border-radius: var(--r);
   padding: .55rem 1.2rem;
   font-size: .82rem;
   font-weight: 600;
-  font-family: 'Sora', sans-serif;
   cursor: pointer;
-  transition: background .15s;
+  transition: opacity .15s;
   align-self: flex-start;
 }
-.btn-primary:hover:not(:disabled) { background: #22448a; }
-.btn-primary:disabled { opacity: .35; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { opacity: .85; }
+.btn-primary:disabled { opacity: .3; cursor: not-allowed; }
 
 .btn-outline {
   display: inline-flex; align-items: center; gap: .4rem;
   background: transparent;
-  border: 1px solid #162035;
-  color: #4a6a8a;
-  border-radius: 9px;
+  border: 1px solid var(--border-mid);
+  color: var(--text-sub);
+  border-radius: var(--r);
   padding: .55rem 1.1rem;
   font-size: .82rem;
-  font-family: 'Sora', sans-serif;
   cursor: pointer;
   transition: border-color .15s, color .15s;
 }
-.btn-outline:hover { border-color: #2a4060; color: #7a9cc0; }
+.btn-outline:hover { border-color: var(--teal-dark); color: var(--teal); }
 
 .btn-danger {
   display: inline-flex; align-items: center; gap: .4rem;
-  background: #3d1515;
-  border: 1px solid #5a2020;
-  color: #f07070;
-  border-radius: 9px;
+  background: rgba(224,85,85,.1);
+  border: 1px solid rgba(224,85,85,.3);
+  color: var(--red);
+  border-radius: var(--r);
   padding: .55rem 1.2rem;
   font-size: .82rem;
   font-weight: 600;
-  font-family: 'Sora', sans-serif;
   cursor: pointer;
   align-self: flex-start;
   transition: background .15s;
 }
-.btn-danger:hover:not(:disabled) { background: #5a1a1a; }
+.btn-danger:hover:not(:disabled) { background: rgba(224,85,85,.2); }
 .btn-danger:disabled { opacity: .3; cursor: not-allowed; }
+.btn-sm { padding: .45rem .9rem; font-size: .78rem; }
+
+.btn-new-biz { align-self: flex-start; }
 
 /* Spinner */
 .spinner {
@@ -520,38 +543,39 @@ code {
 .biz-item {
   display: flex; align-items: center; gap: .85rem;
   background: transparent;
-  border: 1px solid #111e33;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
   padding: .8rem 1rem;
   cursor: pointer;
-  font-family: 'Sora', sans-serif;
   text-align: left;
   transition: background .15s, border-color .15s;
   width: 100%;
 }
-.biz-item:hover { background: #0d1f38; border-color: #162a48; }
-.biz-item--active { background: #0d2040; border-color: #1a3460; }
+.biz-item:hover { background: var(--bg-hover); border-color: var(--border-mid); }
+.biz-item--active { background: var(--bg-hover); border-color: var(--border-mid); border-left: 2px solid var(--teal); }
 
 .biz-avatar {
   width: 36px; height: 36px;
-  background: #0e1f38;
-  border: 1px solid #162a48;
-  border-radius: 9px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r);
   display: flex; align-items: center; justify-content: center;
-  font-size: .82rem; font-weight: 700; color: #4a9eff;
+  font-size: .82rem; font-weight: 700; color: var(--teal);
   flex-shrink: 0;
 }
-.biz-name     { font-size: .84rem; font-weight: 600; color: #8ab4d8; margin: 0; }
-.biz-industry { font-size: .7rem; color: #2a4060; margin: .1rem 0 0; font-family: 'DM Mono', monospace; }
+.biz-info { flex: 1; min-width: 0; }
+.biz-name     { font-size: .84rem; font-weight: 600; color: var(--text); margin: 0; }
+.biz-industry { font-size: .7rem; color: var(--text-muted); margin: .1rem 0 0; }
 .biz-active-tag {
   margin-left: auto;
-  background: #0d2a1a;
-  border: 1px solid #1a4a30;
-  color: #3a9a60;
-  font-size: .65rem;
+  background: var(--green-bg);
+  border: 1px solid rgba(58,184,122,.25);
+  color: var(--green);
+  font-size: .63rem;
+  font-weight: 600;
   padding: .15rem .5rem;
   border-radius: 999px;
-  font-family: 'DM Mono', monospace;
+  white-space: nowrap;
 }
 
 /* Tab transition */

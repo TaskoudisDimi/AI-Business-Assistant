@@ -2,19 +2,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { api } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
+import { useI18n } from 'vue-i18n'
 import DatasetPreviewModal from '@/views/DatasetPreviewModal.vue'
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 
-// ── Tab state ──────────────────────────────────────────────────────────────
+// ── Tab ────────────────────────────────────────────────────────────────────
 const activeTab = ref<'datasets' | 'history'>('datasets')
 
-// ── Datasets state ─────────────────────────────────────────────────────────
-const datasets   = ref<any[]>([])
-const loading    = ref(false)
-const uploading  = ref(false)
-const errorMsg   = ref<string | null>(null)
-
+// ── Datasets ───────────────────────────────────────────────────────────────
+const datasets        = ref<any[]>([])
+const loading         = ref(false)
+const uploading       = ref(false)
+const errorMsg        = ref<string | null>(null)
 const selectedDataset = ref<any | null>(null)
 const datasetToDelete = ref<any | null>(null)
 const datasetToEdit   = ref<any | null>(null)
@@ -31,7 +32,7 @@ const loadDatasets = async () => {
     const res = await api.get('/datasets')
     datasets.value = res.data
   } catch {
-    errorMsg.value = 'Αδυναμία φόρτωσης datasets'
+    errorMsg.value = t('datasets.errorLoad')
   } finally {
     loading.value = false
   }
@@ -56,7 +57,7 @@ const handleDrop = async (e: DragEvent) => {
 
 const uploadFile = async (file: File) => {
   if (!authStore.currentBusiness?.id) {
-    errorMsg.value = 'Δεν έχει επιλεγεί επιχείρηση'
+    errorMsg.value = t('datasets.errorNoBusiness')
     return
   }
   const formData = new FormData()
@@ -69,14 +70,14 @@ const uploadFile = async (file: File) => {
     await api.post('/datasets/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
     await loadDatasets()
   } catch (err: any) {
-    errorMsg.value = err.response?.data?.detail || 'Αποτυχία upload'
+    errorMsg.value = err.response?.data?.detail || t('datasets.errorUpload')
   } finally {
     uploading.value = false
   }
 }
 
-const openPreview = (dataset: any) => { selectedDataset.value = dataset; closeMenu() }
-const confirmDelete = (dataset: any) => { datasetToDelete.value = dataset; closeMenu() }
+const openPreview   = (d: any) => { selectedDataset.value = d; closeMenu() }
+const confirmDelete = (d: any) => { datasetToDelete.value = d; closeMenu() }
 
 const deleteConfirmed = async () => {
   if (!datasetToDelete.value) return
@@ -84,13 +85,13 @@ const deleteConfirmed = async () => {
     await api.delete(`/datasets/${datasetToDelete.value.id}`)
     datasets.value = datasets.value.filter(d => d.id !== datasetToDelete.value.id)
   } catch {
-    errorMsg.value = 'Αποτυχία διαγραφής'
+    errorMsg.value = t('datasets.errorDelete')
   } finally {
     datasetToDelete.value = null
   }
 }
 
-const startEdit = (dataset: any) => { datasetToEdit.value = dataset; editName.value = dataset.name; closeMenu() }
+const startEdit = (d: any) => { datasetToEdit.value = d; editName.value = d.name; closeMenu() }
 
 const saveEdit = async () => {
   if (!datasetToEdit.value) return
@@ -98,17 +99,17 @@ const saveEdit = async () => {
     await api.patch(`/datasets/${datasetToEdit.value.id}`, { name: editName.value })
     datasetToEdit.value.name = editName.value
   } catch {
-    errorMsg.value = 'Αποτυχία αποθήκευσης'
+    errorMsg.value = t('datasets.errorSave')
   } finally {
     datasetToEdit.value = null
   }
 }
 
-// ── History state ──────────────────────────────────────────────────────────
-const history      = ref<any[]>([])
-const histLoading  = ref(false)
-const histFilter   = ref<'all' | 'sales_forecast'>('all')
-const histLoaded   = ref(false)
+// ── History ────────────────────────────────────────────────────────────────
+const history     = ref<any[]>([])
+const histLoading = ref(false)
+const histFilter  = ref<'all' | 'sales_forecast'>('all')
+const histLoaded  = ref(false)
 
 const filteredHistory = computed(() =>
   histFilter.value === 'all'
@@ -154,59 +155,54 @@ onMounted(loadDatasets)
 <template>
   <div class="page" @click="closeMenu">
 
-    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <!-- Header -->
     <div class="page-header">
       <div class="header-left">
         <div class="header-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <ellipse cx="12" cy="5" rx="9" ry="3"/>
             <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
             <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
           </svg>
         </div>
         <div>
-          <h1 class="page-title">Datasets</h1>
+          <h1 class="page-title">{{ t('nav.datasets') }}</h1>
           <p class="page-sub">{{ authStore.currentBusiness?.name }}</p>
         </div>
       </div>
 
-      <button
-        v-if="activeTab === 'datasets'"
-        class="btn-upload"
-        @click.stop="triggerUpload"
-        :disabled="uploading"
-      >
+      <button v-if="activeTab === 'datasets'" class="btn-upload" @click.stop="triggerUpload" :disabled="uploading">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        {{ uploading ? 'Ανέβασμα…' : 'Upload CSV' }}
+        {{ uploading ? t('common.uploading') : t('datasets.uploadBtn') }}
       </button>
     </div>
 
-    <!-- ── Tabs ───────────────────────────────────────────────────────── -->
+    <!-- Tabs -->
     <div class="tabs">
       <button class="tab" :class="{ active: activeTab === 'datasets' }" @click.stop="switchTab('datasets')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <ellipse cx="12" cy="5" rx="9" ry="3"/>
           <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
           <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
         </svg>
-        Datasets
-        <span class="tab-badge">{{ datasets.length }}</span>
+        {{ t('datasets.tabs.datasets') }}
+        <span class="tab-count">{{ datasets.length }}</span>
       </button>
       <button class="tab" :class="{ active: activeTab === 'history' }" @click.stop="switchTab('history')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <polyline points="12 6 12 12 16 14"/>
         </svg>
-        Ιστορικό
-        <span v-if="histLoaded" class="tab-badge">{{ history.length }}</span>
+        {{ t('datasets.tabs.history') }}
+        <span v-if="histLoaded" class="tab-count">{{ history.length }}</span>
       </button>
     </div>
 
-    <!-- ── Error ──────────────────────────────────────────────────────── -->
+    <!-- Error -->
     <Transition name="slide-down">
       <div v-if="errorMsg" class="error-bar" @click="errorMsg = null">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -219,10 +215,9 @@ onMounted(loadDatasets)
       </div>
     </Transition>
 
-    <!-- ══════════════════ DATASETS TAB ══════════════════ -->
+    <!-- DATASETS TAB -->
     <template v-if="activeTab === 'datasets'">
 
-      <!-- Drop zone -->
       <div
         class="drop-zone"
         :class="{ 'drop-zone--active': isDragging, 'drop-zone--busy': uploading }"
@@ -234,59 +229,53 @@ onMounted(loadDatasets)
         <input ref="fileInputRef" type="file" accept=".csv" class="sr-only" @change="handleFileUpload" />
         <div class="drop-inner">
           <div class="drop-icon" :class="{ spin: uploading }">
-            <svg v-if="!uploading" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg v-if="!uploading" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
               <line x1="12" y1="18" x2="12" y2="12"/>
               <line x1="9" y1="15" x2="15" y2="15"/>
             </svg>
-            <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-dasharray="40" stroke-dashoffset="10"/>
             </svg>
           </div>
           <p class="drop-text">
-            <span v-if="uploading">Ανέβασμα…</span>
-            <span v-else-if="isDragging">Άσε το αρχείο εδώ</span>
-            <span v-else>Drag &amp; drop CSV <em>ή</em> κλικ για επιλογή</span>
+            <span v-if="uploading">{{ t('common.uploading') }}</span>
+            <span v-else-if="isDragging">{{ t('datasets.dropZone.active') }}</span>
+            <span v-else>{{ t('datasets.dropZone.idle') }}</span>
           </p>
-          <p class="drop-hint">.csv αρχεία</p>
+          <p class="drop-hint">{{ t('datasets.dropZone.hint') }}</p>
         </div>
       </div>
 
-      <!-- Table card -->
       <div class="card">
         <div v-if="loading" class="state">
           <div class="dots"><span/><span/><span/></div>
-          <p>Φόρτωση…</p>
+          <p>{{ t('common.loading') }}</p>
         </div>
 
         <div v-else-if="datasets.length === 0" class="state">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
             <ellipse cx="12" cy="5" rx="9" ry="3"/>
             <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
             <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
           </svg>
-          <p class="state-title">Κανένα dataset ακόμα</p>
-          <p class="state-hint">Ανέβασε ένα CSV για να ξεκινήσεις</p>
+          <p class="state-title">{{ t('datasets.empty.title') }}</p>
+          <p class="state-hint">{{ t('datasets.empty.hint') }}</p>
         </div>
 
         <table v-else class="table">
           <thead>
             <tr>
-              <th>Αρχείο</th>
-              <th>Ημερομηνία</th>
-              <th>Γραμμές</th>
-              <th>Status</th>
+              <th>{{ t('datasets.table.filename') }}</th>
+              <th>{{ t('datasets.table.date') }}</th>
+              <th>{{ t('datasets.table.rows') }}</th>
+              <th>{{ t('datasets.table.status') }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(d, i) in datasets"
-              :key="d.id"
-              class="table-row"
-              :style="{ animationDelay: `${i * 40}ms` }"
-            >
+            <tr v-for="(d, i) in datasets" :key="d.id" class="table-row" :style="{ animationDelay: `${i * 40}ms` }">
               <td>
                 <div class="file-cell">
                   <div class="file-icon">
@@ -314,7 +303,7 @@ onMounted(loadDatasets)
               <td class="td-actions" @click.stop>
                 <div class="menu-wrap">
                   <button class="btn-dots" @click.stop="toggleMenu(d.id)">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                       <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
                     </svg>
                   </button>
@@ -322,16 +311,16 @@ onMounted(loadDatasets)
                     <div v-if="openMenuId === d.id" class="menu">
                       <button class="menu-item" @click="openPreview(d)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        Προβολή
+                        {{ t('datasets.actions.preview') }}
                       </button>
                       <button class="menu-item" @click="startEdit(d)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        Μετονομασία
+                        {{ t('datasets.actions.rename') }}
                       </button>
                       <div class="menu-sep"/>
                       <button class="menu-item menu-item--danger" @click="confirmDelete(d)">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                        Διαγραφή
+                        {{ t('common.delete') }}
                       </button>
                     </div>
                   </Transition>
@@ -343,34 +332,28 @@ onMounted(loadDatasets)
       </div>
     </template>
 
-    <!-- ══════════════════ HISTORY TAB ══════════════════ -->
+    <!-- HISTORY TAB -->
     <template v-else>
-
       <div class="hist-filters">
-        <button class="fil-btn" :class="{ active: histFilter === 'all' }" @click.stop="histFilter = 'all'">Όλα</button>
+        <button class="fil-btn" :class="{ active: histFilter === 'all' }" @click.stop="histFilter = 'all'">{{ t('history.all') }}</button>
         <button class="fil-btn" :class="{ active: histFilter === 'sales_forecast' }" @click.stop="histFilter = 'sales_forecast'">Sales Forecast</button>
       </div>
 
       <div class="card">
         <div v-if="histLoading" class="state">
           <div class="dots"><span/><span/><span/></div>
-          <p>Φόρτωση…</p>
+          <p>{{ t('common.loading') }}</p>
         </div>
 
         <div v-else-if="filteredHistory.length === 0" class="state">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
-          <p class="state-title">Δεν υπάρχουν αποτελέσματα</p>
+          <p class="state-title">{{ t('history.empty') }}</p>
         </div>
 
         <div v-else class="hist-list">
-          <div
-            v-for="(h, i) in filteredHistory"
-            :key="h.id"
-            class="hist-item"
-            :style="{ animationDelay: `${i * 40}ms` }"
-          >
+          <div v-for="(h, i) in filteredHistory" :key="h.id" class="hist-item" :style="{ animationDelay: `${i * 40}ms` }">
             <div class="hist-icon">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
@@ -381,68 +364,64 @@ onMounted(loadDatasets)
               <p class="hist-date mono">{{ fmtDateTime(h.created_at) }}</p>
             </div>
             <div class="hist-tags">
-              <span v-if="h.result?.summary" class="badge badge--blue">
-                avg {{ fmtNum(h.result.summary.avg) }} / ημ.
-              </span>
-              <span v-if="h.result?.summary?.total" class="badge badge--blue">
-                {{ fmtNum(h.result.summary.total) }} total
-              </span>
+              <span v-if="h.result?.summary" class="badge badge--teal">avg {{ fmtNum(h.result.summary.avg) }}</span>
+              <span v-if="h.result?.summary?.total" class="badge badge--teal">{{ fmtNum(h.result.summary.total) }} total</span>
             </div>
           </div>
         </div>
       </div>
     </template>
 
-    <!-- ── Preview Modal ───────────────────────────────────────────────── -->
+    <!-- Preview Modal -->
     <DatasetPreviewModal :dataset="selectedDataset" @close="selectedDataset = null" />
 
-    <!-- ── Delete Modal ───────────────────────────────────────────────── -->
+    <!-- Delete Modal -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="datasetToDelete" class="overlay" @click.self="datasetToDelete = null">
           <div class="dialog">
             <div class="dialog-icon dialog-icon--danger">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
                 <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
               </svg>
             </div>
-            <h3 class="dialog-title">Διαγραφή Dataset</h3>
-            <p class="dialog-body">Σίγουρα θέλεις να διαγράψεις το <strong>{{ datasetToDelete.name }}</strong>; Η ενέργεια δεν αναιρείται.</p>
+            <h3 class="dialog-title">{{ t('datasets.delete.title') }}</h3>
+            <p class="dialog-body">{{ t('datasets.delete.body', { name: datasetToDelete.name }) }}</p>
             <div class="dialog-actions">
-              <button class="btn-ghost" @click="datasetToDelete = null">Άκυρο</button>
-              <button class="btn-danger" @click="deleteConfirmed">Διαγραφή</button>
+              <button class="btn-ghost" @click="datasetToDelete = null">{{ t('common.cancel') }}</button>
+              <button class="btn-danger" @click="deleteConfirmed">{{ t('common.delete') }}</button>
             </div>
           </div>
         </div>
       </Transition>
     </Teleport>
 
-    <!-- ── Edit Modal ─────────────────────────────────────────────────── -->
+    <!-- Rename Modal -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="datasetToEdit" class="overlay" @click.self="datasetToEdit = null">
           <div class="dialog">
             <div class="dialog-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </div>
-            <h3 class="dialog-title">Μετονομασία</h3>
-            <p class="dialog-body">Νέο όνομα για το <strong>{{ datasetToEdit.name }}</strong></p>
+            <h3 class="dialog-title">{{ t('datasets.rename.title') }}</h3>
+            <p class="dialog-body">{{ t('datasets.rename.body', { name: datasetToEdit.name }) }}</p>
             <input
               v-model="editName"
               class="dialog-input"
-              placeholder="Όνομα dataset…"
+              :placeholder="t('datasets.rename.placeholder')"
               @keydown.enter="saveEdit"
               @keydown.escape="datasetToEdit = null"
               autofocus
             />
             <div class="dialog-actions">
-              <button class="btn-ghost" @click="datasetToEdit = null">Άκυρο</button>
-              <button class="btn-primary" @click="saveEdit">Αποθήκευση</button>
+              <button class="btn-ghost" @click="datasetToEdit = null">{{ t('common.cancel') }}</button>
+              <button class="btn-primary" @click="saveEdit">{{ t('common.save') }}</button>
             </div>
           </div>
         </div>
@@ -453,178 +432,148 @@ onMounted(loadDatasets)
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap');
-
-/* ── Page ── */
 .page {
-  padding: 2rem 2.5rem;
-  background: #080d16;
-  font-family: 'Sora', sans-serif;
-  color: #c8d6e8;
+  padding: 2rem;
+  background: var(--bg);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
-/* ── Header ── */
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: .9rem;
-}
+/* Header */
+.page-header  { display: flex; align-items: center; justify-content: space-between; }
+.header-left  { display: flex; align-items: center; gap: .85rem; }
 .header-icon {
-  width: 42px; height: 42px;
-  background: linear-gradient(135deg, #1a2640 0%, #0e1a2e 100%);
-  border: 1px solid #1e3050;
-  border-radius: 11px;
+  width: 40px; height: 40px;
+  background: rgba(46,196,182,.08);
+  border: 1px solid rgba(46,196,182,.18);
+  border-radius: var(--r-lg);
   display: flex; align-items: center; justify-content: center;
-  color: #4a9eff;
+  color: var(--teal);
   flex-shrink: 0;
 }
-.page-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #e8f0fe;
-  margin: 0;
-  letter-spacing: -.02em;
-}
-.page-sub {
-  font-size: .75rem;
-  color: #3d5570;
-  margin: .1rem 0 0;
-  font-family: 'DM Mono', monospace;
-}
+.page-title { font-size: 1.2rem; font-weight: 600; color: var(--text); margin: 0; letter-spacing: -.01em; }
+.page-sub   { font-size: .73rem; color: var(--text-muted); margin: .12rem 0 0; }
 
 .btn-upload {
-  display: flex; align-items: center; gap: .45rem;
-  background: #1a3460;
-  border: 1px solid #2a4a7a;
-  color: #7ab8ff;
-  border-radius: 9px;
-  padding: .5rem 1rem;
+  display: flex; align-items: center; gap: .4rem;
+  background: rgba(46,196,182,.1);
+  border: 1px solid rgba(46,196,182,.25);
+  color: var(--teal);
+  border-radius: var(--r);
+  padding: .45rem .9rem;
   font-size: .8rem;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Sora', sans-serif;
   transition: background .15s, border-color .15s;
 }
-.btn-upload:hover:not(:disabled) { background: #22448a; border-color: #3a5faa; }
+.btn-upload:hover:not(:disabled) { background: rgba(46,196,182,.18); }
 .btn-upload:disabled { opacity: .4; cursor: not-allowed; }
 
-/* ── Tabs ── */
+/* Tabs */
 .tabs {
   display: flex;
-  gap: .3rem;
-  background: #0a1220;
-  border: 1px solid #111e33;
-  border-radius: 11px;
-  padding: .3rem;
+  gap: .25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: .25rem;
   width: fit-content;
 }
 .tab {
-  display: flex; align-items: center; gap: .45rem;
+  display: flex; align-items: center; gap: .4rem;
   background: transparent;
   border: none;
-  color: #3a5a80;
-  font-size: .8rem;
+  color: var(--text-muted);
+  font-size: .79rem;
   font-weight: 500;
-  font-family: 'Sora', sans-serif;
-  padding: .45rem .9rem;
-  border-radius: 8px;
+  padding: .4rem .85rem;
+  border-radius: var(--r);
   cursor: pointer;
   transition: background .15s, color .15s;
 }
-.tab.active {
-  background: #0d2040;
-  color: #7ab8ff;
-}
-.tab:hover:not(.active) { color: #7ab0e0; }
+.tab.active { background: rgba(46,196,182,.1); color: var(--teal); }
+.tab:hover:not(.active) { color: var(--text-sub); }
 
-.tab-badge {
-  background: #111e33;
-  color: #2a4a6a;
-  font-size: .65rem;
-  font-family: 'DM Mono', monospace;
-  padding: .1rem .4rem;
+.tab-count {
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: .63rem;
+  padding: .08rem .38rem;
   border-radius: 999px;
-  min-width: 18px;
+  min-width: 16px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
-.tab.active .tab-badge { background: #1a3460; color: #5a8acc; }
+.tab.active .tab-count { background: rgba(46,196,182,.15); color: var(--teal-dim); }
 
-/* ── Error ── */
+/* Error */
 .error-bar {
-  display: flex; align-items: center; gap: .55rem;
-  background: #1f0a0a;
-  border: 1px solid #3d1515;
-  border-radius: 9px;
-  padding: .65rem .9rem;
-  font-size: .8rem;
-  color: #f07070;
+  display: flex; align-items: center; gap: .5rem;
+  background: var(--red-bg);
+  border: 1px solid rgba(224,85,85,.3);
+  border-radius: var(--r);
+  padding: .6rem .85rem;
+  font-size: .79rem;
+  color: var(--red);
   cursor: pointer;
 }
 .error-x { margin-left: auto; opacity: .5; }
 
-/* ── Drop zone ── */
+/* Drop zone */
 .drop-zone {
-  border: 1.5px dashed #1e3050;
-  border-radius: 12px;
-  background: #0a1220;
+  border: 1.5px dashed var(--border-mid);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
   padding: 1.75rem;
   cursor: pointer;
   transition: border-color .2s, background .2s;
   text-align: center;
 }
-.drop-zone:hover, .drop-zone--active { border-color: #2a5299; background: #0d1a30; }
-.drop-zone--busy { border-color: #1d4a8a; pointer-events: none; }
+.drop-zone:hover, .drop-zone--active { border-color: var(--teal-dark); background: var(--bg-hover); }
+.drop-zone--busy { pointer-events: none; opacity: .7; }
 
 .drop-inner { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
 .drop-icon {
-  width: 44px; height: 44px;
-  background: #0e1a2e;
-  border: 1px solid #1e3050;
-  border-radius: 11px;
+  width: 42px; height: 42px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
   display: flex; align-items: center; justify-content: center;
-  color: #3a6fcc;
-  margin-bottom: .15rem;
+  color: var(--teal-dim);
+  margin-bottom: .1rem;
 }
 .drop-icon.spin svg { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.sr-only { display: none; }
-.drop-text { font-size: .85rem; color: #6a8aac; margin: 0; }
-.drop-text em { font-style: normal; color: #3a6fcc; }
-.drop-hint { font-size: .72rem; color: #2a4060; margin: 0; font-family: 'DM Mono', monospace; }
+.sr-only   { display: none; }
+.drop-text { font-size: .83rem; color: var(--text-sub); margin: 0; }
+.drop-hint { font-size: .7rem; color: var(--text-muted); margin: 0; }
 
-/* ── Card ── */
+/* Card */
 .card {
-  background: #0a1220;
-  border: 1px solid #111e33;
-  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
   overflow: hidden;
 }
 
-/* ── State (loading / empty) ── */
+/* State */
 .state {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: .65rem;
+  gap: .6rem;
   padding: 3.5rem 2rem;
-  color: #2a4060;
-  font-size: .83rem;
+  color: var(--text-muted);
+  font-size: .82rem;
 }
-.state-title { color: #3a5570; font-size: .88rem; font-weight: 600; margin: 0; }
-.state-hint  { color: #243040; font-size: .75rem; margin: 0; }
+.state-title { color: var(--text-sub); font-size: .86rem; font-weight: 500; margin: 0; }
+.state-hint  { color: var(--text-muted); font-size: .73rem; margin: 0; }
 
-.dots { display: flex; gap: .4rem; }
+.dots { display: flex; gap: .35rem; }
 .dots span {
-  width: 6px; height: 6px;
-  background: #2a4a7a;
+  width: 5px; height: 5px;
+  background: var(--border-mid);
   border-radius: 50%;
   animation: pulse 1.2s ease-in-out infinite;
 }
@@ -635,261 +584,212 @@ onMounted(loadDatasets)
   40%           { opacity: 1;  transform: scale(1); }
 }
 
-/* ── Table ── */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: .82rem;
-}
-.table thead tr { border-bottom: 1px solid #111e33; }
+/* Table */
+.table { width: 100%; border-collapse: collapse; font-size: .81rem; }
+.table thead tr { border-bottom: 1px solid var(--border); }
 .table th {
-  padding: .8rem 1.2rem;
+  padding: .75rem 1.1rem;
   text-align: left;
-  font-size: .68rem;
+  font-size: .67rem;
   font-weight: 600;
-  letter-spacing: .08em;
+  letter-spacing: .07em;
   text-transform: uppercase;
-  color: #2a4060;
-  font-family: 'DM Mono', monospace;
+  color: var(--text-muted);
 }
 .table-row {
-  border-bottom: 1px solid #0d1828;
+  border-bottom: 1px solid var(--border-light);
   animation: rowIn .3s ease both;
   transition: background .12s;
 }
 .table-row:last-child { border-bottom: none; }
-.table-row:hover { background: #0e1f38; }
+.table-row:hover { background: var(--bg-hover); }
 @keyframes rowIn {
-  from { opacity: 0; transform: translateY(5px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.table td { padding: .85rem 1.2rem; vertical-align: middle; }
+.table td { padding: .8rem 1.1rem; vertical-align: middle; }
 
-.file-cell { display: flex; align-items: center; gap: .6rem; }
+.file-cell { display: flex; align-items: center; gap: .55rem; }
 .file-icon {
-  width: 26px; height: 26px;
-  background: #0d1828;
-  border: 1px solid #162035;
+  width: 24px; height: 24px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
   border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  color: #2a5299;
+  color: var(--teal-dim);
   flex-shrink: 0;
 }
 .file-name {
-  color: #b8d0ec;
+  color: var(--text);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 240px;
+  max-width: 230px;
 }
 
-.date-cell { display: flex; flex-direction: column; gap: .05rem; }
-.mono  { font-family: 'DM Mono', monospace; }
-.muted { color: #3a6080; font-size: .75rem; }
+.date-cell { display: flex; flex-direction: column; gap: .03rem; }
+.mono  { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.muted { color: var(--text-muted); font-size: .72rem; }
 
-/* ── Badges ── */
+/* Badges */
 .badge {
-  display: inline-flex; align-items: center; gap: .35rem;
+  display: inline-flex; align-items: center; gap: .3rem;
   border-radius: 999px;
-  padding: .22rem .65rem;
-  font-size: .7rem;
+  padding: .2rem .6rem;
+  font-size: .68rem;
   font-weight: 600;
-  letter-spacing: .04em;
-  font-family: 'DM Mono', monospace;
+  letter-spacing: .03em;
 }
-.badge--green {
-  background: #0d2a1a;
-  border: 1px solid #1a4a30;
-  color: #3a9a60;
-}
-.badge--blue {
-  background: #0d2040;
-  border: 1px solid #1a3460;
-  color: #5a8acc;
-}
-.badge-dot {
-  width: 5px; height: 5px;
-  background: #3a9a60;
-  border-radius: 50%;
-  box-shadow: 0 0 5px #3a9a60;
-}
+.badge--green { background: var(--green-bg); border: 1px solid rgba(58,184,122,.25); color: var(--green); }
+.badge--teal  { background: rgba(46,196,182,.08); border: 1px solid rgba(46,196,182,.2); color: var(--teal-dim); }
+.badge-dot    { width: 4px; height: 4px; background: var(--green); border-radius: 50%; }
 
-/* ── Action menu ── */
-.td-actions { text-align: right; width: 44px; }
+/* Menu */
+.td-actions { text-align: right; width: 42px; }
 .menu-wrap  { position: relative; display: inline-block; }
-
 .btn-dots {
-  background: transparent;
-  border: none;
-  color: #2a4060;
-  cursor: pointer;
-  width: 28px; height: 28px;
+  background: transparent; border: none; color: var(--text-muted);
+  cursor: pointer; width: 26px; height: 26px;
   border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
   transition: background .12s, color .12s;
 }
-.btn-dots:hover { background: #111e33; color: #7a9cc0; }
+.btn-dots:hover { background: var(--bg-hover); color: var(--text-sub); }
 
 .menu {
-  position: absolute;
-  right: 0; top: calc(100% + 5px);
-  background: #0a1525;
-  border: 1px solid #162035;
-  border-radius: 10px;
-  padding: .3rem;
-  min-width: 145px;
+  position: absolute; right: 0; top: calc(100% + 4px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r-lg);
+  padding: .25rem;
+  min-width: 140px;
   z-index: 10;
-  box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  box-shadow: var(--shadow-lg);
 }
 .menu-item {
-  display: flex; align-items: center; gap: .5rem;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: #7a9cc0;
+  display: flex; align-items: center; gap: .45rem;
+  width: 100%; background: transparent; border: none;
+  color: var(--text-sub);
   font-size: .78rem;
-  font-family: 'Sora', sans-serif;
-  padding: .45rem .65rem;
-  border-radius: 7px;
+  padding: .42rem .6rem;
+  border-radius: var(--r);
   cursor: pointer;
   transition: background .1s, color .1s;
   text-align: left;
 }
-.menu-item:hover { background: #111e33; color: #b8d0ec; }
-.menu-item--danger { color: #8a3030; }
-.menu-item--danger:hover { background: #1a0a0a; color: #f07070; }
-.menu-sep { height: 1px; background: #111e33; margin: .2rem 0; }
+.menu-item:hover         { background: var(--bg-hover); color: var(--text); }
+.menu-item--danger       { color: var(--red); }
+.menu-item--danger:hover { background: var(--red-bg); }
+.menu-sep { height: 1px; background: var(--border); margin: .2rem 0; }
 
-/* ── History ── */
+/* History */
 .hist-filters { display: flex; gap: .3rem; }
 .fil-btn {
-  background: #0a1220;
-  border: 1px solid #111e33;
-  color: #3a5a80;
-  border-radius: 8px;
-  padding: .4rem .85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--r);
+  padding: .38rem .8rem;
   font-size: .76rem;
   font-weight: 500;
-  font-family: 'Sora', sans-serif;
   cursor: pointer;
   transition: all .15s;
 }
-.fil-btn.active { background: #0d2040; border-color: #1a3460; color: #7ab8ff; }
-.fil-btn:hover:not(.active) { background: #0d1f38; color: #7ab0e0; }
+.fil-btn.active { background: rgba(46,196,182,.1); border-color: rgba(46,196,182,.25); color: var(--teal); }
+.fil-btn:hover:not(.active) { color: var(--text-sub); }
 
-.hist-list { display: flex; flex-direction: column; gap: .4rem; padding: .75rem; }
+.hist-list { display: flex; flex-direction: column; gap: .35rem; padding: .65rem; }
 .hist-item {
-  display: flex; align-items: center; gap: .8rem;
-  background: #080d16;
-  border: 1px solid #0e1e33;
-  border-radius: 9px;
-  padding: .8rem 1rem;
+  display: flex; align-items: center; gap: .75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: .75rem .9rem;
   transition: background .12s;
   animation: rowIn .3s ease both;
 }
-.hist-item:hover { background: #0d1f38; }
+.hist-item:hover { background: var(--bg-hover); }
 .hist-icon {
-  width: 30px; height: 30px;
-  background: #0e1f38;
-  border: 1px solid #162a48;
-  border-radius: 8px;
+  width: 28px; height: 28px;
+  background: rgba(46,196,182,.08);
+  border: 1px solid rgba(46,196,182,.15);
+  border-radius: var(--r);
   display: flex; align-items: center; justify-content: center;
-  color: #3a6fcc;
+  color: var(--teal);
   flex-shrink: 0;
 }
 .hist-info { flex: 1; }
-.hist-type { font-size: .8rem; font-weight: 600; color: #8ab4d8; margin: 0; text-transform: capitalize; }
-.hist-date { font-size: .68rem; color: #2a4060; margin: .08rem 0 0; }
-.hist-tags { display: flex; gap: .35rem; flex-wrap: wrap; }
+.hist-type { font-size: .8rem; font-weight: 500; color: var(--text-sub); margin: 0; text-transform: capitalize; }
+.hist-date { font-size: .67rem; color: var(--text-muted); margin: .05rem 0 0; }
+.hist-tags { display: flex; gap: .3rem; flex-wrap: wrap; }
 
-/* ── Dialogs ── */
+/* Dialogs */
 .overlay {
   position: fixed; inset: 0; z-index: 50;
-  background: rgba(0, 5, 15, .75);
-  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   padding: 1rem;
 }
 .dialog {
-  background: #0a1525;
-  border: 1px solid #162035;
-  border-radius: 14px;
-  padding: 1.75rem;
-  width: 100%; max-width: 400px;
-  box-shadow: 0 30px 60px rgba(0,0,0,.6);
-  display: flex; flex-direction: column; gap: .9rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r-xl);
+  padding: 1.65rem;
+  width: 100%; max-width: 390px;
+  box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; gap: .85rem;
 }
 .dialog-icon {
-  width: 40px; height: 40px;
-  background: #0d1f38;
-  border: 1px solid #162a48;
-  border-radius: 10px;
+  width: 38px; height: 38px;
+  background: rgba(46,196,182,.08);
+  border: 1px solid rgba(46,196,182,.18);
+  border-radius: var(--r-lg);
   display: flex; align-items: center; justify-content: center;
-  color: #4a9eff;
+  color: var(--teal);
 }
-.dialog-icon--danger { background: #1a0a0a; border-color: #3d1515; color: #cc5050; }
-.dialog-title { font-size: .95rem; font-weight: 700; color: #e8f0fe; margin: 0; }
-.dialog-body  { font-size: .81rem; color: #4a6a8a; margin: 0; line-height: 1.6; }
-.dialog-body strong { color: #7a9cc0; }
+.dialog-icon--danger { background: var(--red-bg); border-color: rgba(224,85,85,.3); color: var(--red); }
+.dialog-title { font-size: .92rem; font-weight: 600; color: var(--text); margin: 0; }
+.dialog-body  { font-size: .8rem; color: var(--text-sub); margin: 0; line-height: 1.6; }
+.dialog-body strong { color: var(--text); }
 
 .dialog-input {
-  background: #080d16;
-  border: 1px solid #162035;
-  border-radius: 8px;
-  color: #c8d6e8;
-  padding: .6rem .85rem;
-  font-size: .83rem;
-  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r);
+  color: var(--text);
+  padding: .55rem .8rem;
+  font-size: .82rem;
   outline: none;
   transition: border-color .15s;
 }
-.dialog-input:focus { border-color: #2a5299; box-shadow: 0 0 0 3px #2a529920; }
+.dialog-input:focus { border-color: var(--teal-dark); box-shadow: 0 0 0 3px rgba(46,196,182,.12); }
 
-.dialog-actions { display: flex; justify-content: flex-end; gap: .65rem; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: .6rem; }
 
 .btn-ghost {
-  background: transparent;
-  border: 1px solid #162035;
-  color: #4a6a8a;
-  border-radius: 8px;
-  padding: .45rem 1rem;
-  font-size: .8rem;
-  font-family: 'Sora', sans-serif;
-  cursor: pointer;
+  background: transparent; border: 1px solid var(--border-mid); color: var(--text-sub);
+  border-radius: var(--r); padding: .42rem .9rem; font-size: .79rem; cursor: pointer;
   transition: border-color .15s, color .15s;
 }
-.btn-ghost:hover { border-color: #2a4060; color: #7a9cc0; }
+.btn-ghost:hover { border-color: var(--border-mid); color: var(--text); }
 
 .btn-primary {
-  background: #1a3460;
-  border: 1px solid #2a4a7a;
-  color: #7ab8ff;
-  border-radius: 8px;
-  padding: .45rem 1rem;
-  font-size: .8rem;
-  font-family: 'Sora', sans-serif;
-  font-weight: 600;
-  cursor: pointer;
+  background: rgba(46,196,182,.12); border: 1px solid rgba(46,196,182,.3); color: var(--teal);
+  border-radius: var(--r); padding: .42rem .9rem; font-size: .79rem; font-weight: 600; cursor: pointer;
   transition: background .15s;
 }
-.btn-primary:hover { background: #22448a; }
+.btn-primary:hover { background: rgba(46,196,182,.2); }
 
 .btn-danger {
-  background: #3d1515;
-  border: 1px solid #5a2020;
-  color: #f07070;
-  border-radius: 8px;
-  padding: .45rem 1rem;
-  font-size: .8rem;
-  font-family: 'Sora', sans-serif;
-  font-weight: 600;
-  cursor: pointer;
+  background: var(--red-bg); border: 1px solid rgba(224,85,85,.3); color: var(--red);
+  border-radius: var(--r); padding: .42rem .9rem; font-size: .79rem; font-weight: 600; cursor: pointer;
   transition: background .15s;
 }
-.btn-danger:hover { background: #5a1a1a; }
+.btn-danger:hover { background: rgba(224,85,85,.2); }
 
-/* ── Transitions ── */
+/* Transitions */
 .fade-enter-active, .fade-leave-active { transition: opacity .18s ease; }
 .fade-enter-from, .fade-leave-to       { opacity: 0; }
 
@@ -898,8 +798,8 @@ onMounted(loadDatasets)
 .slide-down-enter-from   { opacity: 0; transform: translateY(-6px); }
 .slide-down-leave-to     { opacity: 0; transform: translateY(-4px); }
 
-.menu-pop-enter-active { transition: all .15s cubic-bezier(.2,.8,.3,1); }
-.menu-pop-leave-active { transition: all .1s ease; }
-.menu-pop-enter-from   { opacity: 0; transform: scale(.92) translateY(-5px); }
-.menu-pop-leave-to     { opacity: 0; transform: scale(.95); }
+.menu-pop-enter-active { transition: all .13s cubic-bezier(.2,.8,.3,1); }
+.menu-pop-leave-active { transition: all .09s ease; }
+.menu-pop-enter-from   { opacity: 0; transform: scale(.93) translateY(-4px); }
+.menu-pop-leave-to     { opacity: 0; transform: scale(.96); }
 </style>

@@ -58,7 +58,6 @@ async def get_my_businesses(user_id: str = Depends(get_current_user)):
 @router.post("")
 async def create_business(data: CreateBusinessSchema,
                           user_id: str = Depends(get_current_user)):
-    print("USER ID:", user_id)
     business = supabase.table("businesses").insert({
         "owner_id": user_id,
         "name": data.name,
@@ -96,12 +95,18 @@ async def update_business(business_id: str,
     if not membership.data:
         raise HTTPException(403, "Not allowed")
 
-    updated = supabase.table("businesses") \
+    supabase.table("businesses") \
         .update(data.dict(exclude_none=True)) \
         .eq("id", business_id) \
         .execute()
 
-    return updated.data[0]
+    business = supabase.table("businesses") \
+        .select("*") \
+        .eq("id", business_id) \
+        .single() \
+        .execute()
+
+    return business.data
 
 
 # =========================

@@ -404,7 +404,7 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;500;600;700&display=swap');
 
-.sf-page { min-height:100vh; padding:2rem 2.5rem; background:#080d16; font-family:'Sora',sans-serif; color:#c8d6e8; display:flex; flex-direction:column; gap:1.5rem; }
+.sf-page { padding:2rem 2.5rem; background:#080d16; font-family:'Sora',sans-serif; color:#c8d6e8; display:flex; flex-direction:column; gap:1.5rem; }
 
 .sf-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
 .sf-header-left { display:flex; align-items:center; gap:1rem; }

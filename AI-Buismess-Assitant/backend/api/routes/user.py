@@ -16,12 +16,22 @@ class UpdateUserSchema(BaseModel):
 async def update_user(data: UpdateUserSchema,
                       user_id: str = Depends(get_current_user)):
 
-    updated = supabase.table("users") \
-        .update(data.dict(exclude_none=True)) \
+    update_data = data.dict(exclude_none=True)
+    if not update_data:
+        raise HTTPException(400, "No fields to update")
+
+    supabase.table("users") \
+        .update(update_data) \
         .eq("id", user_id) \
         .execute()
 
-    return updated.data[0]
+    user = supabase.table("users") \
+        .select("*") \
+        .eq("id", user_id) \
+        .single() \
+        .execute()
+
+    return user.data
 
 
 class ChangeEmailSchema(BaseModel):
