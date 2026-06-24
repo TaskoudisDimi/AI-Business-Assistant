@@ -17,28 +17,24 @@ const kpis = [
   {
     key: 'total',
     label: () => t('customers.kpi.total'),
-    color: 'var(--teal)',
     icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
     fmt: (v: number) => String(v),
   },
   {
     key: 'active',
     label: () => t('customers.kpi.active'),
-    color: '#34d399',
     icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
     fmt: (v: number) => String(v),
   },
   {
     key: 'churn',
     label: () => t('customers.kpi.churnRate'),
-    color: '#f59e0b',
     icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>`,
     fmt: (v: number) => v + '%',
   },
   {
     key: 'ltv',
     label: () => t('customers.kpi.avgLtv'),
-    color: '#a78bfa',
     icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
     fmt: (v: number) => '€' + v,
   },
@@ -66,11 +62,11 @@ const kpis = [
     <!-- KPIs -->
     <div class="kpi-grid">
       <div v-for="kpi in kpis" :key="kpi.key" class="kpi">
-        <div class="kpi-icon" :style="{ color: kpi.color }">
+        <div class="kpi-icon">
           <span v-html="kpi.icon" />
         </div>
         <p class="kpi-label">{{ kpi.label() }}</p>
-        <p class="kpi-value" :style="{ color: kpi.color }">
+        <p class="kpi-value">
           {{ kpi.fmt(stats[kpi.key as keyof typeof stats]) }}
         </p>
       </div>
@@ -166,9 +162,10 @@ const kpis = [
   background: var(--bg-hover);
   border-radius: var(--r);
   display: flex; align-items: center; justify-content: center;
+  color: var(--text-sub);
 }
 .kpi-label { font-size: .7rem; color: var(--text-muted); margin: 0; letter-spacing: .03em; text-transform: uppercase; font-weight: 500; }
-.kpi-value { font-size: 1.55rem; font-weight: 700; margin: 0; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.kpi-value { font-size: 1.55rem; font-weight: 700; color: var(--text); margin: 0; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 
 /* Card */
 .card {

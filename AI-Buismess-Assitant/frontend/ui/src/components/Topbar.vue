@@ -25,6 +25,9 @@ const pageTitle = computed(() => {
     '/customers': t('nav.customerAnalysis'),
     '/datasets':  t('nav.datasets'),
     '/settings':  t('nav.settings'),
+    '/inventory': t('nav.inventory'),
+    '/products':  t('nav.products'),
+    '/orders':    t('nav.orders'),
   }
   return map[route.path] || 'AI Assistant'
 })
@@ -36,6 +39,9 @@ const pageSub = computed(() => {
     '/customers': t('topbar.sub.customers'),
     '/datasets':  t('topbar.sub.datasets'),
     '/settings':  t('topbar.sub.settings'),
+    '/inventory': t('topbar.sub.inventory'),
+    '/products':  t('topbar.sub.products'),
+    '/orders':    t('topbar.sub.orders'),
   }
   return map[route.path] || ''
 })

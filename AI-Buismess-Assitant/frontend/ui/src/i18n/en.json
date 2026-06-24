@@ -4,7 +4,16 @@
     "salesForecast": "Sales Forecast",
     "customerAnalysis": "Customer Analysis",
     "datasets": "Datasets",
-    "settings": "Settings"
+    "settings": "Settings",
+    "inventory": "Inventory",
+    "products": "Products",
+    "orders": "Orders"
+  },
+  "sidebar": {
+    "analytics": "Analytics",
+    "warehouse": "Warehouse",
+    "data": "Data",
+    "system": "System"
   },
   "topbar": {
     "sub": {
@@ -12,7 +21,10 @@
       "sales": "Sales prediction",
       "customers": "Customer analytics",
       "datasets": "Datasets & History",
-      "settings": "Account settings"
+      "settings": "Account settings",
+      "inventory": "Stock levels & movements",
+      "products": "SKU catalog & pricing",
+      "orders": "Purchase & sales orders"
     }
   },
   "common": {
@@ -28,7 +40,11 @@
     "select": "Select",
     "businesses": "Businesses",
     "current": "Current",
-    "error": "Error"
+    "error": "Error",
+    "add": "Add",
+    "confirm": "Confirm",
+    "complete": "Complete",
+    "cancel_action": "Cancel Order"
   },
   "auth": {
     "login": "Sign in",
@@ -65,12 +81,17 @@
       "customers": "Customers",
       "growth": "Growth"
     },
+    "sectionPerformance": "Performance Overview",
     "quickActions": "Quick Actions",
+    "warehouseAlerts": "Warehouse",
     "actions": {
       "uploadDataset": "Upload Dataset",
       "uploadDatasetDesc": "Import a CSV file",
       "salesForecastDesc": "Run a sales prediction",
-      "customersDesc": "Customer analytics"
+      "customersDesc": "Customer analytics",
+      "inventoryDesc": "View stock levels",
+      "productsDesc": "Manage SKU catalog",
+      "ordersDesc": "Purchase & sales orders"
     }
   },
   "datasets": {
@@ -135,6 +156,111 @@
       "title": "Insight",
       "highChurn": "{count} customers show high churn probability. Consider a targeted retention campaign.",
       "healthyChurn": "Churn rate is healthy. Keep focusing on your Loyal customers."
+    }
+  },
+  "wms": {
+    "errorLoad": "Failed to load data",
+    "products": {
+      "subtitle": "SKU catalog & pricing",
+      "addBtn": "Add Product",
+      "table": {
+        "sku": "SKU",
+        "name": "Name",
+        "category": "Category",
+        "unit": "Unit",
+        "reorderPoint": "Reorder Point",
+        "costPrice": "Cost",
+        "sellPrice": "Price"
+      },
+      "empty": {
+        "title": "No products yet",
+        "hint": "Add your first SKU to get started"
+      },
+      "modal": {
+        "createTitle": "Add Product",
+        "editTitle": "Edit Product"
+      }
+    },
+    "inventory": {
+      "subtitle": "Stock levels & movements",
+      "movement": {
+        "title": "Record Movement",
+        "type": "Movement Type",
+        "inbound": "Inbound",
+        "outbound": "Outbound",
+        "adjustment": "Adjustment",
+        "quantity": "Quantity",
+        "reason": "Reason (optional)",
+        "reasonPlaceholder": "e.g. Supplier delivery"
+      },
+      "table": {
+        "sku": "SKU",
+        "name": "Product",
+        "category": "Category",
+        "quantity": "Stock",
+        "reorderPoint": "Reorder",
+        "lastUpdated": "Updated"
+      },
+      "empty": {
+        "title": "No inventory items",
+        "hint": "Add products first to track inventory"
+      },
+      "ai": {
+        "title": "AI Reorder Suggestions",
+        "subtitle": "Items that need attention based on stock levels and sales velocity",
+        "empty": "All items are well-stocked",
+        "critical": "Critical",
+        "warning": "Low",
+        "daysLeft": "{days}d left",
+        "noHistory": "No sales history",
+        "currentStock": "Stock",
+        "reorderPoint": "Reorder at"
+      }
+    },
+    "orders": {
+      "subtitle": "Purchase & sales orders",
+      "addBtn": "New Order",
+      "tabs": {
+        "all": "All",
+        "purchase": "Purchase",
+        "sale": "Sale"
+      },
+      "table": {
+        "id": "Order",
+        "type": "Type",
+        "party": "Party",
+        "status": "Status",
+        "items": "Items",
+        "date": "Date"
+      },
+      "status": {
+        "draft": "Draft",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "type": {
+        "purchase": "Purchase",
+        "sale": "Sale"
+      },
+      "empty": {
+        "title": "No orders",
+        "hint": "Create your first order"
+      },
+      "modal": {
+        "title": "New Order",
+        "orderType": "Order Type",
+        "party": "Party Name",
+        "partyPlaceholder": "Supplier or customer name",
+        "notes": "Notes",
+        "notesPlaceholder": "Optional notes…",
+        "items": "Line Items",
+        "addItem": "Add Item",
+        "product": "Product",
+        "quantity": "Qty",
+        "unitPrice": "Unit Price",
+        "noProducts": "No products found"
+      }
     }
   },
   "settings": {

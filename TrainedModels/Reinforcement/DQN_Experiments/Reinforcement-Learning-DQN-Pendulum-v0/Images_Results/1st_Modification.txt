@@ -1,5 +1,0 @@
-ep = 200 score = 161, reward = 25
-ep = 150 score = 160  reward = 25
-ep = 100 score = 47  reward = -20
-ep = 50 score =  31 reward = 6
-ep = 0 score =  18 reward = -8

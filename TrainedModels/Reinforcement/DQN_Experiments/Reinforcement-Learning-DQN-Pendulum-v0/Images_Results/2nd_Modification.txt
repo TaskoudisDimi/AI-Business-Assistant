@@ -1,5 +1,0 @@
-ep = 200 score = 0, reward = -25
-ep = 150 score = 0  reward = -25
-ep = 100 score = 0  reward = -25
-ep = 50 score =  0 reward = -25
-ep = 0 score =  0 reward = 0

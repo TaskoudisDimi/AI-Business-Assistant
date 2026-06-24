@@ -1,8 +1,0 @@
-
-Results
-ep = 200 score =  reward = 
-ep = 150 score =   reward = 
-ep = 100 score =  reward = 
-ep = 50 score =   reward = 
-ep = 0 score =  reward = 
-

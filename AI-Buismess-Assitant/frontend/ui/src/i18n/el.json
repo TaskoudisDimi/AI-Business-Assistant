@@ -4,7 +4,16 @@
     "salesForecast": "Sales Forecast",
     "customerAnalysis": "Ανάλυση Πελατών",
     "datasets": "Datasets",
-    "settings": "Ρυθμίσεις"
+    "settings": "Ρυθμίσεις",
+    "inventory": "Αποθεματικό",
+    "products": "Προϊόντα",
+    "orders": "Παραγγελίες"
+  },
+  "sidebar": {
+    "analytics": "Αναλυτικά",
+    "warehouse": "Αποθήκη",
+    "data": "Δεδομένα",
+    "system": "Σύστημα"
   },
   "topbar": {
     "sub": {
@@ -12,7 +21,10 @@
       "sales": "Πρόβλεψη πωλήσεων",
       "customers": "Ανάλυση πελατολογίου",
       "datasets": "Datasets & Ιστορικό",
-      "settings": "Ρυθμίσεις λογαριασμού"
+      "settings": "Ρυθμίσεις λογαριασμού",
+      "inventory": "Επίπεδα αποθέματος & κινήσεις",
+      "products": "Κατάλογος SKU & τιμολόγηση",
+      "orders": "Παραγγελίες αγοράς & πωλήσεων"
     }
   },
   "common": {
@@ -28,7 +40,11 @@
     "select": "Επιλογή",
     "businesses": "Επιχειρήσεις",
     "current": "Τρέχον",
-    "error": "Σφάλμα"
+    "error": "Σφάλμα",
+    "add": "Προσθήκη",
+    "confirm": "Επιβεβαίωση",
+    "complete": "Ολοκλήρωση",
+    "cancel_action": "Ακύρωση Παραγγελίας"
   },
   "auth": {
     "login": "Σύνδεση",
@@ -65,12 +81,17 @@
       "customers": "Πελάτες",
       "growth": "Ανάπτυξη"
     },
+    "sectionPerformance": "Επισκόπηση Επιδόσεων",
     "quickActions": "Γρήγορες Ενέργειες",
+    "warehouseAlerts": "Αποθήκη",
     "actions": {
       "uploadDataset": "Upload Dataset",
       "uploadDatasetDesc": "Εισαγωγή αρχείου CSV",
       "salesForecastDesc": "Εκτέλεση πρόβλεψης πωλήσεων",
-      "customersDesc": "Ανάλυση πελατολογίου"
+      "customersDesc": "Ανάλυση πελατολογίου",
+      "inventoryDesc": "Επίπεδα αποθέματος",
+      "productsDesc": "Διαχείριση κατάλογου SKU",
+      "ordersDesc": "Παραγγελίες αγοράς & πωλήσεων"
     }
   },
   "datasets": {
@@ -135,6 +156,111 @@
       "title": "Insight",
       "highChurn": "{count} πελάτες δείχνουν υψηλή πιθανότητα churn. Εξέτασε στοχευμένη καμπάνια retention.",
       "healthyChurn": "Το churn rate είναι υγιές. Συνέχισε να εστιάζεις στους Loyal πελάτες."
+    }
+  },
+  "wms": {
+    "errorLoad": "Αδυναμία φόρτωσης δεδομένων",
+    "products": {
+      "subtitle": "Κατάλογος SKU & τιμολόγηση",
+      "addBtn": "Προσθήκη Προϊόντος",
+      "table": {
+        "sku": "SKU",
+        "name": "Όνομα",
+        "category": "Κατηγορία",
+        "unit": "Μονάδα",
+        "reorderPoint": "Σημείο Αναπαραγγελίας",
+        "costPrice": "Κόστος",
+        "sellPrice": "Τιμή"
+      },
+      "empty": {
+        "title": "Δεν υπάρχουν προϊόντα",
+        "hint": "Πρόσθεσε το πρώτο σου SKU για να ξεκινήσεις"
+      },
+      "modal": {
+        "createTitle": "Προσθήκη Προϊόντος",
+        "editTitle": "Επεξεργασία Προϊόντος"
+      }
+    },
+    "inventory": {
+      "subtitle": "Επίπεδα αποθέματος & κινήσεις",
+      "movement": {
+        "title": "Καταγραφή Κίνησης",
+        "type": "Τύπος Κίνησης",
+        "inbound": "Εισερχόμενο",
+        "outbound": "Εξερχόμενο",
+        "adjustment": "Διόρθωση",
+        "quantity": "Ποσότητα",
+        "reason": "Αιτία (προαιρετικό)",
+        "reasonPlaceholder": "π.χ. Παραλαβή από προμηθευτή"
+      },
+      "table": {
+        "sku": "SKU",
+        "name": "Προϊόν",
+        "category": "Κατηγορία",
+        "quantity": "Απόθεμα",
+        "reorderPoint": "Αναπαρ.",
+        "lastUpdated": "Ενημέρωση"
+      },
+      "empty": {
+        "title": "Δεν υπάρχουν αντικείμενα",
+        "hint": "Πρόσθεσε πρώτα προϊόντα για να παρακολουθείς το απόθεμα"
+      },
+      "ai": {
+        "title": "AI Προτάσεις Αναπαραγγελίας",
+        "subtitle": "Αντικείμενα που χρειάζονται προσοχή βάσει αποθέματος και ταχύτητας πωλήσεων",
+        "empty": "Όλα τα αντικείμενα έχουν επαρκές απόθεμα",
+        "critical": "Κρίσιμο",
+        "warning": "Χαμηλό",
+        "daysLeft": "{days} ημ.",
+        "noHistory": "Χωρίς ιστορικό",
+        "currentStock": "Απόθεμα",
+        "reorderPoint": "Αναπαραγγελία"
+      }
+    },
+    "orders": {
+      "subtitle": "Παραγγελίες αγοράς & πωλήσεων",
+      "addBtn": "Νέα Παραγγελία",
+      "tabs": {
+        "all": "Όλες",
+        "purchase": "Αγορά",
+        "sale": "Πώληση"
+      },
+      "table": {
+        "id": "Παραγγελία",
+        "type": "Τύπος",
+        "party": "Αντισυμβαλλόμενος",
+        "status": "Κατάσταση",
+        "items": "Είδη",
+        "date": "Ημερομηνία"
+      },
+      "status": {
+        "draft": "Πρόχειρο",
+        "confirmed": "Επιβεβαιωμένο",
+        "completed": "Ολοκληρώθηκε",
+        "cancelled": "Ακυρώθηκε"
+      },
+      "type": {
+        "purchase": "Αγορά",
+        "sale": "Πώληση"
+      },
+      "empty": {
+        "title": "Δεν υπάρχουν παραγγελίες",
+        "hint": "Δημιούργησε την πρώτη σου παραγγελία"
+      },
+      "modal": {
+        "title": "Νέα Παραγγελία",
+        "orderType": "Τύπος Παραγγελίας",
+        "party": "Αντισυμβαλλόμενος",
+        "partyPlaceholder": "Όνομα προμηθευτή ή πελάτη",
+        "notes": "Σημειώσεις",
+        "notesPlaceholder": "Προαιρετικές σημειώσεις…",
+        "items": "Είδη Παραγγελίας",
+        "addItem": "Προσθήκη Είδους",
+        "product": "Προϊόν",
+        "quantity": "Ποσ.",
+        "unitPrice": "Τιμή",
+        "noProducts": "Δεν βρέθηκαν προϊόντα"
+      }
     }
   },
   "settings": {
