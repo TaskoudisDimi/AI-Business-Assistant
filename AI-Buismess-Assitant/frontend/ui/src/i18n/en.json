@@ -141,21 +141,45 @@
   },
   "customers": {
     "title": "Customer Analysis",
-    "subtitle": "Customer analytics & segmentation",
+    "subtitle": "RFM segmentation & revenue analytics",
+    "noData": {
+      "title": "No customer data yet",
+      "hint": "Complete sale orders to start tracking customers"
+    },
     "kpi": {
       "total": "Total Customers",
-      "active": "Active",
-      "churnRate": "Churn Rate",
-      "avgLtv": "Avg LTV"
+      "revenue": "Total Revenue",
+      "avgOrder": "Avg Order Value",
+      "atRisk": "At Risk"
     },
     "segments": {
-      "title": "Customer Segments",
-      "subtitle": "Distribution by category"
+      "title": "RFM Segments",
+      "subtitle": "Recency · Frequency · Monetary",
+      "high_value": "High Value",
+      "loyal": "Loyal",
+      "at_risk": "At Risk",
+      "new": "New",
+      "dormant": "Dormant"
+    },
+    "table": {
+      "title": "Customer Leaderboard",
+      "subtitle": "Ranked by total revenue",
+      "customer": "Customer",
+      "orders": "Orders",
+      "revenue": "Revenue",
+      "avgOrder": "Avg Order",
+      "lastOrder": "Last Order",
+      "segment": "Segment"
+    },
+    "products": {
+      "title": "Top Products Sold",
+      "subtitle": "Most purchased items across all customers"
     },
     "insight": {
-      "title": "Insight",
-      "highChurn": "{count} customers show high churn probability. Consider a targeted retention campaign.",
-      "healthyChurn": "Churn rate is healthy. Keep focusing on your Loyal customers."
+      "title": "AI Insight",
+      "atRisk": "{count} customers haven't ordered in 60+ days. Consider a re-engagement campaign.",
+      "healthy": "Customer base is healthy. Focus on converting New customers to Loyal.",
+      "noOrders": "No completed sale orders yet. Start selling to see analytics here."
     }
   },
   "wms": {

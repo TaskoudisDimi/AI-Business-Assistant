@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import auth, user, business, datasets, predictions, products, inventory, orders
+from api.routes import auth, user, business, datasets, predictions, products, inventory, orders, customers
 from core.middleware import RefreshSessionMiddleware
 
 app = FastAPI()
@@ -24,6 +24,7 @@ app.include_router(predictions.router)
 app.include_router(products.router)
 app.include_router(inventory.router)
 app.include_router(orders.router)
+app.include_router(customers.router)
 
 # uvicorn main:app --reload
 # source activate fastapi
