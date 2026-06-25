@@ -7,205 +7,204 @@ import { api } from '@/services/api'
 const auth  = useAuthStore()
 const { t } = useI18n()
 
-const stats  = ref({ totalRevenue: 0, forecastNextMonth: 0, customers: 0, growth: 0 })
-const loaded = ref(false)
-const lowStockCount = ref(0)
+interface Order {
+  id: string
+  type: 'purchase' | 'sale'
+  status: string
+  party_name: string | null
+  created_at: string
+}
+
+const loading      = ref(true)
+const totalRevenue = ref<number | null>(null)
+const totalCustomers = ref<number | null>(null)
+const totalOrders  = ref<number | null>(null)
+const recentOrders = ref<Order[]>([])
+const criticalItems = ref<{ sku: string; name: string; quantity: number; reorder_point: number }[]>([])
+const ordersLoaded = ref(false)
+
+const businessId = computed(() => auth.currentBusiness?.id ?? '')
 
 onMounted(async () => {
-  await new Promise(r => setTimeout(r, 500))
-  stats.value = { totalRevenue: 24500, forecastNextMonth: 28700, customers: 312, growth: 12.4 }
-  loaded.value = true
+  if (!businessId.value) { loading.value = false; return }
 
-  const bizId = auth.currentBusiness?.id
-  if (bizId) {
-    try {
-      const r = await api.get('/inventory/reorder-suggestions', { params: { business_id: bizId } })
-      lowStockCount.value = (r.data as { urgency: string }[]).filter(s => s.urgency === 'critical').length
-    } catch { /* warehouse tables may not exist yet */ }
+  const [customersRes, ordersRes, suggestionsRes] = await Promise.allSettled([
+    api.get('/customers/analysis', { params: { business_id: businessId.value } }),
+    api.get('/orders', { params: { business_id: businessId.value } }),
+    api.get('/inventory/reorder-suggestions', { params: { business_id: businessId.value } }),
+  ])
+
+  if (customersRes.status === 'fulfilled') {
+    totalRevenue.value = customersRes.value.data.summary?.total_revenue ?? 0
+    totalCustomers.value = customersRes.value.data.summary?.total_customers ?? 0
   }
+
+  if (ordersRes.status === 'fulfilled') {
+    const orders: Order[] = ordersRes.value.data || []
+    totalOrders.value = orders.length
+    recentOrders.value = [...orders]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 6)
+    ordersLoaded.value = true
+  }
+
+  if (suggestionsRes.status === 'fulfilled') {
+    criticalItems.value = (suggestionsRes.value.data as any[])
+      .filter(s => s.urgency === 'critical')
+      .slice(0, 6)
+      .map(s => ({ sku: s.sku, name: s.name, quantity: s.current_stock, reorder_point: s.reorder_point }))
+  }
+
+  loading.value = false
 })
 
-const kpis = [
-  {
-    key: 'totalRevenue',
-    label: () => t('dashboard.kpi.totalRevenue'),
-    prefix: '€', suffix: '',
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
-    trend: '+8.2%',
-    trendUp: true,
-  },
-  {
-    key: 'forecastNextMonth',
-    label: () => t('dashboard.kpi.forecastNextMonth'),
-    prefix: '€', suffix: '',
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
-    trend: 'AI',
-    trendUp: true,
-  },
-  {
-    key: 'customers',
-    label: () => t('dashboard.kpi.customers'),
-    prefix: '', suffix: '',
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
-    trend: '+12',
-    trendUp: true,
-  },
-  {
-    key: 'growth',
-    label: () => t('dashboard.kpi.growth'),
-    prefix: '+', suffix: '%',
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
-    trend: 'MoM',
-    trendUp: true,
-  },
-]
-
-const quickActions = [
-  {
-    label: () => t('nav.salesForecast'),
-    path: '/sales',
-    desc: () => t('dashboard.actions.salesForecastDesc'),
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
-  },
-  {
-    label: () => t('dashboard.actions.uploadDataset'),
-    path: '/datasets',
-    desc: () => t('dashboard.actions.uploadDatasetDesc'),
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
-  },
-  {
-    label: () => t('nav.customerAnalysis'),
-    path: '/customers',
-    desc: () => t('dashboard.actions.customersDesc'),
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
-  },
-]
-
-const warehouseActions = [
-  {
-    label: () => t('nav.inventory'),
-    path: '/inventory',
-    desc: () => t('dashboard.actions.inventoryDesc'),
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>`,
-  },
-  {
-    label: () => t('nav.products'),
-    path: '/products',
-    desc: () => t('dashboard.actions.productsDesc'),
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
-  },
-  {
-    label: () => t('nav.orders'),
-    path: '/orders',
-    desc: () => t('dashboard.actions.ordersDesc'),
-    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>`,
-  },
-]
-
-const now = computed(() => new Date().toLocaleDateString('el-GR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }))
-const fmt = (val: number) => val.toLocaleString('el-GR')
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('el-GR', { day: '2-digit', month: 'short' })
+}
+function fmtRevenue(n: number | null) {
+  if (n === null) return '—'
+  return '€' + n.toLocaleString('el-GR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+function fmtNum(n: number | null) {
+  if (n === null) return '—'
+  return n.toLocaleString('el-GR')
+}
 </script>
 
 <template>
   <div class="dash">
 
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="page-header-left">
-        <div>
-          <h1 class="page-title">
-            {{ t('dashboard.greeting', { name: auth.user?.full_name?.split(' ')[0] || 'User' }) }}
-          </h1>
-          <p class="page-sub">{{ t('dashboard.business', { business: auth.currentBusiness?.name }) }}</p>
-        </div>
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h1 class="greeting">
+          {{ t('dashboard.greeting', { name: auth.user?.full_name?.split(' ')[0] || '' }) }}
+        </h1>
+        <p class="biz-name">{{ auth.currentBusiness?.name }}</p>
       </div>
-      <div class="page-header-right">
-        <span class="date-label">{{ now }}</span>
-        <div class="ai-badge">
-          <span class="ai-dot" />
-          AI Active
+      <span class="date-chip">
+        {{ new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) }}
+      </span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">{{ t('dashboard.kpi.totalRevenue') }}</div>
+        <div class="kpi-value" :class="{ 'kpi-value--empty': totalRevenue === null || totalRevenue === 0 }">
+          {{ fmtRevenue(totalRevenue) }}
         </div>
+        <div class="kpi-sub">{{ t('dashboard.kpi.fromOrders') }}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">{{ t('dashboard.kpi.orders') }}</div>
+        <div class="kpi-value" :class="{ 'kpi-value--empty': totalOrders === null || totalOrders === 0 }">
+          {{ fmtNum(totalOrders) }}
+        </div>
+        <div class="kpi-sub">{{ t('dashboard.kpi.totalCreated') }}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">{{ t('dashboard.kpi.customers') }}</div>
+        <div class="kpi-value" :class="{ 'kpi-value--empty': totalCustomers === null || totalCustomers === 0 }">
+          {{ fmtNum(totalCustomers) }}
+        </div>
+        <div class="kpi-sub">{{ t('dashboard.kpi.uniqueBuyers') }}</div>
+      </div>
+      <div class="kpi" :class="{ 'kpi--alert': criticalItems.length > 0 }">
+        <div class="kpi-label">{{ t('dashboard.kpi.criticalStock') }}</div>
+        <div class="kpi-value" :class="criticalItems.length > 0 ? 'kpi-value--red' : 'kpi-value--empty'">
+          {{ criticalItems.length > 0 ? criticalItems.length : '—' }}
+        </div>
+        <div class="kpi-sub">{{ t('dashboard.kpi.belowReorder') }}</div>
       </div>
     </div>
 
-    <!-- Section: Performance -->
-    <div class="section">
-      <p class="section-label">{{ t('dashboard.sectionPerformance').toUpperCase() }}</p>
-      <div class="kpi-grid">
-        <div
-          v-for="(kpi, i) in kpis"
-          :key="kpi.key"
-          class="kpi-card"
-          :style="{ animationDelay: `${i * 60}ms` }"
-        >
-          <div class="kpi-top">
-            <div class="kpi-icon">
-              <span v-html="kpi.icon" />
+    <!-- Main content -->
+    <div class="panels">
+
+      <!-- Recent Orders -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">{{ t('dashboard.recentOrders') }}</span>
+          <router-link to="/orders" class="panel-link">{{ t('dashboard.viewAll') }} →</router-link>
+        </div>
+
+        <div v-if="loading" class="panel-loading">{{ t('common.loading') }}</div>
+        <template v-else-if="recentOrders.length === 0">
+          <div class="panel-empty">
+            <p>{{ t('dashboard.noOrders') }}</p>
+            <router-link to="/orders" class="panel-cta">{{ t('dashboard.createOrder') }}</router-link>
+          </div>
+        </template>
+        <template v-else>
+          <table class="mini-tbl">
+            <thead>
+              <tr>
+                <th>{{ t('wms.orders.table.party') }}</th>
+                <th>{{ t('wms.orders.table.type') }}</th>
+                <th>{{ t('wms.orders.table.status') }}</th>
+                <th class="right">{{ t('wms.orders.table.date') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="o in recentOrders" :key="o.id">
+                <td class="fw">{{ o.party_name || '—' }}</td>
+                <td>
+                  <span class="badge" :class="o.type === 'purchase' ? 'badge--teal' : 'badge--green'">
+                    {{ t(`wms.orders.type.${o.type}`) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge"
+                    :class="{
+                      'badge--muted':  o.status === 'draft',
+                      'badge--teal':   o.status === 'confirmed',
+                      'badge--green':  o.status === 'completed',
+                      'badge--red':    o.status === 'cancelled',
+                    }">
+                    {{ t(`wms.orders.status.${o.status}`) }}
+                  </span>
+                </td>
+                <td class="right muted">{{ fmtDate(o.created_at) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+      </div>
+
+      <!-- Critical Stock -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">{{ t('dashboard.criticalStock') }}</span>
+          <router-link to="/inventory" class="panel-link">{{ t('dashboard.viewAll') }} →</router-link>
+        </div>
+
+        <div v-if="loading" class="panel-loading">{{ t('common.loading') }}</div>
+        <template v-else-if="criticalItems.length === 0">
+          <div class="panel-empty panel-empty--ok">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <p>{{ t('dashboard.allStocked') }}</p>
+          </div>
+        </template>
+        <template v-else>
+          <div class="stock-list">
+            <div v-for="item in criticalItems" :key="item.sku" class="stock-row">
+              <div class="stock-info">
+                <span class="stock-sku">{{ item.sku }}</span>
+                <span class="stock-name">{{ item.name }}</span>
+              </div>
+              <div class="stock-qty">
+                <span class="qty-num qty-num--red">{{ item.quantity }}</span>
+                <span class="qty-sep">/</span>
+                <span class="qty-reorder">{{ item.reorder_point }}</span>
+              </div>
             </div>
-            <span class="kpi-trend" :class="kpi.trendUp ? 'trend--up' : 'trend--down'">
-              {{ kpi.trend }}
-            </span>
           </div>
-          <div class="kpi-value">
-            <span v-if="loaded">{{ kpi.prefix }}{{ fmt(stats[kpi.key as keyof typeof stats]) }}{{ kpi.suffix }}</span>
-            <span v-else class="skeleton" />
-          </div>
-          <p class="kpi-label">{{ kpi.label() }}</p>
-        </div>
+        </template>
       </div>
-    </div>
 
-    <!-- Section: Quick Access -->
-    <div class="section">
-      <p class="section-label">{{ t('dashboard.quickActions') }}</p>
-      <div class="actions-grid">
-        <router-link
-          v-for="(a, i) in quickActions"
-          :key="a.path"
-          :to="a.path"
-          class="action-card"
-          :style="{ animationDelay: `${180 + i * 50}ms` }"
-        >
-          <div class="action-icon" v-html="a.icon" />
-          <div class="action-body">
-            <p class="action-label">{{ a.label() }}</p>
-            <p class="action-desc">{{ a.desc() }}</p>
-          </div>
-          <svg class="action-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
-        </router-link>
-      </div>
-    </div>
-
-    <!-- Section: Warehouse -->
-    <div class="section">
-      <div class="section-label-row">
-        <p class="section-label">{{ t('dashboard.warehouseAlerts').toUpperCase() }}</p>
-        <span v-if="lowStockCount > 0" class="alert-badge">
-          {{ lowStockCount }} critical
-        </span>
-      </div>
-      <div class="actions-grid">
-        <router-link
-          v-for="(a, i) in warehouseActions"
-          :key="a.path"
-          :to="a.path"
-          class="action-card"
-          :style="{ animationDelay: `${300 + i * 50}ms` }"
-        >
-          <div class="action-icon" v-html="a.icon" />
-          <div class="action-body">
-            <p class="action-label">{{ a.label() }}</p>
-            <p class="action-desc">{{ a.desc() }}</p>
-          </div>
-          <svg class="action-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
-        </router-link>
-      </div>
     </div>
 
   </div>
@@ -213,199 +212,213 @@ const fmt = (val: number) => val.toLocaleString('el-GR')
 
 <style scoped>
 .dash {
-  padding: 1.75rem 2rem;
-  background: var(--bg);
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  background: var(--bg);
 }
 
-/* Page Header */
-.page-header {
+/* Header */
+.header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 1rem;
-  padding-bottom: 1.25rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
 }
-.page-header-left { display: flex; align-items: center; gap: .75rem; }
-.page-header-right { display: flex; align-items: center; gap: .75rem; }
-.page-title {
-  font-size: 1.15rem;
+.greeting {
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--text);
   margin: 0;
   letter-spacing: -.02em;
 }
-.page-sub {
-  font-size: .73rem;
+.biz-name {
+  font-size: .75rem;
   color: var(--text-muted);
   margin: .2rem 0 0;
 }
-.date-label {
-  font-size: .7rem;
+.date-chip {
+  font-size: .73rem;
   color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-.ai-badge {
-  display: flex; align-items: center; gap: .35rem;
-  background: rgba(62,207,191,.06);
-  border: 1px solid rgba(62,207,191,.18);
-  border-radius: 999px;
-  padding: .22rem .7rem;
-  font-size: .68rem;
-  font-weight: 600;
-  color: var(--teal);
-  letter-spacing: .03em;
-}
-.ai-dot {
-  width: 5px; height: 5px;
-  background: var(--teal);
-  border-radius: 50%;
-  animation: pulse 2s ease infinite;
-}
-@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: .3 } }
-
-/* Sections */
-.section { display: flex; flex-direction: column; gap: .75rem; }
-.section-label-row { display: flex; align-items: center; gap: .6rem; }
-.section-label {
-  font-size: .62rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  margin: 0;
-}
-.alert-badge {
-  font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-  background: var(--red-bg); color: var(--red);
-  border: 1px solid rgba(224,85,85,.25); border-radius: 999px;
-  padding: .1rem .5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: .3rem .7rem;
+  white-space: nowrap;
+  align-self: flex-start;
 }
 
-/* KPI Grid */
-.kpi-grid {
+/* KPI Row */
+.kpi-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: .75rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .85rem;
 }
-.kpi-card {
+@media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .kpi-row { grid-template-columns: 1fr; } }
+
+.kpi {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 1.1rem 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: .5rem;
-  animation: fadeUp .35s ease both;
+  gap: .35rem;
   transition: border-color .2s;
 }
-.kpi-card:hover { border-color: var(--border-mid); }
+.kpi:hover { border-color: var(--border-mid); }
+.kpi--alert { border-color: rgba(224,85,85,.3); background: rgba(224,85,85,.03); }
 
-.kpi-top { display: flex; align-items: center; justify-content: space-between; }
-.kpi-icon {
-  width: 28px; height: 28px;
-  background: var(--bg-hover);
-  border-radius: var(--r);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-sub);
-  flex-shrink: 0;
-}
-.kpi-trend {
-  font-size: .65rem;
-  font-weight: 700;
-  padding: .12rem .45rem;
-  border-radius: 999px;
-  letter-spacing: .03em;
-}
-.trend--up   { background: var(--green-bg); color: var(--green); border: 1px solid rgba(58,184,122,.2); }
-.trend--down { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(224,85,85,.2); }
-
-.kpi-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -.03em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
 .kpi-label {
-  font-size: .7rem;
+  font-size: .68rem;
+  font-weight: 600;
   color: var(--text-muted);
-  margin: 0;
-  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .07em;
 }
-.skeleton {
-  display: block;
-  width: 90px; height: 24px;
-  background: var(--bg-hover);
-  border-radius: var(--r);
-  animation: shimmer 1.2s ease infinite;
+.kpi-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.kpi-value--empty { color: var(--text-muted); font-weight: 400; }
+.kpi-value--red   { color: var(--red); }
+.kpi-sub {
+  font-size: .68rem;
+  color: var(--text-muted);
+  margin-top: .1rem;
 }
 
-/* Actions Grid */
-.actions-grid {
+/* Panels */
+.panels {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: .6rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
-.action-card {
-  display: flex;
-  align-items: center;
-  gap: .8rem;
+@media (max-width: 750px) { .panels { grid-template-columns: 1fr; } }
+
+.panel {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  padding: .9rem 1rem;
-  text-decoration: none;
-  animation: fadeUp .35s ease both;
-  transition: background .15s, border-color .15s;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
 }
-.action-card:hover { background: var(--bg-hover); border-color: var(--border-mid); }
-
-.action-icon {
-  width: 32px; height: 32px;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-mid);
-  border-radius: var(--r);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-sub);
-  flex-shrink: 0;
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.action-body { flex: 1; min-width: 0; }
-.action-label {
-  font-size: .82rem;
+.panel-title {
+  font-size: .8rem;
   font-weight: 600;
   color: var(--text);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-.action-desc {
-  font-size: .7rem;
+.panel-link {
+  font-size: .72rem;
+  color: var(--teal);
+  text-decoration: none;
+  opacity: .8;
+  transition: opacity .15s;
+}
+.panel-link:hover { opacity: 1; }
+.panel-loading {
+  font-size: .78rem;
   color: var(--text-muted);
-  margin: .1rem 0 0;
+  padding: .75rem 0;
 }
-.action-arrow {
-  color: var(--text-muted);
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity .15s, transform .15s;
-  flex-shrink: 0;
+.panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  padding: 1.5rem 0;
+  text-align: center;
 }
-.action-card:hover .action-arrow { opacity: 1; transform: translateX(0); }
+.panel-empty p { font-size: .8rem; color: var(--text-muted); margin: 0; }
+.panel-empty--ok { flex-direction: row; justify-content: center; padding: 1.25rem 0; }
+.panel-empty--ok svg { color: var(--green); }
+.panel-empty--ok p { color: var(--green); font-weight: 500; }
+.panel-cta {
+  font-size: .75rem;
+  color: var(--teal);
+  text-decoration: none;
+  border: 1px solid rgba(62,207,191,.25);
+  border-radius: var(--r);
+  padding: .3rem .8rem;
+  margin-top: .25rem;
+  transition: background .15s;
+}
+.panel-cta:hover { background: rgba(62,207,191,.06); }
 
-/* Animations */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* Mini Table */
+.mini-tbl { width: 100%; border-collapse: collapse; }
+.mini-tbl th {
+  font-size: .63rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  padding: 0 .5rem .5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
 }
-@keyframes shimmer {
-  0%, 100% { opacity: .35; }
-  50%       { opacity: .65; }
+.mini-tbl th.right { text-align: right; }
+.mini-tbl td {
+  padding: .55rem .5rem;
+  font-size: .78rem;
+  color: var(--text-sub);
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
 }
+.mini-tbl tbody tr:last-child td { border-bottom: none; }
+.mini-tbl tbody tr:hover { background: var(--bg-hover); }
+.mini-tbl td.fw    { color: var(--text); font-weight: 500; }
+.mini-tbl td.right { text-align: right; }
+.mini-tbl td.muted { color: var(--text-muted); }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 600;
+  padding: .12rem .45rem;
+  border-radius: var(--r);
+  letter-spacing: .02em;
+  text-transform: capitalize;
+}
+.badge--teal  { background: rgba(62,207,191,.1);  color: var(--teal);  }
+.badge--green { background: var(--green-bg);       color: var(--green); }
+.badge--red   { background: var(--red-bg);         color: var(--red);   }
+.badge--muted { background: var(--bg-hover);       color: var(--text-muted); }
+
+/* Stock list */
+.stock-list { display: flex; flex-direction: column; }
+.stock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem .5rem;
+  border-bottom: 1px solid var(--border-light);
+  transition: background .12s;
+}
+.stock-row:last-child { border-bottom: none; }
+.stock-row:hover { background: var(--bg-hover); }
+.stock-info { display: flex; align-items: center; gap: .55rem; min-width: 0; }
+.stock-sku  { font-size: .68rem; color: var(--teal); font-family: monospace; font-weight: 600; flex-shrink: 0; }
+.stock-name { font-size: .78rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stock-qty  { display: flex; align-items: center; gap: .2rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.qty-num    { font-size: .8rem; font-weight: 600; color: var(--text); }
+.qty-num--red { color: var(--red); }
+.qty-sep    { font-size: .72rem; color: var(--text-muted); }
+.qty-reorder { font-size: .72rem; color: var(--text-muted); }
 </style>

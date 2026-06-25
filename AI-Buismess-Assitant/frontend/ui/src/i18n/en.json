@@ -74,25 +74,22 @@
   "dashboard": {
     "greeting": "Welcome back, {name}",
     "business": "Overview for {business}",
-    "live": "Live",
     "kpi": {
       "totalRevenue": "Total Revenue",
-      "forecastNextMonth": "Forecast Next Month",
+      "fromOrders": "from completed sales",
+      "orders": "Total Orders",
+      "totalCreated": "all order types",
       "customers": "Customers",
-      "growth": "Growth"
+      "uniqueBuyers": "unique buyers",
+      "criticalStock": "Critical Stock",
+      "belowReorder": "below reorder point"
     },
-    "sectionPerformance": "Performance Overview",
-    "quickActions": "Quick Actions",
-    "warehouseAlerts": "Warehouse",
-    "actions": {
-      "uploadDataset": "Upload Dataset",
-      "uploadDatasetDesc": "Import a CSV file",
-      "salesForecastDesc": "Run a sales prediction",
-      "customersDesc": "Customer analytics",
-      "inventoryDesc": "View stock levels",
-      "productsDesc": "Manage SKU catalog",
-      "ordersDesc": "Purchase & sales orders"
-    }
+    "recentOrders": "Recent Orders",
+    "criticalStock": "Critical Stock",
+    "viewAll": "View all",
+    "noOrders": "No orders yet",
+    "createOrder": "Create first order",
+    "allStocked": "All items well-stocked"
   },
   "datasets": {
     "uploadBtn": "Upload CSV",

@@ -74,25 +74,22 @@
   "dashboard": {
     "greeting": "Καλώς ήρθες, {name}",
     "business": "Επισκόπηση για {business}",
-    "live": "Live",
     "kpi": {
       "totalRevenue": "Συνολικά Έσοδα",
-      "forecastNextMonth": "Πρόβλεψη Επόμενου Μήνα",
+      "fromOrders": "από ολοκληρωμένες πωλήσεις",
+      "orders": "Συνολικές Παραγγελίες",
+      "totalCreated": "όλοι οι τύποι",
       "customers": "Πελάτες",
-      "growth": "Ανάπτυξη"
+      "uniqueBuyers": "μοναδικοί αγοραστές",
+      "criticalStock": "Κρίσιμο Απόθεμα",
+      "belowReorder": "κάτω από το όριο επαναπαραγγελίας"
     },
-    "sectionPerformance": "Επισκόπηση Επιδόσεων",
-    "quickActions": "Γρήγορες Ενέργειες",
-    "warehouseAlerts": "Αποθήκη",
-    "actions": {
-      "uploadDataset": "Upload Dataset",
-      "uploadDatasetDesc": "Εισαγωγή αρχείου CSV",
-      "salesForecastDesc": "Εκτέλεση πρόβλεψης πωλήσεων",
-      "customersDesc": "Ανάλυση πελατολογίου",
-      "inventoryDesc": "Επίπεδα αποθέματος",
-      "productsDesc": "Διαχείριση κατάλογου SKU",
-      "ordersDesc": "Παραγγελίες αγοράς & πωλήσεων"
-    }
+    "recentOrders": "Πρόσφατες Παραγγελίες",
+    "criticalStock": "Κρίσιμο Απόθεμα",
+    "viewAll": "Δες όλες",
+    "noOrders": "Δεν υπάρχουν παραγγελίες ακόμα",
+    "createOrder": "Δημιούργησε την πρώτη παραγγελία",
+    "allStocked": "Όλα τα είδη είναι επαρκώς στοκαρισμένα"
   },
   "datasets": {
     "uploadBtn": "Upload CSV",
