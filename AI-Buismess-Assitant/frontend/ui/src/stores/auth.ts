@@ -2,9 +2,6 @@ import { defineStore } from 'pinia'
 import { api } from '@/services/api'
 import type { Router } from 'vue-router'
 
-// ====================
-// Types
-// ====================
 export interface User {
   id: string
   email: string
@@ -20,69 +17,26 @@ export interface Business {
   created_at: string
 }
 
-export interface Membership {
-  business_id: string
-  role: 'owner' | 'admin' | 'member'
-}
-
 interface AuthResponse {
   user: User
   businesses: Business[]
-  memberships: Membership[]
+  memberships: { business_id: string; role: string }[]
 }
 
-
-// ====================
-// Store
-// ====================
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null as User | null,
-    businesses: [] as Business[],
-    memberships: [] as Membership[],
-
-    currentBusinessId: null as string | null,
-    loading: true,
-    error: null as string | null,
+    user:       null as User | null,
+    business:   null as Business | null,
+    loading:    true,
+    error:      null as string | null,
   }),
-
-  persist: [
-    {
-      key: 'ai-business-assistant-auth',
-      storage: localStorage,
-      pick: ['currentBusinessId'],
-    },
-  ],
 
   getters: {
     isAuthenticated: (state): boolean => !!state.user,
-
-    currentBusiness: (state): Business | null => {
-      if (!state.currentBusinessId) return null
-      return state.businesses.find(b => b.id === state.currentBusinessId) ?? null
-    },
-
-    currentMembership: (state): Membership | null => {
-      if (!state.currentBusinessId) return null
-      return (
-        state.memberships.find(m => m.business_id === state.currentBusinessId) ?? null
-      )
-    },
-
-    hasBusinesses: (state): boolean => state.businesses.length > 0,
-
-    isOwner: (state): boolean => {
-      const membership = state.memberships.find(
-        m => m.business_id === state.currentBusinessId
-      )
-      return membership?.role === 'owner'
-    },
+    currentBusiness: (state): Business | null => state.business,
   },
 
   actions: {
-    // ====================
-    // Core
-    // ====================
     async initialize(): Promise<void> {
       this.loading = true
       try {
@@ -95,49 +49,16 @@ export const useAuthStore = defineStore('auth', {
     async fetchUser(): Promise<void> {
       try {
         const { data } = await api.get<AuthResponse>('/auth/me')
-
-        this.user = data.user
-        this.businesses = data.businesses ?? []
-        this.memberships = data.memberships ?? []
-
-        this.resolveCurrentBusiness()
-      } catch (error) {
+        this.user     = data.user
+        this.business = data.businesses?.[0] ?? null
+      } catch {
         this.resetAuth()
       }
     },
 
-    resolveCurrentBusiness(): void {
-      if (!this.businesses.length) {
-        this.currentBusinessId = null
-        return
-      }
-
-      // try persisted
-      if (this.currentBusinessId) {
-        const exists = this.businesses.some(b => b.id === this.currentBusinessId)
-        if (exists) return
-      }
-
-      const first = this.businesses[0]
-      if (!first) return
-
-      this.currentBusinessId = first.id 
-    },
-
-    setCurrentBusiness(businessId: string): void {
-      const exists = this.businesses.some(b => b.id === businessId)
-      if (!exists) return
-
-      this.currentBusinessId = businessId
-    },
-
-    // ====================
-    // Auth
-    // ====================
     async login(email: string, password: string): Promise<boolean> {
       this.loading = true
-      this.error = null
-
+      this.error   = null
       try {
         await api.post('/auth/login', { email, password })
         await this.fetchUser()
@@ -152,18 +73,13 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout(router?: Router): Promise<void> {
-      try {
-        await api.post('/auth/logout')
-      } catch (_) {
-      } finally {
+      try { await api.post('/auth/logout') } catch { /* ignore */ }
+      finally {
         this.resetAuth()
         if (router) router.push('/login')
       }
     },
 
-    // ====================
-    // Utils
-    // ====================
     resetAuth(): void {
       this.$reset()
     },

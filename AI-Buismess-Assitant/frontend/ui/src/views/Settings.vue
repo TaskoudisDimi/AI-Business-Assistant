@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/services/api'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
 
-const auth   = useAuthStore()
-const router = useRouter()
-const { t }  = useI18n()
+const auth  = useAuthStore()
+const { t } = useI18n()
 
 const loading   = ref(false)
 const toast     = ref<{ msg: string; type: 'success' | 'error' } | null>(null)
-const activeTab = ref<'account' | 'security' | 'business'>('account')
+const activeTab = ref<'account' | 'security'>('account')
 
 const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
   toast.value = { msg, type }
@@ -80,63 +78,14 @@ const deleteAccount = async () => {
   window.location.href = '/login'
 }
 
-/* ── Business ── */
-const activeBusinessId = ref(auth.currentBusinessId ?? '')
-const businessName     = ref('')
-const industry         = ref('')
-
-watch(activeBusinessId, () => {
-  const b = auth.businesses.find(b => b.id === activeBusinessId.value)
-  if (!b) return
-  businessName.value = b.name
-  industry.value     = b.industry ?? ''
-}, { immediate: true })
-
-const saveBusiness = async () => {
-  loading.value = true
-  try {
-    await api.patch(`/businesses/${activeBusinessId.value}`, { name: businessName.value, industry: industry.value })
-    const b = auth.businesses.find(b => b.id === activeBusinessId.value)
-    if (b) { b.name = businessName.value; b.industry = industry.value }
-    showToast(t('settings.business.businessSaved'))
-  } catch { showToast(t('common.error'), 'error') }
-  finally  { loading.value = false }
-}
-
-const createBusiness = async () => {
-  try {
-    const { data } = await api.post('/businesses', { name: t('settings.business.newBusiness'), industry: '' })
-    auth.businesses.push(data)
-    activeBusinessId.value = data.id
-    showToast(t('settings.business.businessCreated'))
-  } catch { showToast(t('common.error'), 'error') }
-}
-
-const deleteBusiness = async () => {
-  if (!activeBusinessId.value) return
-  try {
-    await api.delete(`/businesses/${activeBusinessId.value}`)
-    const idx = auth.businesses.findIndex(b => b.id === activeBusinessId.value)
-    if (idx !== -1) auth.businesses.splice(idx, 1)
-    auth.resolveCurrentBusiness()
-    if (!auth.hasBusinesses) {
-      router.push('/onboarding')
-    } else {
-      activeBusinessId.value = auth.currentBusinessId ?? ''
-      showToast(t('settings.business.businessDeleted'))
-    }
-  } catch { showToast(t('common.error'), 'error') }
-}
-
 const initials = computed(() =>
   (auth.user?.full_name ?? 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 )
 
-const tabs = computed(() => [
+const tabs = [
   { key: 'account',  label: t('settings.tabs.account'),  icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>` },
   { key: 'security', label: t('settings.tabs.security'), icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>` },
-  { key: 'business', label: t('settings.tabs.business'), icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>` },
-])
+]
 </script>
 
 <template>
@@ -176,7 +125,7 @@ const tabs = computed(() => [
       </button>
     </div>
 
-    <!-- ── Account Tab ── -->
+    <!-- Account Tab -->
     <Transition name="tab-fade" mode="out-in">
       <div v-if="activeTab === 'account'" key="account" class="tab-panel">
 
@@ -224,7 +173,7 @@ const tabs = computed(() => [
 
       </div>
 
-      <!-- ── Security Tab ── -->
+      <!-- Security Tab -->
       <div v-else-if="activeTab === 'security'" key="security" class="tab-panel">
 
         <div class="card">
@@ -272,66 +221,6 @@ const tabs = computed(() => [
           <button class="btn-danger" :disabled="deleteConfirm !== 'DELETE'" @click="deleteAccount">
             {{ t('settings.security.confirmDelete') }}
           </button>
-        </div>
-
-      </div>
-
-      <!-- ── Business Tab ── -->
-      <div v-else-if="activeTab === 'business'" key="business" class="tab-panel">
-
-        <div class="card">
-          <div class="card-head">
-            <h3 class="card-title">{{ t('settings.business.select') }}</h3>
-          </div>
-          <div class="biz-list">
-            <button
-              v-for="b in auth.businesses"
-              :key="b.id"
-              class="biz-item"
-              :class="{ 'biz-item--active': b.id === activeBusinessId }"
-              @click="activeBusinessId = b.id"
-            >
-              <div class="biz-avatar">{{ b.name.charAt(0).toUpperCase() }}</div>
-              <div class="biz-info">
-                <p class="biz-name">{{ b.name }}</p>
-                <p class="biz-industry">{{ b.industry || t('settings.business.noIndustry') }}</p>
-              </div>
-              <span v-if="b.id === activeBusinessId" class="biz-active-tag">{{ t('settings.business.selected') }}</span>
-            </button>
-          </div>
-
-          <button class="btn-outline btn-new-biz" @click="createBusiness">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            {{ t('settings.business.newBusiness') }}
-          </button>
-        </div>
-
-        <div v-if="activeBusinessId" class="card">
-          <div class="card-head">
-            <h3 class="card-title">{{ t('settings.business.edit') }}</h3>
-          </div>
-
-          <div class="field-grid">
-            <div class="field">
-              <label>{{ t('settings.business.name') }}</label>
-              <input v-model="businessName" :placeholder="t('settings.business.name')" />
-            </div>
-            <div class="field">
-              <label>{{ t('settings.business.industry') }}</label>
-              <input v-model="industry" placeholder="e.g. Retail, SaaS…" />
-            </div>
-          </div>
-
-          <div class="field-row">
-            <button class="btn-primary" :disabled="loading" @click="saveBusiness">
-              <span v-if="loading" class="spinner" />
-              {{ t('settings.business.saveChanges') }}
-            </button>
-            <button class="btn-danger btn-sm" @click="deleteBusiness">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-              {{ t('settings.business.deleteBusiness') }}
-            </button>
-          </div>
         </div>
 
       </div>
@@ -466,7 +355,6 @@ input::placeholder { color: var(--text-muted); opacity: .6; }
 .input-mono { font-family: monospace; }
 .field-error { font-size: .72rem; color: var(--red); margin: 0; }
 
-/* Input with icon */
 .input-icon-wrap { position: relative; }
 .input-icon-wrap input { padding-right: 2.5rem; }
 .input-icon-btn {
@@ -505,6 +393,7 @@ input::placeholder { color: var(--text-muted); opacity: .6; }
   font-size: .82rem;
   cursor: pointer;
   transition: border-color .15s, color .15s;
+  white-space: nowrap;
 }
 .btn-outline:hover { border-color: var(--teal-dark); color: var(--teal); }
 
@@ -523,11 +412,7 @@ input::placeholder { color: var(--text-muted); opacity: .6; }
 }
 .btn-danger:hover:not(:disabled) { background: rgba(224,85,85,.2); }
 .btn-danger:disabled { opacity: .3; cursor: not-allowed; }
-.btn-sm { padding: .45rem .9rem; font-size: .78rem; }
 
-.btn-new-biz { align-self: flex-start; }
-
-/* Spinner */
 .spinner {
   width: 12px; height: 12px;
   border: 2px solid transparent;
@@ -538,47 +423,6 @@ input::placeholder { color: var(--text-muted); opacity: .6; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Business list */
-.biz-list { display: flex; flex-direction: column; gap: .5rem; }
-.biz-item {
-  display: flex; align-items: center; gap: .85rem;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: .8rem 1rem;
-  cursor: pointer;
-  text-align: left;
-  transition: background .15s, border-color .15s;
-  width: 100%;
-}
-.biz-item:hover { background: var(--bg-hover); border-color: var(--border-mid); }
-.biz-item--active { background: var(--bg-hover); border-color: var(--border-mid); border-left: 2px solid var(--teal); }
-
-.biz-avatar {
-  width: 36px; height: 36px;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-mid);
-  border-radius: var(--r);
-  display: flex; align-items: center; justify-content: center;
-  font-size: .82rem; font-weight: 700; color: var(--teal);
-  flex-shrink: 0;
-}
-.biz-info { flex: 1; min-width: 0; }
-.biz-name     { font-size: .84rem; font-weight: 600; color: var(--text); margin: 0; }
-.biz-industry { font-size: .7rem; color: var(--text-muted); margin: .1rem 0 0; }
-.biz-active-tag {
-  margin-left: auto;
-  background: var(--green-bg);
-  border: 1px solid rgba(58,184,122,.25);
-  color: var(--green);
-  font-size: .63rem;
-  font-weight: 600;
-  padding: .15rem .5rem;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-/* Tab transition */
 .tab-fade-enter-active { transition: opacity .2s, transform .2s; }
 .tab-fade-leave-active { transition: opacity .1s; }
 .tab-fade-enter-from  { opacity: 0; transform: translateY(6px); }

@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, HTTPException, Response, Depends, Request
 from pydantic import BaseModel, EmailStr, Field
 from db.supabase_client import supabase
@@ -23,7 +24,7 @@ async def register(data: RegisterRequest, response: Response):
             "password": data.password,
             "options": {
                 "data": {"full_name": data.full_name},
-                "email_redirect_to": "http://localhost:5173/login" 
+                "email_redirect_to": "https://wms.task-code.com/login"
             }
         })
 
@@ -49,21 +50,22 @@ async def login(data: LoginRequest, response: Response):
         if not res.session:
             raise HTTPException(401, "Invalid credentials")
 
+        secure = os.getenv("COOKIE_SECURE", "false").lower() == "true"
         response.set_cookie(
             key="access_token",
             value=res.session.access_token,
             httponly=True,
-            secure=False,         
+            secure=secure,
             samesite="lax",
-            max_age=3600 * 24 * 7 
+            max_age=3600 * 24 * 7,
         )
         response.set_cookie(
             key="refresh_token",
             value=res.session.refresh_token,
             httponly=True,
-            secure=False,
+            secure=secure,
             samesite="lax",
-            max_age=3600 * 24 * 30 
+            max_age=3600 * 24 * 30,
         )
 
         return {"message": "Logged in"}
@@ -94,6 +96,25 @@ async def get_me(user_id: str = Depends(get_current_user)):
 
     business_ids = [m["business_id"] for m in memberships.data]
 
+    # Auto-create a default business if the user has none
+    if not business_ids:
+        full_name = (user.data or {}).get("full_name", "My Business")
+        biz = supabase.table("businesses").insert({
+            "owner_id": user_id,
+            "name": full_name,
+            "industry": None,
+        }).execute()
+        created_id = biz.data[0]["id"]
+        supabase.table("business_members").insert({
+            "business_id": created_id,
+            "user_id": user_id,
+            "role": "owner",
+        }).execute()
+        business_ids = [created_id]
+        memberships_data = [{"business_id": created_id, "role": "owner"}]
+    else:
+        memberships_data = memberships.data
+
     businesses = supabase.table("businesses") \
         .select("*") \
         .in_("id", business_ids) \
@@ -102,5 +123,5 @@ async def get_me(user_id: str = Depends(get_current_user)):
     return {
         "user": user.data,
         "businesses": businesses.data,
-        "memberships": memberships.data
+        "memberships": memberships_data,
     }

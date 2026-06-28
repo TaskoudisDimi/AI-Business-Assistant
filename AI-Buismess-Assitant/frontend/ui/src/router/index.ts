@@ -19,7 +19,6 @@ const routes = [
       { path: 'inventory',  component: () => import('@/views/wms/Inventory.vue') },
       { path: 'products',   component: () => import('@/views/wms/Products.vue') },
       { path: 'orders',     component: () => import('@/views/wms/Orders.vue') },
-      { path: 'onboarding', component: () => import('@/views/CreateFirstBusiness.vue') },
     ],
   },
 
@@ -38,10 +37,6 @@ router.beforeEach(async (to) => {
   const isAuthPage = to.path === '/login' || to.path === '/register'
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) return '/login'
-
-  if (to.meta.requiresAuth && auth.isAuthenticated && !auth.hasBusinesses && to.path !== '/onboarding')
-    return '/onboarding'
-
   if (isAuthPage && auth.isAuthenticated) return '/dashboard'
 })
 

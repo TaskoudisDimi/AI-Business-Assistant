@@ -288,8 +288,7 @@
     "title": "Ρυθμίσεις",
     "tabs": {
       "account": "Λογαριασμός",
-      "security": "Ασφάλεια",
-      "business": "Επιχείρηση"
+      "security": "Ασφάλεια"
     },
     "account": {
       "fullName": "Ονοματεπώνυμο",
@@ -321,23 +320,6 @@
       "changePasswordSub": "Χρησιμοποίησε τουλάχιστον 8 χαρακτήρες",
       "deleteConfirmLabel": "Γράψε DELETE για επιβεβαίωση",
       "passwordChanged": "Κωδικός άλλαξε"
-    },
-    "business": {
-      "name": "Όνομα Επιχείρησης",
-      "industry": "Κλάδος",
-      "saveChanges": "Αποθήκευση",
-      "newBusiness": "Νέα Επιχείρηση",
-      "newBusinessName": "Όνομα νέας επιχείρησης",
-      "createBusiness": "Δημιουργία",
-      "select": "Επιλογή επιχείρησης",
-      "edit": "Επεξεργασία επιχείρησης",
-      "noIndustry": "Χωρίς κλάδο",
-      "selected": "Επιλεγμένο",
-      "deleteBusiness": "Διαγραφή Επιχείρησης",
-      "deleteBusinessWarning": "Διαγράφει μόνιμα αυτή την επιχείρηση και όλα τα δεδομένα της.",
-      "businessSaved": "Επιχείρηση αποθηκεύτηκε",
-      "businessCreated": "Επιχείρηση δημιουργήθηκε",
-      "businessDeleted": "Η επιχείρηση διαγράφηκε"
     }
   }
 }

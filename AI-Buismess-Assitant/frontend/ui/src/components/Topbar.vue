@@ -16,7 +16,6 @@ const toggleLocale = () => {
 }
 
 const showUserMenu = ref(false)
-const showBizMenu  = ref(false)
 
 const pageTitle = computed(() => {
   const map: Record<string, string> = {
@@ -56,14 +55,8 @@ const logout = async () => {
   await auth.logout(router)
 }
 
-const switchBusiness = (id: string) => {
-  auth.setCurrentBusiness(id)
-  showBizMenu.value = false
-}
-
 const closeAll = () => {
   showUserMenu.value = false
-  showBizMenu.value  = false
 }
 </script>
 
@@ -76,34 +69,6 @@ const closeAll = () => {
     </div>
 
     <div class="topbar-right" @click.stop>
-
-      <!-- Business switcher -->
-      <div v-if="auth.hasBusinesses" class="dropdown-host">
-        <button class="biz-btn" @click="showBizMenu = !showBizMenu">
-          <span class="online-dot" />
-          <span>{{ auth.currentBusiness?.name || t('common.select') }}</span>
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            :style="{ transform: showBizMenu ? 'rotate(180deg)' : '', transition: 'transform .2s' }">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
-
-        <Transition name="menu-pop">
-          <div v-if="showBizMenu" class="dropdown">
-            <p class="dropdown-label">{{ t('common.businesses') }}</p>
-            <button
-              v-for="biz in auth.businesses"
-              :key="biz.id"
-              :class="['dropdown-item', { 'dropdown-item--active': biz.id === auth.currentBusinessId }]"
-              @click="switchBusiness(biz.id)"
-            >
-              <span class="item-dot" :class="{ on: biz.id === auth.currentBusinessId }" />
-              {{ biz.name }}
-              <span v-if="biz.id === auth.currentBusinessId" class="current-tag">{{ t('common.current') }}</span>
-            </button>
-          </div>
-        </Transition>
-      </div>
 
       <!-- Language toggle -->
       <button class="lang-btn" @click="toggleLocale" :title="locale === 'el' ? 'Switch to English' : 'Αλλαγή σε Ελληνικά'">

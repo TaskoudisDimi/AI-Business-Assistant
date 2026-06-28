@@ -288,8 +288,7 @@
     "title": "Settings",
     "tabs": {
       "account": "Account",
-      "security": "Security",
-      "business": "Business"
+      "security": "Security"
     },
     "account": {
       "fullName": "Full Name",
@@ -321,23 +320,6 @@
       "changePasswordSub": "Use at least 8 characters",
       "deleteConfirmLabel": "Type DELETE to confirm",
       "passwordChanged": "Password changed"
-    },
-    "business": {
-      "name": "Business Name",
-      "industry": "Industry",
-      "saveChanges": "Save Changes",
-      "newBusiness": "New Business",
-      "newBusinessName": "New business name",
-      "createBusiness": "Create",
-      "select": "Select business",
-      "edit": "Edit business",
-      "noIndustry": "No industry",
-      "selected": "Selected",
-      "deleteBusiness": "Delete Business",
-      "deleteBusinessWarning": "Permanently deletes this business and all its data.",
-      "businessSaved": "Business saved",
-      "businessCreated": "Business created",
-      "businessDeleted": "Business deleted"
     }
   }
 }
