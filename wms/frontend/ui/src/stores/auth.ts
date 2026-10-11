@@ -17,6 +17,14 @@ export interface Business {
   created_at: string
 }
 
+/** FastAPI returns `detail` as a string, or as a list of validation errors (422) */
+export function apiErrorMessage(err: unknown): string | null {
+  const detail = (err as { response?: { data?: { detail?: unknown } } }).response?.data?.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg
+  return null
+}
+
 interface AuthResponse {
   user: User
   businesses: Business[]
@@ -64,12 +72,27 @@ export const useAuthStore = defineStore('auth', {
         await this.fetchUser()
         return true
       } catch (err: unknown) {
-        const e = err as { response?: { data?: { detail?: string } } }
-        this.error = e.response?.data?.detail ?? 'Login failed'
+        this.error = apiErrorMessage(err)
         return false
       } finally {
         this.loading = false
       }
+    },
+
+    /** Returns true when the account is active immediately (email confirmation off) */
+    async register(email: string, password: string, fullName: string): Promise<{ confirmed: boolean }> {
+      const { data } = await api.post<{ confirmed: boolean }>('/auth/register', {
+        email, password, full_name: fullName,
+      })
+      return { confirmed: !!data.confirmed }
+    },
+
+    async requestPasswordReset(email: string): Promise<void> {
+      await api.post('/auth/forgot-password', { email })
+    },
+
+    async resetPassword(password: string, link: { access_token?: string; token_hash?: string }): Promise<void> {
+      await api.post('/auth/reset-password', { password, ...link })
     },
 
     async logout(router?: Router): Promise<void> {

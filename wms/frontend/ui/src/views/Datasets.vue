@@ -157,19 +157,6 @@ onMounted(loadDatasets)
 
     <!-- Header -->
     <div class="page-header">
-      <div class="header-left">
-        <div class="header-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <ellipse cx="12" cy="5" rx="9" ry="3"/>
-            <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
-            <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="page-title">{{ t('nav.datasets') }}</h1>
-          <p class="page-sub">{{ authStore.currentBusiness?.name }}</p>
-        </div>
-      </div>
 
       <button v-if="activeTab === 'datasets'" class="btn-upload" @click.stop="triggerUpload" :disabled="uploading">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -441,12 +428,12 @@ onMounted(loadDatasets)
 }
 
 /* Header */
-.page-header  { display: flex; align-items: center; justify-content: space-between; }
+.page-header  { display: flex; align-items: center; justify-content: flex-end; }
 .header-left  { display: flex; align-items: center; gap: .85rem; }
 .header-icon {
   width: 40px; height: 40px;
-  background: rgba(46,196,182,.08);
-  border: 1px solid rgba(46,196,182,.18);
+  background: rgba(var(--accent-rgb), .08);
+  border: 1px solid rgba(var(--accent-rgb), .18);
   border-radius: var(--r-lg);
   display: flex; align-items: center; justify-content: center;
   color: var(--teal);
@@ -457,8 +444,8 @@ onMounted(loadDatasets)
 
 .btn-upload {
   display: flex; align-items: center; gap: .4rem;
-  background: rgba(46,196,182,.1);
-  border: 1px solid rgba(46,196,182,.25);
+  background: rgba(var(--accent-rgb), .1);
+  border: 1px solid rgba(var(--accent-rgb), .25);
   color: var(--teal);
   border-radius: var(--r);
   padding: .45rem .9rem;
@@ -467,7 +454,7 @@ onMounted(loadDatasets)
   cursor: pointer;
   transition: background .15s, border-color .15s;
 }
-.btn-upload:hover:not(:disabled) { background: rgba(46,196,182,.18); }
+.btn-upload:hover:not(:disabled) { background: rgba(var(--accent-rgb), .18); }
 .btn-upload:disabled { opacity: .4; cursor: not-allowed; }
 
 /* Tabs */
@@ -492,7 +479,7 @@ onMounted(loadDatasets)
   cursor: pointer;
   transition: background .15s, color .15s;
 }
-.tab.active { background: rgba(46,196,182,.1); color: var(--teal); }
+.tab.active { background: rgba(var(--accent-rgb), .1); color: var(--teal); }
 .tab:hover:not(.active) { color: var(--text-sub); }
 
 .tab-count {
@@ -505,13 +492,13 @@ onMounted(loadDatasets)
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.tab.active .tab-count { background: rgba(46,196,182,.15); color: var(--teal-dim); }
+.tab.active .tab-count { background: rgba(var(--accent-rgb), .15); color: var(--teal-dim); }
 
 /* Error */
 .error-bar {
   display: flex; align-items: center; gap: .5rem;
   background: var(--red-bg);
-  border: 1px solid rgba(224,85,85,.3);
+  border: 1px solid rgba(var(--red-rgb), .3);
   border-radius: var(--r);
   padding: .6rem .85rem;
   font-size: .79rem;
@@ -590,10 +577,8 @@ onMounted(loadDatasets)
 .table th {
   padding: .75rem 1.1rem;
   text-align: left;
-  font-size: .67rem;
+  font-size: .75rem;
   font-weight: 600;
-  letter-spacing: .07em;
-  text-transform: uppercase;
   color: var(--text-muted);
 }
 .table-row {
@@ -641,8 +626,8 @@ onMounted(loadDatasets)
   font-weight: 600;
   letter-spacing: .03em;
 }
-.badge--green { background: var(--green-bg); border: 1px solid rgba(58,184,122,.25); color: var(--green); }
-.badge--teal  { background: rgba(46,196,182,.08); border: 1px solid rgba(46,196,182,.2); color: var(--teal-dim); }
+.badge--green { background: var(--green-bg); border: 1px solid rgba(var(--green-rgb), .25); color: var(--green); }
+.badge--teal  { background: rgba(var(--accent-rgb), .08); border: 1px solid rgba(var(--accent-rgb), .2); color: var(--teal-dim); }
 .badge-dot    { width: 4px; height: 4px; background: var(--green); border-radius: 50%; }
 
 /* Menu */
@@ -696,7 +681,7 @@ onMounted(loadDatasets)
   cursor: pointer;
   transition: all .15s;
 }
-.fil-btn.active { background: rgba(46,196,182,.1); border-color: rgba(46,196,182,.25); color: var(--teal); }
+.fil-btn.active { background: rgba(var(--accent-rgb), .1); border-color: rgba(var(--accent-rgb), .25); color: var(--teal); }
 .fil-btn:hover:not(.active) { color: var(--text-sub); }
 
 .hist-list { display: flex; flex-direction: column; gap: .35rem; padding: .65rem; }
@@ -712,8 +697,8 @@ onMounted(loadDatasets)
 .hist-item:hover { background: var(--bg-hover); }
 .hist-icon {
   width: 28px; height: 28px;
-  background: rgba(46,196,182,.08);
-  border: 1px solid rgba(46,196,182,.15);
+  background: rgba(var(--accent-rgb), .08);
+  border: 1px solid rgba(var(--accent-rgb), .15);
   border-radius: var(--r);
   display: flex; align-items: center; justify-content: center;
   color: var(--teal);
@@ -727,7 +712,7 @@ onMounted(loadDatasets)
 /* Dialogs */
 .overlay {
   position: fixed; inset: 0; z-index: 50;
-  background: rgba(0,0,0,.65);
+  background: var(--overlay);
   backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   padding: 1rem;
@@ -743,13 +728,13 @@ onMounted(loadDatasets)
 }
 .dialog-icon {
   width: 38px; height: 38px;
-  background: rgba(46,196,182,.08);
-  border: 1px solid rgba(46,196,182,.18);
+  background: rgba(var(--accent-rgb), .08);
+  border: 1px solid rgba(var(--accent-rgb), .18);
   border-radius: var(--r-lg);
   display: flex; align-items: center; justify-content: center;
   color: var(--teal);
 }
-.dialog-icon--danger { background: var(--red-bg); border-color: rgba(224,85,85,.3); color: var(--red); }
+.dialog-icon--danger { background: var(--red-bg); border-color: rgba(var(--red-rgb), .3); color: var(--red); }
 .dialog-title { font-size: .92rem; font-weight: 600; color: var(--text); margin: 0; }
 .dialog-body  { font-size: .8rem; color: var(--text-sub); margin: 0; line-height: 1.6; }
 .dialog-body strong { color: var(--text); }
@@ -764,7 +749,7 @@ onMounted(loadDatasets)
   outline: none;
   transition: border-color .15s;
 }
-.dialog-input:focus { border-color: var(--teal-dark); box-shadow: 0 0 0 3px rgba(46,196,182,.12); }
+.dialog-input:focus { border-color: var(--teal-dark); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .12); }
 
 .dialog-actions { display: flex; justify-content: flex-end; gap: .6rem; }
 
@@ -776,18 +761,18 @@ onMounted(loadDatasets)
 .btn-ghost:hover { border-color: var(--border-mid); color: var(--text); }
 
 .btn-primary {
-  background: rgba(46,196,182,.12); border: 1px solid rgba(46,196,182,.3); color: var(--teal);
+  background: rgba(var(--accent-rgb), .12); border: 1px solid rgba(var(--accent-rgb), .3); color: var(--teal);
   border-radius: var(--r); padding: .42rem .9rem; font-size: .79rem; font-weight: 600; cursor: pointer;
   transition: background .15s;
 }
-.btn-primary:hover { background: rgba(46,196,182,.2); }
+.btn-primary:hover { background: rgba(var(--accent-rgb), .2); }
 
 .btn-danger {
-  background: var(--red-bg); border: 1px solid rgba(224,85,85,.3); color: var(--red);
+  background: var(--red-bg); border: 1px solid rgba(var(--red-rgb), .3); color: var(--red);
   border-radius: var(--r); padding: .42rem .9rem; font-size: .79rem; font-weight: 600; cursor: pointer;
   transition: background .15s;
 }
-.btn-danger:hover { background: rgba(224,85,85,.2); }
+.btn-danger:hover { background: rgba(var(--red-rgb), .2); }
 
 /* Transitions */
 .fade-enter-active, .fade-leave-active { transition: opacity .18s ease; }

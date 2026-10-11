@@ -3,13 +3,15 @@ from core.security import get_current_user
 from db.supabase_client import supabase
 import uuid
 from pydantic import BaseModel
-import csv, io
+import csv, io, os
 
 router = APIRouter(prefix="/api/datasets", tags=["Datasets"])
 
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+
 
 @router.get("")
-async def get_datasets(user_id: str = Depends(get_current_user)):
+def get_datasets(user_id: str = Depends(get_current_user)):
     memberships = supabase.table("business_members") \
         .select("business_id") \
         .eq("user_id", user_id) \
@@ -42,12 +44,14 @@ async def upload_dataset(
         .maybe_single() \
         .execute()
 
-    if not membership.data:
+    if not membership or not membership.data:
         raise HTTPException(status_code=403, detail="Δεν έχεις πρόσβαση σε αυτό το business")
 
     dataset_id = str(uuid.uuid4())
-    file_bytes = await file.read()
-    filename_safe = file.filename.replace(" ", "_")   
+    file_bytes = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(file_bytes) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File too large (max 20 MB)")
+    filename_safe = os.path.basename(file.filename or "dataset.csv").replace(" ", "_")   
     path = f"{business_id}/{dataset_id}_{filename_safe}"
 
     res = supabase.storage.from_("datasets").upload(
@@ -76,7 +80,7 @@ async def upload_dataset(
 
 
 @router.delete("/{dataset_id}")
-async def delete_dataset(dataset_id: str, user_id: str = Depends(get_current_user)):
+def delete_dataset(dataset_id: str, user_id: str = Depends(get_current_user)):
     memberships = supabase.table("business_members") \
     .select("business_id") \
     .eq("user_id", user_id) \
@@ -91,7 +95,7 @@ async def delete_dataset(dataset_id: str, user_id: str = Depends(get_current_use
         .maybe_single() \
         .execute() 
 
-    if not dataset.data:
+    if not dataset or not dataset.data:
         raise HTTPException(403, "Δεν βρέθηκε ή δεν έχεις δικαίωμα")
     supabase.storage.from_("datasets").remove([dataset.data["storage_path"]])
 
@@ -101,7 +105,7 @@ async def delete_dataset(dataset_id: str, user_id: str = Depends(get_current_use
 
 
 @router.patch("/{dataset_id}")
-async def update_dataset(
+def update_dataset(
     dataset_id: str,
     data: dict,  # {"name": "new name", ...}
     user_id: str = Depends(get_current_user)
@@ -110,10 +114,10 @@ async def update_dataset(
     dataset = supabase.table("datasets") \
         .select("business_id") \
         .eq("id", dataset_id) \
-        .single() \
+        .maybe_single() \
         .execute()
 
-    if not dataset.data:
+    if not dataset or not dataset.data:
         raise HTTPException(404, "Dataset not found")
 
     membership = supabase.table("business_members") \
@@ -123,7 +127,7 @@ async def update_dataset(
         .maybe_single() \
         .execute()
 
-    if not membership.data:
+    if not membership or not membership.data:
         raise HTTPException(403, "Not allowed")
 
     # Update μόνο τα επιτρεπόμενα πεδία
@@ -144,14 +148,14 @@ async def update_dataset(
     return updated.data[0]
 
 @router.get("/signed-url/{dataset_id}")
-async def get_signed_url(dataset_id: str, user_id: str = Depends(get_current_user)):
+def get_signed_url(dataset_id: str, user_id: str = Depends(get_current_user)):
     dataset = supabase.table("datasets") \
         .select("storage_path, business_id") \
         .eq("id", dataset_id) \
-        .single() \
+        .maybe_single() \
         .execute()
 
-    if not dataset.data:
+    if not dataset or not dataset.data:
         raise HTTPException(404)
 
     # Έλεγχος δικαιώματος
@@ -162,7 +166,7 @@ async def get_signed_url(dataset_id: str, user_id: str = Depends(get_current_use
         .maybe_single() \
         .execute()
 
-    if not membership.data:
+    if not membership or not membership.data:
         raise HTTPException(403)
 
     signed_url = supabase.storage.from_("datasets") \
@@ -188,7 +192,7 @@ def _check_access(dataset_id: str, user_id: str) -> dict:
         .maybe_single() \
         .execute()
  
-    if not dataset.data:
+    if not dataset or not dataset.data:
         raise HTTPException(403, "Δεν βρέθηκε ή δεν έχεις πρόσβαση")
  
     return dataset.data
@@ -219,7 +223,7 @@ def _rows_to_csv(columns: list[str], rows: list[dict]) -> str:
 # ─── GET /datasets/{dataset_id}/rows ──────────────────────────────────────────
  
 @router.get("/{dataset_id}/rows")
-async def get_dataset_rows(
+def get_dataset_rows(
     dataset_id: str,
     user_id: str = Depends(get_current_user)
 ):
@@ -259,7 +263,7 @@ class SaveChangesRequest(BaseModel):
  
  
 @router.patch("/{dataset_id}/rows")
-async def save_dataset_rows(
+def save_dataset_rows(
     dataset_id: str,
     body: SaveChangesRequest,
     user_id: str = Depends(get_current_user)

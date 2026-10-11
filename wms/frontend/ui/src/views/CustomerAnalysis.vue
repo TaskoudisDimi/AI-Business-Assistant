@@ -77,9 +77,9 @@ const totalCustomers = computed(() => data.value?.summary.total_customers ?? 0)
 
 const segmentColors: Record<string, string> = {
   high_value: 'var(--teal)',
-  loyal:      '#34d399',
+  loyal:      'var(--green)',
   at_risk:    'var(--amber)',
-  new:        '#a78bfa',
+  new:        'var(--blue)',
   dormant:    'var(--red)',
 }
 
@@ -110,22 +110,6 @@ const insightText = computed(() => {
 
 <template>
   <div class="page">
-
-    <!-- Header -->
-    <div class="page-header">
-      <div class="header-icon">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-          <path d="M16 3.13a4 4 0 010 7.75"/>
-        </svg>
-      </div>
-      <div>
-        <h1 class="page-title">{{ t('customers.title') }}</h1>
-        <p class="page-sub">{{ t('customers.subtitle') }}</p>
-      </div>
-    </div>
 
     <!-- Loading / Error -->
     <div v-if="loading" class="state-msg">{{ t('common.loading') }}</div>
@@ -339,7 +323,7 @@ const insightText = computed(() => {
 .page-header { display: flex; align-items: center; gap: .85rem; }
 .header-icon {
   width: 40px; height: 40px;
-  background: rgba(62,207,191,.08); border: 1px solid rgba(62,207,191,.18);
+  background: rgba(var(--accent-rgb), .08); border: 1px solid rgba(var(--accent-rgb), .18);
   border-radius: var(--r-lg); display: flex; align-items: center; justify-content: center;
   color: var(--teal); flex-shrink: 0;
 }
@@ -373,14 +357,14 @@ const insightText = computed(() => {
   transition: border-color .2s;
 }
 .kpi:hover { border-color: var(--border-mid); }
-.kpi--warn { border-color: rgba(224,85,85,.3) !important; background: rgba(224,85,85,.04); }
+.kpi--warn { border-color: rgba(var(--red-rgb), .3) !important; background: rgba(var(--red-rgb), .04); }
 
 .kpi-icon {
   width: 30px; height: 30px; background: var(--bg-hover); border-radius: var(--r);
   display: flex; align-items: center; justify-content: center; color: var(--text-sub);
 }
 .kpi--warn .kpi-icon { color: var(--red); background: var(--red-bg); }
-.kpi-label { font-size: .68rem; color: var(--text-muted); margin: 0; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+.kpi-label { font-size: .75rem; color: var(--text-muted); margin: 0; font-weight: 500; }
 .kpi-value { font-size: 1.55rem; font-weight: 700; color: var(--text); margin: 0; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .kpi--warn .kpi-value { color: var(--red); }
 
@@ -420,7 +404,7 @@ const insightText = computed(() => {
 .prod-row:hover { background: var(--bg-hover); }
 .prod-rank { font-size: .7rem; font-weight: 700; color: var(--text-muted); width: 16px; text-align: center; flex-shrink: 0; }
 .prod-info { display: flex; align-items: center; gap: .45rem; flex: 1; min-width: 0; }
-.prod-sku  { font-size: .68rem; color: var(--teal); font-family: monospace; font-weight: 600; flex-shrink: 0; }
+.prod-sku  { font-size: .68rem; color: var(--text-sub); font-family: 'Geist Mono', ui-monospace, monospace; font-weight: 600; flex-shrink: 0; }
 .prod-name { font-size: .78rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prod-stats { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
 .prod-qty  { font-size: .72rem; color: var(--text-muted); }
@@ -444,9 +428,8 @@ const insightText = computed(() => {
 .tbl { width: 100%; border-collapse: collapse; font-size: .8rem; }
 .tbl thead { background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .tbl th {
-  padding: .6rem 1.25rem; font-size: .65rem; font-weight: 600;
-  color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase;
-  text-align: left; white-space: nowrap; user-select: none;
+  padding: .6rem 1.25rem; font-size: .75rem; font-weight: 600;
+  color: var(--text-muted); text-align: left; white-space: nowrap; user-select: none;
 }
 .tbl th.num { text-align: right; }
 .tbl th.sortable { cursor: pointer; }
@@ -466,7 +449,7 @@ const insightText = computed(() => {
   padding: .1rem .4rem; border-radius: var(--r);
 }
 .days--ok   { background: var(--green-bg); color: var(--green); }
-.days--mid  { background: rgba(212,160,23,.1); color: var(--amber); }
+.days--mid  { background: rgba(var(--amber-rgb), .1); color: var(--amber); }
 .days--warn { background: var(--red-bg); color: var(--red); }
 
 .seg-badge {
@@ -478,11 +461,11 @@ const insightText = computed(() => {
 /* Insight */
 .insight {
   display: flex; align-items: flex-start; gap: .8rem;
-  background: rgba(62,207,191,.04); border: 1px solid rgba(62,207,191,.15);
+  background: rgba(var(--accent-rgb), .04); border: 1px solid rgba(var(--accent-rgb), .15);
   border-radius: var(--r-lg); padding: 1.1rem 1.25rem;
 }
 .insight-icon {
-  width: 28px; height: 28px; background: rgba(62,207,191,.1);
+  width: 28px; height: 28px; background: rgba(var(--accent-rgb), .1);
   border-radius: var(--r); display: flex; align-items: center; justify-content: center;
   color: var(--teal); flex-shrink: 0; margin-top: .05rem;
 }

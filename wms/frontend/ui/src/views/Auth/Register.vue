@@ -1,35 +1,37 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { setLocale } from '@/i18n'
+import { useAuthStore, apiErrorMessage } from '@/stores/auth'
+import AuthShell from '@/components/auth/AuthShell.vue'
+import PasswordInput from '@/components/auth/PasswordInput.vue'
 
-const { t, locale } = useI18n()
-const toggleLocale = () => setLocale(locale.value === 'el' ? 'en' : 'el')
-const auth   = useAuthStore()
-const router = useRouter()
+const MIN_PASSWORD = 8
+
+const { t } = useI18n()
+const auth = useAuthStore()
 
 const fullName = ref('')
 const email    = ref('')
 const password = ref('')
 const loading  = ref(false)
 const error    = ref('')
-const success  = ref('')
-const showPass = ref(false)
+const sentTo   = ref('')       // set once the confirmation email is on its way
+const confirmed = ref(false)   // project has email confirmation disabled
+
+const passwordTooShort = computed(() => password.value.length > 0 && password.value.length < MIN_PASSWORD)
 
 const submit = async () => {
-  error.value   = ''
-  success.value = ''
-  if (fullName.value.trim().length < 3) { error.value = t('auth.nameTooShort'); return }
-  if (password.value.length < 6)        { error.value = t('auth.passwordTooShort'); return }
+  error.value = ''
+  if (fullName.value.trim().length < 2) { error.value = t('auth.nameTooShort'); return }
+  if (password.value.length < MIN_PASSWORD) { error.value = t('auth.passwordTooShort', { n: MIN_PASSWORD }); return }
+
   loading.value = true
   try {
-    const ok = await (auth as any).register(email.value, password.value, fullName.value)
-    if (ok) success.value = t('auth.accountCreated')
-    else    error.value   = (auth as any).error || t('auth.registerFailed')
-  } catch (e: any) {
-    error.value = e.response?.data?.detail || t('auth.registerFailed')
+    const res = await auth.register(email.value.trim(), password.value, fullName.value.trim())
+    confirmed.value = res.confirmed
+    sentTo.value = email.value.trim()
+  } catch (e) {
+    error.value = apiErrorMessage(e) || t('auth.registerFailed')
   } finally {
     loading.value = false
   }
@@ -37,158 +39,51 @@ const submit = async () => {
 </script>
 
 <template>
-  <div class="auth-root">
-    <div class="bg-grid" />
-
-    <button class="lang-btn" @click="toggleLocale">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-      </svg>
-      {{ locale === 'el' ? 'EN' : 'EL' }}
-    </button>
-
-    <div class="auth-panel">
-      <div class="brand">
-        <div class="brand-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-        <span class="brand-name">AI Assistant</span>
+  <AuthShell v-if="!sentTo" :title="t('auth.register')" :subtitle="t('auth.startFree')">
+    <form class="form" novalidate @submit.prevent="submit">
+      <div class="ui-field">
+        <label class="ui-label" for="name">{{ t('auth.fullName') }}</label>
+        <input id="name" v-model="fullName" class="ui-input" autocomplete="name" required autofocus />
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="email">{{ t('auth.email') }}</label>
+        <input id="email" v-model="email" class="ui-input" type="email" autocomplete="email"
+          placeholder="name@company.com" required />
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="password">{{ t('auth.password') }}</label>
+        <PasswordInput id="password" v-model="password" autocomplete="new-password" :invalid="passwordTooShort" />
+        <p class="ui-hint">{{ t('auth.passwordRule', { n: MIN_PASSWORD }) }}</p>
       </div>
 
-      <h1 class="auth-title">{{ t('auth.register') }}</h1>
-      <p class="auth-sub">{{ t('auth.startFree') }}</p>
+      <p v-if="error" class="ui-alert ui-alert--error" role="alert">{{ error }}</p>
 
-      <div class="form">
-        <div class="field">
-          <label>{{ t('auth.fullName') }}</label>
-          <input v-model="fullName" placeholder="John Doe" @keydown.enter="submit" />
-        </div>
-        <div class="field">
-          <label>{{ t('auth.email') }}</label>
-          <input v-model="email" type="email" placeholder="name@company.com" @keydown.enter="submit" />
-        </div>
-        <div class="field">
-          <label>{{ t('auth.password') }}</label>
-          <div class="input-wrap">
-            <input v-model="password" :type="showPass ? 'text' : 'password'" :placeholder="`min. 6`" @keydown.enter="submit" />
-            <button class="toggle-pass" @click="showPass = !showPass" tabindex="-1">
-              <svg v-if="!showPass" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-          </div>
-        </div>
+      <button class="ui-btn ui-btn--primary ui-btn--block" type="submit" :disabled="loading || !email || !password || !fullName">
+        <span v-if="loading" class="ui-spinner" />
+        {{ loading ? t('auth.creatingAccount') : t('auth.signUp') }}
+      </button>
+    </form>
 
-        <Transition name="msg">
-          <p v-if="error"   class="msg msg--error">{{ error }}</p>
-          <p v-else-if="success" class="msg msg--success">{{ success }}</p>
-        </Transition>
+    <template #footer>
+      {{ t('auth.hasAccount') }} <router-link to="/login">{{ t('auth.signIn') }}</router-link>
+    </template>
+  </AuthShell>
 
-        <button class="btn-submit" :disabled="loading || !!success" @click="submit">
-          <span v-if="loading" class="spinner" />
-          {{ loading ? t('auth.creatingAccount') : t('auth.signUp') }}
-        </button>
-      </div>
+  <AuthShell v-else-if="confirmed" :title="t('auth.accountReady')" :subtitle="t('auth.accountReadySub')">
+    <router-link to="/login" class="ui-btn ui-btn--primary ui-btn--block cta">{{ t('auth.signIn') }}</router-link>
+  </AuthShell>
 
-      <p class="switch-link">
-        {{ t('auth.hasAccount') }}
-        <router-link to="/login">{{ t('auth.signIn') }}</router-link>
-      </p>
-    </div>
-  </div>
+  <AuthShell v-else :title="t('auth.checkInbox')">
+    <p class="sent">{{ t('auth.confirmSent', { email: sentTo }) }}</p>
+    <p class="ui-hint">{{ t('auth.checkSpam') }}</p>
+    <template #footer>
+      <router-link to="/login">← {{ t('auth.backToSignIn') }}</router-link>
+    </template>
+  </AuthShell>
 </template>
 
 <style scoped>
-.auth-root {
-  min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: var(--bg); padding: 1rem;
-  position: relative; overflow: hidden;
-}
-
-.lang-btn {
-  position: absolute;
-  top: 1.25rem; right: 1.25rem;
-  z-index: 10;
-  display: flex; align-items: center; gap: .35rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  color: var(--text-muted);
-  font-size: .72rem; font-weight: 600;
-  padding: .32rem .65rem;
-  cursor: pointer; letter-spacing: .04em;
-  transition: border-color .15s, color .15s;
-}
-.lang-btn:hover { border-color: var(--border-mid); color: var(--teal); }
-.bg-grid {
-  position: absolute; inset: 0; pointer-events: none;
-  background-image: linear-gradient(rgba(62,207,191,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(62,207,191,.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
-}
-.auth-panel {
-  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl);
-  padding: 2.5rem; width: 100%; max-width: 400px;
-  box-shadow: var(--shadow-lg); position: relative; z-index: 1;
-}
-.brand { display: flex; align-items: center; gap: .65rem; margin-bottom: 2rem; }
-.brand-icon {
-  width: 38px; height: 38px;
-  background: linear-gradient(135deg, var(--teal-dark), #0a3a3a);
-  border: 1px solid var(--border-mid); border-radius: var(--r);
-  display: flex; align-items: center; justify-content: center; color: var(--teal);
-}
-.brand-name { font-size: .92rem; font-weight: 700; color: var(--text); letter-spacing: -.02em; }
-.auth-title { font-size: 1.4rem; font-weight: 700; color: var(--text); margin: 0; letter-spacing: -.03em; }
-.auth-sub   { font-size: .8rem; color: var(--text-muted); margin: .3rem 0 2rem; }
-.form { display: flex; flex-direction: column; gap: 1rem; }
-.field { display: flex; flex-direction: column; gap: .4rem; }
-
-label {
-  font-size: .68rem; font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: .07em; text-transform: uppercase;
-}
-
-input {
-  background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--r);
-  color: var(--text); padding: .7rem .95rem; font-size: .85rem;
-  outline: none; width: 100%; box-sizing: border-box;
-  transition: border-color .15s, box-shadow .15s;
-}
-input:focus { border-color: var(--teal-dark); box-shadow: 0 0 0 3px var(--teal-glow); }
-input::placeholder { color: var(--text-muted); opacity: .5; }
-.input-wrap { position: relative; }
-.input-wrap input { padding-right: 2.8rem; }
-.toggle-pass {
-  position: absolute; right: .8rem; top: 50%; transform: translateY(-50%);
-  background: transparent; border: none; color: var(--text-muted); cursor: pointer;
-  transition: color .15s; padding: 0;
-}
-.toggle-pass:hover { color: var(--teal); }
-
-.msg { font-size: .78rem; border-radius: var(--r); padding: .55rem .8rem; margin: 0; }
-.msg--error   { color: var(--red);   background: var(--red-bg);   border: 1px solid rgba(224,85,85,.3); }
-.msg--success { color: var(--green); background: var(--green-bg); border: 1px solid rgba(58,184,122,.3); }
-
-.btn-submit {
-  display: flex; align-items: center; justify-content: center; gap: .5rem;
-  background: var(--teal); border: none; color: #0a0a0a;
-  border-radius: var(--r); padding: .75rem; font-size: .88rem; font-weight: 600;
-  cursor: pointer; transition: opacity .15s;
-}
-.btn-submit:hover:not(:disabled) { opacity: .85; }
-.btn-submit:disabled { opacity: .35; cursor: not-allowed; }
-
-.switch-link { text-align: center; margin-top: 1.5rem; font-size: .8rem; color: var(--text-muted); }
-.switch-link a { color: var(--teal); text-decoration: none; font-weight: 600; }
-.switch-link a:hover { color: var(--teal-dim); }
-
-.spinner { width: 13px; height: 13px; border-radius: 50%; border: 2px solid transparent; border-top-color: currentColor; animation: spin .6s linear infinite; display: inline-block; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.msg-enter-active { transition: all .2s ease; }
-.msg-leave-active { transition: all .15s ease; }
-.msg-enter-from, .msg-leave-to { opacity: 0; transform: translateY(-4px); }
+.form { display: flex; flex-direction: column; gap: 1.1rem; }
+.cta { margin-top: 1.75rem; }
+.sent { margin: .4rem 0 .75rem; color: var(--text-sub); font-size: .92rem; }
 </style>

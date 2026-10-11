@@ -37,6 +37,7 @@ A full-stack business management platform combining warehouse management (WMS), 
 
 ### Auth
 - Email/password registration with email confirmation
+- Forgot / reset password via emailed recovery link (`/forgot-password` → `/reset-password`)
 - Secure httponly cookies (access + refresh tokens, 7-day / 30-day TTL)
 - Auto-refresh via middleware on every request
 - A default business is auto-created for new users on first login
@@ -46,8 +47,8 @@ A full-stack business management platform combining warehouse management (WMS), 
 ## Project Structure
 
 ```
-AI-Business-Assistant/
-├── AI-Buismess-Assitant/          # main app directory
+WMS/
+├── wms/                           # main app directory
 │   ├── backend/
 │   │   ├── main.py                # FastAPI app, CORS, middleware, routers, static file serving
 │   │   ├── requirements.txt
@@ -184,8 +185,20 @@ create table order_items (
 SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_KEY=your-service-role-key
 COOKIE_SECURE=true          # set to false for local dev (no HTTPS)
+FRONTEND_URL=https://wms.task-code.com   # used in confirmation / password-reset email links
 SALES_MODEL_PATH=models/sales_model.pkl
 ```
+
+### Supabase Auth settings
+
+In **Authentication → URL Configuration**, add `<FRONTEND_URL>/reset-password` and
+`<FRONTEND_URL>/login` to **Redirect URLs** (for local dev also `http://localhost:5173/...`).
+Without this, Supabase ignores the link target and password-reset emails point to the Site URL.
+
+Optional — the reset page also accepts the token-hash style link. To use it, change the
+**Reset Password** email template link to
+`{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery`; the user is then
+signed in automatically after choosing a new password.
 
 ### Frontend — `frontend/ui/.env.local` (gitignored)
 
@@ -203,7 +216,7 @@ In production this variable is not set — the frontend defaults to `/api` (same
 
 ```bash
 # 1. Backend
-cd AI-Buismess-Assitant/backend
+cd wms/backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -211,7 +224,7 @@ cp .env.example .env          # fill in SUPABASE_URL and SUPABASE_KEY
 uvicorn main:app --reload --port 8000
 
 # 2. Frontend (separate terminal)
-cd AI-Buismess-Assitant/frontend/ui
+cd wms/frontend/ui
 npm install
 # create .env.local with: VITE_API_URL=http://localhost:8000/api
 npm run dev
@@ -251,7 +264,7 @@ Browser → wms.task-code.com:443
 ### 1. Build the frontend
 
 ```bash
-cd AI-Buismess-Assitant/frontend/ui
+cd wms/frontend/ui
 npm run build-only        # outputs to dist/
 ```
 
@@ -264,8 +277,8 @@ After=network.target
 
 [Service]
 User=root
-WorkingDirectory=/var/www/AI-Business-Assistant/AI-Buismess-Assitant/backend
-ExecStart=/var/www/AI-Business-Assistant/AI-Buismess-Assitant/backend/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001
+WorkingDirectory=/var/www/AI-Business-Assistant/wms/backend
+ExecStart=/var/www/AI-Business-Assistant/wms/backend/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001
 Restart=always
 RestartSec=3
 
@@ -330,6 +343,8 @@ All endpoints require authentication via the `access_token` cookie (set at login
 | POST | `/api/auth/register` | Create account |
 | POST | `/api/auth/login` | Login — sets cookies |
 | POST | `/api/auth/logout` | Clear cookies |
+| POST | `/api/auth/forgot-password` | Email a password-reset link |
+| POST | `/api/auth/reset-password` | Set a new password from a reset link |
 | GET | `/api/auth/me` | Current user + business |
 | GET | `/api/products` | List SKUs |
 | POST | `/api/products` | Create SKU |

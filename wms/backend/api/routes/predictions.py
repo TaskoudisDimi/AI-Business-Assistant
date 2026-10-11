@@ -10,7 +10,7 @@ Model features: date, sales + extra: temperature, promo, marketing_spend
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from core.security import get_current_user
 from db.supabase_client import supabase
@@ -126,7 +126,7 @@ def _check_access(dataset_id: str, user_id: str) -> dict:
                 .eq("user_id", user_id).execute().data or [])]
     ds = supabase.table("datasets").select("id, business_id, name, storage_path") \
         .eq("id", dataset_id).in_("business_id", biz_ids).maybe_single().execute()
-    if not ds.data:
+    if not ds or not ds.data:
         raise HTTPException(403, "Dataset δεν βρέθηκε ή δεν έχεις πρόσβαση")
     return ds.data
 
@@ -135,7 +135,7 @@ def _check_access(dataset_id: str, user_id: str) -> dict:
 
 class PredictRequest(BaseModel):
     dataset_id:      str
-    future_days:     int            = 30
+    future_days:     int            = Field(default=30, ge=1, le=365)
     temperature:     Optional[float] = None   # override; αν None → forward-fill
     promo:           Optional[float] = None
     marketing_spend: Optional[float] = None
@@ -144,7 +144,7 @@ class PredictRequest(BaseModel):
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.get("/model-info")
-async def model_info(_: str = Depends(get_current_user)):
+def model_info(_: str = Depends(get_current_user)):
     a = get_artifact()
     return {
         "status": "loaded",
@@ -156,7 +156,7 @@ async def model_info(_: str = Depends(get_current_user)):
 
 
 @router.get("")
-async def list_predictions(
+def list_predictions(
     dataset_id: Optional[str] = None,
     user_id: str = Depends(get_current_user),
 ):
@@ -173,7 +173,7 @@ async def list_predictions(
 
 
 @router.post("/run")
-async def run_prediction(body: PredictRequest, user_id: str = Depends(get_current_user)):
+def run_prediction(body: PredictRequest, user_id: str = Depends(get_current_user)):
     ds       = _check_access(body.dataset_id, user_id)
     artifact = get_artifact()
 
@@ -227,13 +227,13 @@ async def run_prediction(body: PredictRequest, user_id: str = Depends(get_curren
 
 
 @router.get("/{prediction_id}")
-async def get_prediction(prediction_id: str, user_id: str = Depends(get_current_user)):
+def get_prediction(prediction_id: str, user_id: str = Depends(get_current_user)):
     biz_ids = [m["business_id"] for m in
                (supabase.table("business_members").select("business_id")
                 .eq("user_id", user_id).execute().data or [])]
     pred = (supabase.table("predictions").select("*")
             .eq("id", prediction_id).in_("business_id", biz_ids)
             .maybe_single().execute())
-    if not pred.data:
+    if not pred or not pred.data:
         raise HTTPException(404, "Prediction δεν βρέθηκε")
     return pred.data

@@ -89,27 +89,12 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 <template>
   <div class="page">
 
-    <div class="page-header">
-      <div class="header-icon">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <rect x="2" y="7" width="20" height="14" rx="2"/>
-          <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
-          <line x1="12" y1="12" x2="12" y2="16"/>
-          <line x1="10" y1="14" x2="14" y2="14"/>
-        </svg>
-      </div>
-      <div>
-        <h1 class="page-title">{{ t('nav.inventory') }}</h1>
-        <p class="page-sub">{{ t('wms.inventory.subtitle') }}</p>
-      </div>
-    </div>
-
-    <!-- AI Suggestions panel -->
+    <!-- Reorder alerts -->
     <div v-if="suggestions.length > 0" class="ai-panel">
       <div class="ai-panel-head">
         <div class="ai-panel-icon">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/>
           </svg>
         </div>
         <div>
@@ -264,7 +249,7 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 .page-header { display: flex; align-items: center; gap: .85rem; }
 .header-icon {
   width: 40px; height: 40px;
-  background: rgba(62,207,191,.08); border: 1px solid rgba(62,207,191,.18);
+  background: rgba(var(--accent-rgb), .08); border: 1px solid rgba(var(--accent-rgb), .18);
   border-radius: var(--r-lg); display: flex; align-items: center; justify-content: center;
   color: var(--teal); flex-shrink: 0;
 }
@@ -273,8 +258,8 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 
 /* AI Panel */
 .ai-panel {
-  background: rgba(62,207,191,.04);
-  border: 1px solid rgba(62,207,191,.18);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 1rem 1.25rem;
   display: flex; flex-direction: column; gap: .9rem;
@@ -282,29 +267,28 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 .ai-panel-head { display: flex; align-items: flex-start; gap: .75rem; }
 .ai-panel-icon {
   width: 28px; height: 28px;
-  background: rgba(62,207,191,.12); border-radius: var(--r);
+  background: var(--red-bg); border-radius: var(--r);
   display: flex; align-items: center; justify-content: center;
-  color: var(--teal); flex-shrink: 0; margin-top: .05rem;
+  color: var(--red); flex-shrink: 0; margin-top: .05rem;
 }
-.ai-panel-title { font-size: .82rem; font-weight: 600; color: var(--teal); margin: 0; }
-.ai-panel-sub   { font-size: .72rem; color: var(--text-muted); margin: .15rem 0 0; }
+.ai-panel-title { font-size: .9rem; font-weight: 600; color: var(--text); margin: 0; }
+.ai-panel-sub   { font-size: .8rem; color: var(--text-muted); margin: .15rem 0 0; }
 
 .ai-items { display: flex; flex-direction: column; gap: .55rem; }
 .ai-item {
   display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
-  background: var(--bg-card); border: 1px solid var(--border);
+  background: var(--bg); border: 1px solid var(--border);
   border-radius: var(--r); padding: .6rem .85rem;
 }
 .urgency-badge {
-  font-size: .65rem; font-weight: 700; padding: .15rem .5rem;
-  border-radius: 999px; letter-spacing: .04em; text-transform: uppercase;
-  flex-shrink: 0;
+  font-size: .75rem; font-weight: 700; padding: .15rem .5rem;
+  border-radius: 999px; flex-shrink: 0;
 }
-.urgency--critical { background: var(--red-bg); color: var(--red); border: 1px solid rgba(224,85,85,.25); }
-.urgency--warning  { background: rgba(212,160,23,.1); color: var(--amber); border: 1px solid rgba(212,160,23,.25); }
+.urgency--critical { background: var(--red-bg); color: var(--red); border: 1px solid rgba(var(--red-rgb), .25); }
+.urgency--warning  { background: rgba(var(--amber-rgb), .1); color: var(--amber); border: 1px solid rgba(var(--amber-rgb), .25); }
 
 .ai-item-info { display: flex; align-items: center; gap: .5rem; flex: 1; min-width: 0; }
-.ai-item-sku  { font-size: .7rem; color: var(--teal); font-family: monospace; font-weight: 600; }
+.ai-item-sku  { font-size: .7rem; color: var(--text-sub); font-family: 'Geist Mono', ui-monospace, monospace; font-weight: 600; }
 .ai-item-name { font-size: .8rem; color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .ai-item-stats { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
@@ -314,7 +298,7 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
   border-radius: var(--r); padding: .1rem .45rem;
 }
 .stat-pill strong { color: var(--text-sub); }
-.stat-pill--warn  { color: var(--red); border-color: rgba(224,85,85,.2); background: var(--red-bg); }
+.stat-pill--warn  { color: var(--red); border-color: rgba(var(--red-rgb), .2); background: var(--red-bg); }
 .stat-pill--muted { color: var(--text-muted); }
 
 /* State */
@@ -339,9 +323,8 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 .tbl { width: 100%; border-collapse: collapse; font-size: .8rem; }
 .tbl thead { background: var(--bg); border-bottom: 1px solid var(--border); }
 .tbl th {
-  padding: .65rem 1rem; font-size: .66rem; font-weight: 600;
-  color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase;
-  text-align: left; white-space: nowrap;
+  padding: .65rem 1rem; font-size: .75rem; font-weight: 600;
+  color: var(--text-muted); text-align: left; white-space: nowrap;
 }
 .tbl th.num, .tbl td.num { text-align: right; }
 .tbl th.act, .tbl td.act { width: 80px; text-align: right; padding-right: .75rem; }
@@ -352,9 +335,9 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 .tbl td.muted { color: var(--text-muted); }
 
 .sku-badge {
-  display: inline-block; background: rgba(62,207,191,.08); border: 1px solid rgba(62,207,191,.2);
-  color: var(--teal); font-size: .71rem; font-weight: 600; padding: .1rem .45rem;
-  border-radius: var(--r); font-family: monospace; letter-spacing: .03em;
+  display: inline-block;  
+  color: var(--text-sub); font-size: .71rem; font-weight: 600; padding: .1rem .45rem;
+  border-radius: var(--r); font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: .03em;
 }
 
 .qty-val { font-weight: 600; color: var(--text); }
@@ -374,7 +357,7 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 
 /* Modal */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  position: fixed; inset: 0; background: var(--overlay);
   display: flex; align-items: center; justify-content: center;
   z-index: 200; padding: 1rem;
 }
@@ -402,8 +385,8 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
   padding: .45rem .5rem; cursor: pointer; transition: all .15s; text-align: center;
 }
 .type-pill.active {
-  background: rgba(62,207,191,.1); border-color: rgba(62,207,191,.35);
-  color: var(--teal); font-weight: 600;
+  background: rgba(var(--blue-rgb), .1); border-color: rgba(var(--blue-rgb), .35);
+  color: var(--blue); font-weight: 600;
 }
 .type-pill:hover:not(.active) { border-color: var(--border-mid); color: var(--text-sub); }
 
@@ -418,7 +401,7 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 
 .btn-primary {
   display: inline-flex; align-items: center; gap: .4rem;
-  background: var(--teal); color: #0a0a0a; border: none;
+  background: var(--teal); color: var(--accent-text); border: none;
   border-radius: var(--r); padding: .5rem 1rem;
   font-size: .8rem; font-weight: 600; cursor: pointer; transition: opacity .15s;
 }

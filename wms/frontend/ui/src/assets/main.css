@@ -11,69 +11,138 @@ html, body, #app {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0c0c0c;
+  background: var(--bg);
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #f0f0f0;
+  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+  font-feature-settings: 'ss01', 'cv11';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 a { text-decoration: none; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 
-/* ─── Design tokens ─────────────────────────────────────────────────────── */
+/* Figures line up in tables and KPIs */
+table, .tabular { font-variant-numeric: tabular-nums; }
+code, .mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* ─── Design tokens ─────────────────────────────────────────────────────────
+   Light by default. <html data-theme="dark"> switches to dark; it is set before
+   first paint by the inline script in index.html and kept in sync by useTheme().
+   Legacy names (--teal, --bg-card…) are kept as aliases so view styles keep working. */
 :root {
-  /* Accent — teal from logo, used sparingly */
-  --teal:      #3ECFBF;
-  --teal-dim:  #2BB5A5;
-  --teal-dark: #1a5c58;
-  --teal-glow: rgba(62, 207, 191, 0.10);
+  color-scheme: light;
 
-  /* Backgrounds — neutral dark */
-  --bg:         #0c0c0c;
-  --bg-sidebar: #0f0f0f;
-  --bg-card:    #171717;
-  --bg-hover:   #1e1e1e;
-  --bg-input:   #111111;
+  /* Accent — signal orange, used for primary actions and the active state only */
+  --accent-rgb:   229, 84, 27;
+  --accent:       rgb(var(--accent-rgb));
+  --accent-hover: #c9460f;
+  --accent-text:  #ffffff;
+  --accent-soft:  rgba(var(--accent-rgb), .09);
+  --accent-line:  rgba(var(--accent-rgb), .28);
 
-  /* Borders — neutral */
-  --border:       #222222;
-  --border-mid:   #2e2e2e;
-  --border-light: #1a1a1a;
+  /* Surfaces — warm neutrals */
+  --bg:         #f6f6f3;
+  --bg-sidebar: #f6f6f3;
+  --bg-card:    #ffffff;
+  --bg-hover:   #efeeea;
+  --bg-input:   #ffffff;
+  --bg-sunken:  #f1f0ec;
 
-  /* Text — clean neutral grays */
-  --text:       #f0f0f0;
-  --text-sub:   #909090;
-  --text-muted: #555555;
+  --border:       #e4e3de;
+  --border-mid:   #d6d5cf;
+  --border-light: #eeede9;
+
+  --text:       #1b1b19;
+  --text-sub:   #5c5b56;
+  --text-muted: #8c8b85;
 
   /* Status */
-  --green:    #3ab87a;
-  --green-bg: #0d2018;
-  --red:      #e05555;
-  --red-bg:   #1a0a0a;
-  --amber:    #d4a017;
+  --green-rgb: 22, 136, 77;
+  --green:     rgb(var(--green-rgb));
+  --green-bg:  rgba(var(--green-rgb), .08);
+  --red-rgb:   206, 50, 50;
+  --red:       rgb(var(--red-rgb));
+  --red-bg:    rgba(var(--red-rgb), .07);
+  --amber-rgb: 176, 116, 0;
+  --amber:     rgb(var(--amber-rgb));
+  --blue-rgb:  37, 99, 235;
+  --blue:      rgb(var(--blue-rgb));
+
+  --overlay: rgba(20, 20, 18, .38);
 
   /* Radii */
-  --r:    8px;
-  --r-lg: 12px;
-  --r-xl: 16px;
+  --r:    6px;
+  --r-lg: 10px;
+  --r-xl: 14px;
 
-  /* Shadows */
-  --shadow:    0 2px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  /* Shadows — soft, low-contrast */
+  --shadow:    0 1px 2px rgba(20, 20, 18, .05), 0 1px 1px rgba(20, 20, 18, .03);
+  --shadow-lg: 0 12px 32px -8px rgba(20, 20, 18, .18), 0 2px 6px rgba(20, 20, 18, .06);
+
+  /* Legacy aliases */
+  --teal:      var(--accent);
+  --teal-dim:  var(--accent-hover);
+  --teal-dark: var(--accent-line);
+  --teal-glow: var(--accent-soft);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --accent-rgb:   255, 112, 56;
+  --accent-hover: #ff8a5c;
+  --accent-text:  #1a0d06;
+  --accent-soft:  rgba(var(--accent-rgb), .12);
+  --accent-line:  rgba(var(--accent-rgb), .34);
+
+  --bg:         #121211;
+  --bg-sidebar: #121211;
+  --bg-card:    #1a1a19;
+  --bg-hover:   #232321;
+  --bg-input:   #161615;
+  --bg-sunken:  #161615;
+
+  --border:       #2a2a27;
+  --border-mid:   #363632;
+  --border-light: #222220;
+
+  --text:       #ecebe7;
+  --text-sub:   #a7a6a0;
+  --text-muted: #73726c;
+
+  --green-rgb: 74, 194, 128;
+  --green-bg:  rgba(var(--green-rgb), .1);
+  --red-rgb:   240, 104, 104;
+  --red-bg:    rgba(var(--red-rgb), .1);
+  --amber-rgb: 230, 170, 50;
+  --blue-rgb:  110, 160, 255;
+
+  --overlay: rgba(0, 0, 0, .6);
+
+  --shadow:    0 1px 2px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, .6), 0 2px 6px rgba(0, 0, 0, .3);
 }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────── */
-::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar        { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track  { background: transparent; }
-::-webkit-scrollbar-thumb  { background: var(--border-mid); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+::-webkit-scrollbar-thumb  { background: var(--border-mid); border-radius: 999px; border: 2px solid var(--bg); }
 * { scrollbar-width: thin; scrollbar-color: var(--border-mid) transparent; }
 
 /* ─── Focus ring ────────────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+::selection { background: rgba(var(--accent-rgb), .22); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }

@@ -271,15 +271,13 @@ function fmtNum(n: number | null) {
   transition: border-color .2s;
 }
 .kpi:hover { border-color: var(--border-mid); }
-.kpi--alert { border-color: rgba(224,85,85,.3); background: rgba(224,85,85,.03); }
+.kpi--alert { border-color: rgba(var(--red-rgb), .3); background: rgba(var(--red-rgb), .03); }
 
 .kpi-label {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-}
+  }
 .kpi-value {
   font-size: 1.65rem;
   font-weight: 700;
@@ -352,22 +350,20 @@ function fmtNum(n: number | null) {
   font-size: .75rem;
   color: var(--teal);
   text-decoration: none;
-  border: 1px solid rgba(62,207,191,.25);
+  border: 1px solid rgba(var(--accent-rgb), .25);
   border-radius: var(--r);
   padding: .3rem .8rem;
   margin-top: .25rem;
   transition: background .15s;
 }
-.panel-cta:hover { background: rgba(62,207,191,.06); }
+.panel-cta:hover { background: rgba(var(--accent-rgb), .06); }
 
 /* Mini Table */
 .mini-tbl { width: 100%; border-collapse: collapse; }
 .mini-tbl th {
-  font-size: .63rem;
+  font-size: .75rem;
   font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .07em;
   padding: 0 .5rem .5rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
@@ -396,7 +392,7 @@ function fmtNum(n: number | null) {
   letter-spacing: .02em;
   text-transform: capitalize;
 }
-.badge--teal  { background: rgba(62,207,191,.1);  color: var(--teal);  }
+.badge--teal  { background: rgba(var(--blue-rgb), .1);  color: var(--blue);  }
 .badge--green { background: var(--green-bg);       color: var(--green); }
 .badge--red   { background: var(--red-bg);         color: var(--red);   }
 .badge--muted { background: var(--bg-hover);       color: var(--text-muted); }
@@ -414,7 +410,7 @@ function fmtNum(n: number | null) {
 .stock-row:last-child { border-bottom: none; }
 .stock-row:hover { background: var(--bg-hover); }
 .stock-info { display: flex; align-items: center; gap: .55rem; min-width: 0; }
-.stock-sku  { font-size: .68rem; color: var(--teal); font-family: monospace; font-weight: 600; flex-shrink: 0; }
+.stock-sku  { font-size: .68rem; color: var(--text-sub); font-family: 'Geist Mono', ui-monospace, monospace; font-weight: 600; flex-shrink: 0; }
 .stock-name { font-size: .78rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stock-qty  { display: flex; align-items: center; gap: .2rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .qty-num    { font-size: .8rem; font-weight: 600; color: var(--text); }

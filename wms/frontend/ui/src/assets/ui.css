@@ -1,0 +1,72 @@
+/* Shared form primitives. Views mostly carry their own scoped styles; new screens
+   (auth pages) use these so they stay consistent. */
+
+.ui-field { display: flex; flex-direction: column; gap: .4rem; }
+.ui-label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: .8rem; font-weight: 500; color: var(--text-sub);
+}
+.ui-label a { color: var(--text-sub); font-weight: 500; }
+.ui-label a:hover { color: var(--accent); }
+
+.ui-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 .8rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r);
+  font-size: .9rem;
+  color: var(--text);
+  transition: border-color .12s, box-shadow .12s;
+}
+.ui-input::placeholder { color: var(--text-muted); }
+.ui-input:hover { border-color: var(--text-muted); }
+.ui-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ui-input:focus-visible { outline: none; }
+.ui-input[aria-invalid="true"] { border-color: var(--red); }
+
+.ui-input-wrap { position: relative; }
+.ui-input-wrap .ui-input { padding-right: 2.6rem; }
+.ui-input-action {
+  position: absolute; right: .35rem; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; border-radius: var(--r);
+  display: grid; place-items: center;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+}
+.ui-input-action:hover { color: var(--text); background: var(--bg-hover); }
+
+.ui-hint { font-size: .78rem; color: var(--text-muted); }
+
+.ui-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  height: 40px; padding: 0 1rem;
+  border-radius: var(--r);
+  font-size: .9rem; font-weight: 550;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, opacity .12s;
+}
+.ui-btn:disabled { opacity: .55; cursor: not-allowed; }
+.ui-btn--primary { background: var(--accent); color: var(--accent-text); }
+.ui-btn--primary:disabled { opacity: 1; background: var(--bg-hover); color: var(--text-muted); }
+.ui-btn--primary:hover:not(:disabled) { background: var(--accent-hover); }
+.ui-btn--ghost { background: transparent; color: var(--text-sub); border: 1px solid var(--border-mid); }
+.ui-btn--ghost:hover:not(:disabled) { background: var(--bg-hover); color: var(--text); }
+.ui-btn--block { width: 100%; }
+
+.ui-alert {
+  display: flex; gap: .55rem; align-items: flex-start;
+  padding: .65rem .8rem;
+  border-radius: var(--r);
+  font-size: .84rem; line-height: 1.4;
+}
+.ui-alert svg { flex-shrink: 0; margin-top: .1rem; }
+.ui-alert--error   { background: var(--red-bg);   color: var(--red); }
+.ui-alert--success { background: var(--green-bg); color: var(--green); }
+
+.ui-spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: ui-spin .6s linear infinite;
+}
+@keyframes ui-spin { to { transform: rotate(360deg); } }

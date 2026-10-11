@@ -98,17 +98,6 @@ async function confirmDelete(id: string) {
   <div class="page">
 
     <div class="page-header">
-      <div class="header-icon">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-          <line x1="12" y1="22.08" x2="12" y2="12"/>
-        </svg>
-      </div>
-      <div class="header-text">
-        <h1 class="page-title">{{ t('nav.products') }}</h1>
-        <p class="page-sub">{{ t('wms.products.subtitle') }}</p>
-      </div>
       <button class="btn-primary" @click="openCreate">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -256,11 +245,11 @@ async function confirmDelete(id: string) {
   gap: 1.5rem;
 }
 
-.page-header { display: flex; align-items: center; gap: .85rem; }
+.page-header { display: flex; align-items: center; justify-content: flex-end; }
 .header-icon {
   width: 40px; height: 40px;
-  background: rgba(62,207,191,.08);
-  border: 1px solid rgba(62,207,191,.18);
+  background: rgba(var(--accent-rgb), .08);
+  border: 1px solid rgba(var(--accent-rgb), .18);
   border-radius: var(--r-lg);
   display: flex; align-items: center; justify-content: center;
   color: var(--teal); flex-shrink: 0;
@@ -271,7 +260,7 @@ async function confirmDelete(id: string) {
 
 .btn-primary {
   display: inline-flex; align-items: center; gap: .4rem;
-  background: var(--teal); color: #0a0a0a; border: none;
+  background: var(--teal); color: var(--accent-text); border: none;
   border-radius: var(--r); padding: .5rem 1rem;
   font-size: .8rem; font-weight: 600; cursor: pointer;
   transition: opacity .15s; white-space: nowrap;
@@ -309,9 +298,8 @@ async function confirmDelete(id: string) {
 .tbl { width: 100%; border-collapse: collapse; font-size: .8rem; }
 .tbl thead { background: var(--bg); border-bottom: 1px solid var(--border); }
 .tbl th {
-  padding: .65rem 1rem; font-size: .66rem; font-weight: 600;
-  color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase;
-  text-align: left; white-space: nowrap;
+  padding: .65rem 1rem; font-size: .75rem; font-weight: 600;
+  color: var(--text-muted); text-align: left; white-space: nowrap;
 }
 .tbl th.num, .tbl td.num { text-align: right; }
 .tbl th.act, .tbl td.act { width: 90px; text-align: right; padding-right: .75rem; }
@@ -326,10 +314,10 @@ async function confirmDelete(id: string) {
 
 .sku-badge {
   display: inline-block;
-  background: rgba(62,207,191,.08); border: 1px solid rgba(62,207,191,.2);
-  color: var(--teal); font-size: .71rem; font-weight: 600;
+   
+  color: var(--text-sub); font-size: .71rem; font-weight: 600;
   padding: .1rem .45rem; border-radius: var(--r);
-  font-family: monospace; letter-spacing: .03em;
+  font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: .03em;
 }
 
 .row-actions {
@@ -346,12 +334,12 @@ async function confirmDelete(id: string) {
   transition: background .12s, color .12s, border-color .12s;
 }
 .icon-btn:hover { background: var(--bg-hover); border-color: var(--border); color: var(--text-sub); }
-.icon-btn--danger:hover  { background: var(--red-bg); border-color: rgba(224,85,85,.25); color: var(--red); }
+.icon-btn--danger:hover  { background: var(--red-bg); border-color: rgba(var(--red-rgb), .25); color: var(--red); }
 .icon-btn--confirm       { color: var(--green); }
-.icon-btn--confirm:hover { background: var(--green-bg); border-color: rgba(58,184,122,.25); color: var(--green); }
+.icon-btn--confirm:hover { background: var(--green-bg); border-color: rgba(var(--green-rgb), .25); color: var(--green); }
 
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  position: fixed; inset: 0; background: var(--overlay);
   display: flex; align-items: center; justify-content: center;
   z-index: 200; padding: 1rem;
 }

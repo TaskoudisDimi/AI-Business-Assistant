@@ -49,7 +49,7 @@
   "auth": {
     "login": "Sign in",
     "logout": "Sign out",
-    "register": "Sign up",
+    "register": "Create your account",
     "email": "Email",
     "password": "Password",
     "fullName": "Full Name",
@@ -59,17 +59,52 @@
     "signIn": "Sign in",
     "signUp": "Create account",
     "wrongCredentials": "Invalid credentials",
-    "minPassword": "At least 6 characters",
-    "welcomeBack": "Welcome back",
-    "platformSignIn": "Sign in to your account",
-    "loginFailed": "Login failed",
+    "welcomeBack": "Sign in",
+    "platformSignIn": "Welcome back. Enter your details to continue.",
     "signingIn": "Signing in…",
-    "startFree": "Start for free today",
+    "startFree": "Set up your workspace in under a minute.",
     "creatingAccount": "Creating…",
-    "nameTooShort": "Name must be at least 3 characters",
-    "passwordTooShort": "Password must be at least 6 characters",
-    "accountCreated": "Account created! Check your email for confirmation.",
-    "registerFailed": "Registration failed"
+    "nameTooShort": "Please enter your full name",
+    "passwordTooShort": "Password must be at least {n} characters",
+    "registerFailed": "Registration failed",
+    "passwordRule": "At least {n} characters.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "backToSignIn": "Back to sign in",
+    "checkInbox": "Check your inbox",
+    "checkSpam": "Didn't get it within a few minutes? Check your spam folder.",
+    "confirmSent": "We sent a confirmation link to {email}. Open it to activate your account.",
+    "accountReady": "Your account is ready",
+    "accountReadySub": "You can sign in now.",
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "Enter the email you signed up with and we'll send you a link to choose a new password.",
+      "send": "Send reset link",
+      "sent": "If an account exists for {email}, you'll get an email with a reset link shortly.",
+      "tryAnother": "Use a different email"
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "subtitle": "Pick something you haven't used here before.",
+      "newPassword": "New password",
+      "confirm": "Confirm new password",
+      "save": "Update password",
+      "mismatch": "Passwords don't match",
+      "doneTitle": "Password updated",
+      "doneSub": "You can now use your new password.",
+      "continue": "Continue to dashboard",
+      "invalidTitle": "This link has expired",
+      "invalidSub": "Reset links work once and expire after an hour. Request a new one to continue.",
+      "requestNew": "Request a new link"
+    },
+    "showcase": {
+      "eyebrow": "Warehouse management",
+      "title": "Know what's on the shelf before it runs out.",
+      "low": "low",
+      "point1": "Stock levels update the moment an order is completed",
+      "point2": "Reorder alerts based on the last 30 days of movement",
+      "point3": "Sales forecasts from your own data"
+    }
   },
   "dashboard": {
     "greeting": "Welcome back, {name}",
@@ -173,7 +208,7 @@
       "subtitle": "Most purchased items across all customers"
     },
     "insight": {
-      "title": "AI Insight",
+      "title": "Insight",
       "atRisk": "{count} customers haven't ordered in 60+ days. Consider a re-engagement campaign.",
       "healthy": "Customer base is healthy. Focus on converting New customers to Loyal.",
       "noOrders": "No completed sale orders yet. Start selling to see analytics here."
@@ -227,7 +262,7 @@
         "hint": "Add products first to track inventory"
       },
       "ai": {
-        "title": "AI Reorder Suggestions",
+        "title": "Reorder alerts",
         "subtitle": "Items that need attention based on stock levels and sales velocity",
         "empty": "All items are well-stocked",
         "critical": "Critical",
@@ -319,7 +354,17 @@
       "changePassword": "Change password",
       "changePasswordSub": "Use at least 8 characters",
       "deleteConfirmLabel": "Type DELETE to confirm",
-      "passwordChanged": "Password changed"
+      "passwordChanged": "Password changed",
+      "currentPassword": "Current password",
+      "wrongCurrent": "Current password is incorrect"
+    }
+  },
+  "prefs": {
+    "language": "Ελληνικά",
+    "theme": {
+      "system": "Theme: system",
+      "light": "Theme: light",
+      "dark": "Theme: dark"
     }
   }
 }

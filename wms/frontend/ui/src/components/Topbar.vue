@@ -1,19 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
-import { setLocale } from '@/i18n'
+import PrefsToggles from '@/components/PrefsToggles.vue'
 
 const auth   = useAuthStore()
 const route  = useRoute()
 const router = useRouter()
-const { t, locale } = useI18n()
-
-const toggleLocale = () => {
-  const next = locale.value === 'el' ? 'en' : 'el'
-  setLocale(next as 'el' | 'en')
-}
+const { t } = useI18n()
 
 const showUserMenu = ref(false)
 
@@ -28,7 +23,7 @@ const pageTitle = computed(() => {
     '/products':  t('nav.products'),
     '/orders':    t('nav.orders'),
   }
-  return map[route.path] || 'AI Assistant'
+  return map[route.path] || ''
 })
 
 const pageSub = computed(() => {
@@ -55,72 +50,50 @@ const logout = async () => {
   await auth.logout(router)
 }
 
-const closeAll = () => {
-  showUserMenu.value = false
+const menuHost = ref<HTMLElement | null>(null)
+const onDocClick = (e: MouseEvent) => {
+  if (menuHost.value && !menuHost.value.contains(e.target as Node)) showUserMenu.value = false
 }
+const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') showUserMenu.value = false }
+onMounted(() => { document.addEventListener('click', onDocClick); document.addEventListener('keydown', onKey) })
+onBeforeUnmount(() => { document.removeEventListener('click', onDocClick); document.removeEventListener('keydown', onKey) })
+
+const goSettings = () => { showUserMenu.value = false; router.push('/settings') }
 </script>
 
 <template>
-  <header class="topbar" @click="closeAll">
-
-    <div class="topbar-left">
+  <header class="topbar">
+    <div class="titles">
       <h1 class="page-title">{{ pageTitle }}</h1>
       <span v-if="pageSub" class="page-sub">{{ pageSub }}</span>
     </div>
 
-    <div class="topbar-right" @click.stop>
+    <div class="actions">
+      <PrefsToggles />
 
-      <!-- Language toggle -->
-      <button class="lang-btn" @click="toggleLocale" :title="locale === 'el' ? 'Switch to English' : 'Αλλαγή σε Ελληνικά'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-        </svg>
-        <span>{{ locale === 'el' ? 'EN' : 'EL' }}</span>
-      </button>
-
-      <div class="sep" />
-
-      <!-- User menu -->
-      <div class="dropdown-host">
-        <button class="user-btn" @click="showUserMenu = !showUserMenu">
-          <div class="avatar">{{ initials }}</div>
-          <span class="user-name">{{ auth.user?.full_name?.split(' ')[0] || 'User' }}</span>
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            :style="{ transform: showUserMenu ? 'rotate(180deg)' : '', transition: 'transform .2s' }">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
+      <div ref="menuHost" class="menu-host">
+        <button class="user-btn" :aria-expanded="showUserMenu" aria-haspopup="menu" @click="showUserMenu = !showUserMenu">
+          <span class="avatar">{{ initials }}</span>
         </button>
 
-        <Transition name="menu-pop">
-          <div v-if="showUserMenu" class="dropdown dropdown--right">
-            <div class="user-info">
-              <div class="avatar avatar--lg">{{ initials }}</div>
-              <div>
-                <p class="user-name-full">{{ auth.user?.full_name }}</p>
-                <p class="user-email">{{ auth.user?.email }}</p>
-              </div>
+        <Transition name="pop">
+          <div v-if="showUserMenu" class="menu" role="menu">
+            <div class="menu-user">
+              <p class="menu-name">{{ auth.user?.full_name }}</p>
+              <p class="menu-email">{{ auth.user?.email }}</p>
+              <p v-if="auth.currentBusiness" class="menu-biz">{{ auth.currentBusiness.name }}</p>
             </div>
-            <div class="dropdown-divider" />
-            <button class="dropdown-item" @click="router.push('/settings'); showUserMenu = false">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-              </svg>
+            <button class="menu-item" role="menuitem" @click="goSettings">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
               {{ t('nav.settings') }}
             </button>
-            <div class="dropdown-divider" />
-            <button class="dropdown-item dropdown-item--danger" @click="logout">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
+            <button class="menu-item menu-item--danger" role="menuitem" @click="logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg>
               {{ t('auth.logout') }}
             </button>
           </div>
         </Transition>
       </div>
-
     </div>
   </header>
 </template>
@@ -128,167 +101,54 @@ const closeAll = () => {
 <style scoped>
 .topbar {
   height: 56px;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   padding: 0 1.5rem;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 20;
 }
+.titles { display: flex; align-items: baseline; gap: .75rem; min-width: 0; }
+.page-title { font-size: 1rem; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
+.page-sub { font-size: .85rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 640px) { .page-sub { display: none; } }
 
-.topbar-left { display: flex; align-items: baseline; gap: .65rem; }
-.page-title  { font-size: .95rem; font-weight: 600; color: var(--text); margin: 0; letter-spacing: -.01em; }
-.page-sub    { font-size: .72rem; color: var(--text-muted); }
+.actions { display: flex; align-items: center; gap: .5rem; }
 
-.topbar-right { display: flex; align-items: center; gap: .6rem; }
-.sep { width: 1px; height: 20px; background: var(--border); }
-
-/* Language toggle */
-.lang-btn {
-  display: flex; align-items: center; gap: .3rem;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  color: var(--text-muted);
-  font-size: .72rem;
-  font-weight: 600;
-  padding: .28rem .55rem;
-  cursor: pointer;
-  letter-spacing: .04em;
-  transition: border-color .15s, color .15s;
-}
-.lang-btn:hover { border-color: var(--border-mid); color: var(--teal); }
-
-/* Business */
-.dropdown-host { position: relative; }
-.biz-btn {
-  display: flex; align-items: center; gap: .45rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  color: var(--text-sub);
-  font-size: .78rem;
-  font-weight: 500;
-  padding: .35rem .7rem;
-  cursor: pointer;
-  transition: border-color .15s, color .15s;
-  white-space: nowrap;
-}
-.biz-btn:hover { border-color: var(--border-mid); color: var(--text); }
-
-.online-dot {
-  width: 6px; height: 6px;
-  background: var(--green);
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-/* User */
-.user-btn {
-  display: flex; align-items: center; gap: .45rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--text-sub);
-  padding: .3rem .35rem;
-  border-radius: var(--r);
-  transition: background .15s;
-}
-.user-btn:hover { background: var(--bg-hover); }
-.user-name { font-size: .8rem; font-weight: 500; color: var(--text-sub); }
-
-/* Avatar */
+.menu-host { position: relative; }
+.user-btn { display: flex; padding: 2px; border-radius: 50%; background: transparent; cursor: pointer; }
+.user-btn:hover .avatar { border-color: var(--text-muted); }
 .avatar {
-  width: 28px; height: 28px;
-  background: linear-gradient(135deg, var(--teal-dark), #0a3a3a);
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: .75rem; font-weight: 600;
+  background: var(--bg-card); color: var(--text-sub);
   border: 1px solid var(--border-mid);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .68rem; font-weight: 700; color: var(--teal);
-  flex-shrink: 0;
+  transition: border-color .12s;
 }
-.avatar--lg { width: 36px; height: 36px; font-size: .78rem; }
 
-/* Dropdown */
-.dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
+.menu {
+  position: absolute; right: 0; top: calc(100% + 6px);
+  width: 240px; padding: .3rem;
   background: var(--bg-card);
-  border: 1px solid var(--border-mid);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  padding: .35rem;
-  min-width: 190px;
-  z-index: 100;
   box-shadow: var(--shadow-lg);
+  z-index: 50;
 }
-.dropdown--right { left: auto; right: 0; }
-
-.dropdown-label {
-  font-size: .64rem;
-  font-weight: 600;
-  letter-spacing: .07em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding: .3rem .55rem .2rem;
-}
-.dropdown-divider { height: 1px; background: var(--border); margin: .25rem 0; }
-
-.dropdown-item {
-  display: flex; align-items: center; gap: .5rem;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--text-sub);
-  font-size: .8rem;
-  padding: .45rem .6rem;
+.menu-user { padding: .55rem .6rem .65rem; margin-bottom: .3rem; border-bottom: 1px solid var(--border-light); }
+.menu-name { font-size: .875rem; font-weight: 600; }
+.menu-email, .menu-biz { font-size: .8rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-biz { margin-top: .35rem; color: var(--text-sub); }
+.menu-item {
+  width: 100%; display: flex; align-items: center; gap: .6rem;
+  height: 34px; padding: 0 .6rem;
   border-radius: var(--r);
-  cursor: pointer;
-  transition: background .1s, color .1s;
-  text-align: left;
+  background: transparent; font-size: .875rem; color: var(--text-sub); text-align: left; cursor: pointer;
 }
-.dropdown-item:hover         { background: var(--bg-hover); color: var(--text); }
-.dropdown-item--active       { background: var(--bg-hover); color: var(--text); }
-.dropdown-item--danger       { color: var(--red); }
-.dropdown-item--danger:hover { background: var(--red-bg); }
+.menu-item:hover { background: var(--bg-hover); color: var(--text); }
+.menu-item--danger:hover { background: var(--red-bg); color: var(--red); }
 
-.item-dot {
-  width: 5px; height: 5px;
-  background: var(--text-muted);
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.item-dot.on { background: var(--green); }
-
-.current-tag {
-  margin-left: auto;
-  background: var(--green-bg);
-  border: 1px solid rgba(58,184,122,.25);
-  color: var(--green);
-  font-size: .63rem;
-  padding: .08rem .4rem;
-  border-radius: 999px;
-}
-
-.user-info {
-  display: flex; align-items: center; gap: .65rem;
-  padding: .45rem .6rem .55rem;
-}
-.user-name-full { font-size: .82rem; font-weight: 600; color: var(--text); margin: 0; }
-.user-email     { font-size: .7rem; color: var(--text-muted); margin: .06rem 0 0; }
-
-/* Transitions */
-.menu-pop-enter-active { transition: all .14s cubic-bezier(.2,.8,.3,1); }
-.menu-pop-leave-active { transition: all .1s ease; }
-.menu-pop-enter-from   { opacity: 0; transform: scale(.94) translateY(-5px); }
-.menu-pop-leave-to     { opacity: 0; transform: scale(.97); }
-
-@media (max-width: 640px) {
-  .page-sub, .user-name { display: none; }
-  .topbar { padding: 0 1rem; }
-}
+.pop-enter-active, .pop-leave-active { transition: opacity .12s, transform .12s; transform-origin: top right; }
+.pop-enter-from, .pop-leave-to { opacity: 0; transform: scale(.97) translateY(-2px); }
 </style>

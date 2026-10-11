@@ -10,5 +10,5 @@ def check_business_access(user_id: str, business_id: str):
         .maybe_single() \
         .execute()
 
-    if not membership.data:
+    if not membership or not membership.data:
         raise HTTPException(status_code=403, detail="No access to this business")

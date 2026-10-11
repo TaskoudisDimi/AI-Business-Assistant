@@ -1,24 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from core.security import get_current_user
 from db.supabase_client import supabase
+from services.permissions import check_business_access as _check_biz
 
 router = APIRouter(prefix="/api/orders", tags=["Orders"])
 
 
-def _check_biz(business_id: str, user_id: str):
-    m = supabase.table("business_members") \
-        .select("role").eq("user_id", user_id).eq("business_id", business_id) \
-        .maybe_single().execute()
-    if not m.data:
-        raise HTTPException(403, "Access denied")
-
-
 class OrderItemIn(BaseModel):
     product_id: str
-    quantity: int
-    unit_price: Optional[float] = None
+    quantity: int = Field(gt=0)
+    unit_price: Optional[float] = Field(default=None, ge=0)
 
 
 class OrderCreate(BaseModel):
@@ -34,7 +27,7 @@ class StatusUpdate(BaseModel):
 
 
 @router.get("")
-async def list_orders(
+def list_orders(
     business_id: str,
     type: Optional[str] = None,
     status: Optional[str] = None,
@@ -51,10 +44,17 @@ async def list_orders(
 
 
 @router.post("")
-async def create_order(body: OrderCreate, user_id: str = Depends(get_current_user)):
+def create_order(body: OrderCreate, user_id: str = Depends(get_current_user)):
     _check_biz(body.business_id, user_id)
     if body.type not in ("purchase", "sale"):
         raise HTTPException(400, "Invalid order type")
+
+    product_ids = {item.product_id for item in body.items}
+    if product_ids:
+        owned = supabase.table("products").select("id") \
+            .eq("business_id", body.business_id).in_("id", list(product_ids)).execute()
+        if len(owned.data or []) != len(product_ids):
+            raise HTTPException(400, "Unknown product in order")
 
     order_res = supabase.table("orders").insert({
         "business_id": body.business_id,
@@ -85,10 +85,10 @@ async def create_order(body: OrderCreate, user_id: str = Depends(get_current_use
 
 
 @router.get("/{order_id}")
-async def get_order(order_id: str, user_id: str = Depends(get_current_user)):
+def get_order(order_id: str, user_id: str = Depends(get_current_user)):
     order = supabase.table("orders").select("*") \
         .eq("id", order_id).maybe_single().execute()
-    if not order.data:
+    if not order or not order.data:
         raise HTTPException(404, "Order not found")
     _check_biz(order.data["business_id"], user_id)
     items = supabase.table("order_items") \
@@ -98,34 +98,38 @@ async def get_order(order_id: str, user_id: str = Depends(get_current_user)):
 
 
 @router.patch("/{order_id}/status")
-async def update_status(
+def update_status(
     order_id: str,
     body: StatusUpdate,
     user_id: str = Depends(get_current_user),
 ):
-    if body.status not in ("draft", "confirmed", "completed", "cancelled"):
+    if body.status not in ("draft", "confirmed", "cancelled"):
         raise HTTPException(400, "Invalid status")
     order = supabase.table("orders").select("*") \
         .eq("id", order_id).maybe_single().execute()
-    if not order.data:
+    if not order or not order.data:
         raise HTTPException(404, "Order not found")
     _check_biz(order.data["business_id"], user_id)
+    if order.data["status"] == "completed":
+        raise HTTPException(400, "Completed orders can't change status")
     res = supabase.table("orders").update({"status": body.status}).eq("id", order_id).execute()
     return res.data[0]
 
 
 @router.post("/{order_id}/complete")
-async def complete_order(order_id: str, user_id: str = Depends(get_current_user)):
+def complete_order(order_id: str, user_id: str = Depends(get_current_user)):
     order = supabase.table("orders").select("*") \
         .eq("id", order_id).maybe_single().execute()
-    if not order.data:
+    if not order or not order.data:
         raise HTTPException(404, "Order not found")
     _check_biz(order.data["business_id"], user_id)
 
-    if order.data["status"] == "completed":
-        raise HTTPException(400, "Already completed")
-    if order.data["status"] == "cancelled":
-        raise HTTPException(400, "Cannot complete a cancelled order")
+    # Claim the order atomically first, so two concurrent requests can't both
+    # apply the stock movements
+    claimed = supabase.table("orders").update({"status": "completed"}) \
+        .eq("id", order_id).in_("status", ["draft", "confirmed"]).execute()
+    if not claimed.data:
+        raise HTTPException(400, "Order is already completed or cancelled")
 
     items = supabase.table("order_items").select("product_id, quantity") \
         .eq("order_id", order_id).execute()
@@ -150,11 +154,10 @@ async def complete_order(order_id: str, user_id: str = Depends(get_current_user)
             .eq("business_id", business_id) \
             .maybe_single().execute()
 
-        if inv.data:
+        if inv and inv.data:
             current = inv.data["quantity"]
             new_qty = current + item["quantity"] if movement_type == "inbound" else max(0, current - item["quantity"])
             supabase.table("inventory_items") \
                 .update({"quantity": new_qty}).eq("id", inv.data["id"]).execute()
 
-    res = supabase.table("orders").update({"status": "completed"}).eq("id", order_id).execute()
-    return res.data[0]
+    return claimed.data[0]

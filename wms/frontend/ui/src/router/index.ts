@@ -2,8 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
-  { path: '/login',    component: () => import('@/views/Auth/Login.vue') },
-  { path: '/register', component: () => import('@/views/Auth/Register.vue') },
+  { path: '/login',           component: () => import('@/views/Auth/Login.vue'),          meta: { guestOnly: true } },
+  { path: '/register',        component: () => import('@/views/Auth/Register.vue'),       meta: { guestOnly: true } },
+  { path: '/forgot-password', component: () => import('@/views/Auth/ForgotPassword.vue'), meta: { guestOnly: true } },
+  // Reachable while signed in too: the recovery link may be opened in a browser with an active session
+  { path: '/reset-password',  component: () => import('@/views/Auth/ResetPassword.vue') },
 
   {
     path: '/',
@@ -34,10 +37,8 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   if (auth.loading) await auth.initialize()
 
-  const isAuthPage = to.path === '/login' || to.path === '/register'
-
   if (to.meta.requiresAuth && !auth.isAuthenticated) return '/login'
-  if (isAuthPage && auth.isAuthenticated) return '/dashboard'
+  if (to.meta.guestOnly && auth.isAuthenticated) return '/dashboard'
 })
 
 export default router

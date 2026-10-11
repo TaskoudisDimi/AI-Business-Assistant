@@ -1,11 +1,11 @@
 #!/bin/bash
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-BACKEND_DIR="$REPO_ROOT/AI-Buismess-Assitant/backend"
-FRONTEND_DIR="$REPO_ROOT/AI-Buismess-Assitant/frontend/ui"
+BACKEND_DIR="$REPO_ROOT/wms/backend"
+FRONTEND_DIR="$REPO_ROOT/wms/frontend/ui"
 VENV_ACTIVATE="$BACKEND_DIR/ai-bus-assistant/bin/activate"
 
-echo "Starting AI Business Assistant..."
+echo "Starting WMS..."
 
 # Backend terminal
 osascript <<EOF

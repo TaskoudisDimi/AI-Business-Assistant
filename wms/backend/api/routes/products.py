@@ -3,16 +3,9 @@ from pydantic import BaseModel
 from typing import Optional
 from core.security import get_current_user
 from db.supabase_client import supabase
+from services.permissions import check_business_access as _check_biz
 
 router = APIRouter(prefix="/api/products", tags=["Products"])
-
-
-def _check_biz(business_id: str, user_id: str):
-    m = supabase.table("business_members") \
-        .select("role").eq("user_id", user_id).eq("business_id", business_id) \
-        .maybe_single().execute()
-    if not m.data:
-        raise HTTPException(403, "Access denied")
 
 
 class ProductCreate(BaseModel):
@@ -37,7 +30,7 @@ class ProductUpdate(BaseModel):
 
 
 @router.get("")
-async def list_products(business_id: str, user_id: str = Depends(get_current_user)):
+def list_products(business_id: str, user_id: str = Depends(get_current_user)):
     _check_biz(business_id, user_id)
     res = supabase.table("products").select("*") \
         .eq("business_id", business_id).order("created_at").execute()
@@ -45,7 +38,7 @@ async def list_products(business_id: str, user_id: str = Depends(get_current_use
 
 
 @router.post("")
-async def create_product(body: ProductCreate, user_id: str = Depends(get_current_user)):
+def create_product(body: ProductCreate, user_id: str = Depends(get_current_user)):
     _check_biz(body.business_id, user_id)
     res = supabase.table("products").insert({
         "business_id": body.business_id,
@@ -69,14 +62,14 @@ async def create_product(body: ProductCreate, user_id: str = Depends(get_current
 
 
 @router.patch("/{product_id}")
-async def update_product(
+def update_product(
     product_id: str,
     body: ProductUpdate,
     user_id: str = Depends(get_current_user),
 ):
     p = supabase.table("products").select("business_id") \
         .eq("id", product_id).maybe_single().execute()
-    if not p.data:
+    if not p or not p.data:
         raise HTTPException(404, "Not found")
     _check_biz(p.data["business_id"], user_id)
     fields = {k: v for k, v in {
@@ -91,10 +84,10 @@ async def update_product(
 
 
 @router.delete("/{product_id}")
-async def delete_product(product_id: str, user_id: str = Depends(get_current_user)):
+def delete_product(product_id: str, user_id: str = Depends(get_current_user)):
     p = supabase.table("products").select("business_id") \
         .eq("id", product_id).maybe_single().execute()
-    if not p.data:
+    if not p or not p.data:
         raise HTTPException(404, "Not found")
     _check_biz(p.data["business_id"], user_id)
     supabase.table("products").delete().eq("id", product_id).execute()

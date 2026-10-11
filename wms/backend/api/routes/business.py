@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import Literal
 from core.security import get_current_user
 from db.supabase_client import supabase
 
@@ -23,7 +23,7 @@ class UpdateBusinessSchema(BaseModel):
 
 class InviteMemberSchema(BaseModel):
     user_id: str
-    role: str = "member"
+    role: Literal["member", "admin"] = "member"
 
 
 # =========================
@@ -31,7 +31,7 @@ class InviteMemberSchema(BaseModel):
 # =========================
 
 @router.get("")
-async def get_my_businesses(user_id: str = Depends(get_current_user)):
+def get_my_businesses(user_id: str = Depends(get_current_user)):
 
     memberships = supabase.table("business_members") \
         .select("business_id") \
@@ -56,8 +56,8 @@ async def get_my_businesses(user_id: str = Depends(get_current_user)):
 # =========================
 
 @router.post("")
-async def create_business(data: CreateBusinessSchema,
-                          user_id: str = Depends(get_current_user)):
+def create_business(data: CreateBusinessSchema,
+                    user_id: str = Depends(get_current_user)):
     business = supabase.table("businesses").insert({
         "owner_id": user_id,
         "name": data.name,
@@ -81,18 +81,18 @@ async def create_business(data: CreateBusinessSchema,
 # =========================
 
 @router.patch("/{business_id}")
-async def update_business(business_id: str,
-                          data: UpdateBusinessSchema,
-                          user_id: str = Depends(get_current_user)):
+def update_business(business_id: str,
+                    data: UpdateBusinessSchema,
+                    user_id: str = Depends(get_current_user)):
 
     membership = supabase.table("business_members") \
-        .select("*") \
+        .select("role") \
         .eq("business_id", business_id) \
         .eq("user_id", user_id) \
         .maybe_single() \
         .execute()
 
-    if not membership.data:
+    if not membership or membership.data["role"] not in ("owner", "admin"):
         raise HTTPException(403, "Not allowed")
 
     supabase.table("businesses") \
@@ -114,8 +114,8 @@ async def update_business(business_id: str,
 # =========================
 
 @router.delete("/{business_id}")
-async def delete_business(business_id: str,
-                          user_id: str = Depends(get_current_user)):
+def delete_business(business_id: str,
+                    user_id: str = Depends(get_current_user)):
 
     business = supabase.table("businesses") \
         .select("*") \
@@ -124,7 +124,7 @@ async def delete_business(business_id: str,
         .maybe_single() \
         .execute()
 
-    if not business.data:
+    if not business or not business.data:
         raise HTTPException(403, "Only owner can delete")
 
     supabase.table("businesses") \
@@ -140,9 +140,9 @@ async def delete_business(business_id: str,
 # =========================
 
 @router.post("/{business_id}/invite")
-async def invite_member(business_id: str,
-                        data: InviteMemberSchema,
-                        user_id: str = Depends(get_current_user)):
+def invite_member(business_id: str,
+                  data: InviteMemberSchema,
+                  user_id: str = Depends(get_current_user)):
 
     # only owner
     business = supabase.table("businesses") \
@@ -152,7 +152,7 @@ async def invite_member(business_id: str,
         .maybe_single() \
         .execute()
 
-    if not business.data:
+    if not business or not business.data:
         raise HTTPException(403, "Only owner can invite")
 
     supabase.table("business_members").insert({

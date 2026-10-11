@@ -2,16 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
 from core.security import get_current_user
 from db.supabase_client import supabase
+from services.permissions import check_business_access as _check_biz
 
 router = APIRouter(prefix="/api/customers", tags=["Customers"])
-
-
-def _check_biz(business_id: str, user_id: str):
-    m = supabase.table("business_members") \
-        .select("role").eq("user_id", user_id).eq("business_id", business_id) \
-        .maybe_single().execute()
-    if not m.data:
-        raise HTTPException(403, "Access denied")
 
 
 def _segment(total_orders: int, total_revenue: float, days_since: int, avg_revenue: float) -> str:
@@ -27,7 +20,7 @@ def _segment(total_orders: int, total_revenue: float, days_since: int, avg_reven
 
 
 @router.get("/analysis")
-async def customer_analysis(business_id: str, user_id: str = Depends(get_current_user)):
+def customer_analysis(business_id: str, user_id: str = Depends(get_current_user)):
     _check_biz(business_id, user_id)
 
     # Fetch all completed sale orders

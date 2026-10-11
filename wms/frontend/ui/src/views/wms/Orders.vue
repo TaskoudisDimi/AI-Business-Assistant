@@ -124,18 +124,6 @@ const STATUS_CLASS: Record<string, string> = {
   <div class="page">
 
     <div class="page-header">
-      <div class="header-icon">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="9" y1="13" x2="15" y2="13"/>
-          <line x1="9" y1="17" x2="15" y2="17"/>
-        </svg>
-      </div>
-      <div class="header-text">
-        <h1 class="page-title">{{ t('nav.orders') }}</h1>
-        <p class="page-sub">{{ t('wms.orders.subtitle') }}</p>
-      </div>
       <button class="btn-primary" @click="openCreate">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -303,10 +291,10 @@ const STATUS_CLASS: Record<string, string> = {
   gap: 1.5rem;
 }
 
-.page-header { display: flex; align-items: center; gap: .85rem; }
+.page-header { display: flex; align-items: center; justify-content: flex-end; }
 .header-icon {
   width: 40px; height: 40px;
-  background: rgba(62,207,191,.08); border: 1px solid rgba(62,207,191,.18);
+  background: rgba(var(--accent-rgb), .08); border: 1px solid rgba(var(--accent-rgb), .18);
   border-radius: var(--r-lg); display: flex; align-items: center; justify-content: center;
   color: var(--teal); flex-shrink: 0;
 }
@@ -356,9 +344,8 @@ const STATUS_CLASS: Record<string, string> = {
 .tbl { width: 100%; border-collapse: collapse; font-size: .8rem; }
 .tbl thead { background: var(--bg); border-bottom: 1px solid var(--border); }
 .tbl th {
-  padding: .65rem 1rem; font-size: .66rem; font-weight: 600;
-  color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase;
-  text-align: left; white-space: nowrap;
+  padding: .65rem 1rem; font-size: .75rem; font-weight: 600;
+  color: var(--text-muted); text-align: left; white-space: nowrap;
 }
 .tbl th.act, .tbl td.act { width: 120px; text-align: right; padding-right: .75rem; }
 .tbl td { padding: .72rem 1rem; color: var(--text-sub); border-bottom: 1px solid var(--border); }
@@ -370,20 +357,19 @@ const STATUS_CLASS: Record<string, string> = {
 .order-id { font-family: monospace; font-size: .78rem; color: var(--text-muted); }
 
 .type-badge {
-  display: inline-block; font-size: .68rem; font-weight: 600;
-  padding: .1rem .45rem; border-radius: var(--r); text-transform: uppercase; letter-spacing: .03em;
-}
-.type--purchase { background: rgba(62,207,191,.1); color: var(--teal); border: 1px solid rgba(62,207,191,.2); }
-.type--sale     { background: rgba(58,184,122,.1); color: var(--green); border: 1px solid rgba(58,184,122,.2); }
+  display: inline-block; font-size: .75rem; font-weight: 600;
+  padding: .1rem .45rem; border-radius: var(--r); }
+.type--purchase { background: rgba(var(--blue-rgb), .1); color: var(--blue); border: 1px solid rgba(var(--blue-rgb), .2); }
+.type--sale     { background: rgba(var(--green-rgb), .1); color: var(--green); border: 1px solid rgba(var(--green-rgb), .2); }
 
 .status-badge {
   display: inline-block; font-size: .68rem; font-weight: 600;
   padding: .1rem .45rem; border-radius: var(--r); letter-spacing: .02em;
 }
 .status--draft     { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
-.status--confirmed { background: rgba(62,207,191,.1); color: var(--teal); border: 1px solid rgba(62,207,191,.2); }
-.status--completed { background: var(--green-bg); color: var(--green); border: 1px solid rgba(58,184,122,.2); }
-.status--cancelled { background: var(--red-bg); color: var(--red); border: 1px solid rgba(224,85,85,.2); }
+.status--confirmed { background: rgba(var(--blue-rgb), .1); color: var(--blue); border: 1px solid rgba(var(--blue-rgb), .2); }
+.status--completed { background: var(--green-bg); color: var(--green); border: 1px solid rgba(var(--green-rgb), .2); }
+.status--cancelled { background: var(--red-bg); color: var(--red); border: 1px solid rgba(var(--red-rgb), .2); }
 
 .row-actions { display: flex; align-items: center; justify-content: flex-end; gap: .3rem; opacity: 0; transition: opacity .15s; }
 .tbl tbody tr:hover .row-actions { opacity: 1; }
@@ -402,7 +388,7 @@ const STATUS_CLASS: Record<string, string> = {
 /* Buttons */
 .btn-primary {
   display: inline-flex; align-items: center; gap: .4rem;
-  background: var(--teal); color: #0a0a0a; border: none;
+  background: var(--teal); color: var(--accent-text); border: none;
   border-radius: var(--r); padding: .5rem 1rem;
   font-size: .8rem; font-weight: 600; cursor: pointer; transition: opacity .15s; white-space: nowrap;
 }
@@ -424,7 +410,7 @@ const STATUS_CLASS: Record<string, string> = {
 
 /* Modal */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  position: fixed; inset: 0; background: var(--overlay);
   display: flex; align-items: center; justify-content: center;
   z-index: 200; padding: 1rem;
 }
@@ -452,7 +438,7 @@ const STATUS_CLASS: Record<string, string> = {
   border-radius: var(--r); color: var(--text-muted); font-size: .76rem;
   padding: .45rem .5rem; cursor: pointer; transition: all .15s; text-align: center;
 }
-.type-pill.active { background: rgba(62,207,191,.1); border-color: rgba(62,207,191,.35); color: var(--teal); font-weight: 600; }
+.type-pill.active { background: rgba(var(--blue-rgb), .1); border-color: rgba(var(--blue-rgb), .35); color: var(--blue); font-weight: 600; }
 .type-pill:hover:not(.active) { border-color: var(--border-mid); color: var(--text-sub); }
 
 /* Line items */
@@ -481,7 +467,7 @@ const STATUS_CLASS: Record<string, string> = {
   color: var(--text-muted); cursor: pointer; transition: background .12s, color .12s; flex-shrink: 0;
 }
 .icon-btn:hover { background: var(--bg-hover); border-color: var(--border); color: var(--text-sub); }
-.icon-btn--danger:hover { background: var(--red-bg); border-color: rgba(224,85,85,.25); color: var(--red); }
+.icon-btn--danger:hover { background: var(--red-bg); border-color: rgba(var(--red-rgb), .25); color: var(--red); }
 
 .modal-enter-active { transition: all .18s cubic-bezier(.2,.8,.3,1); }
 .modal-leave-active { transition: all .12s ease; }

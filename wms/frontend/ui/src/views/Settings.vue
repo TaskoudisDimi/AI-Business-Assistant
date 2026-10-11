@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, apiErrorMessage } from '@/stores/auth'
 import { api } from '@/services/api'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
@@ -55,6 +55,7 @@ const changeEmail = async () => {
 }
 
 /* ── Security ── */
+const currentPass   = ref('')
 const newPassword   = ref('')
 const confirmPass   = ref('')
 const showPass      = ref(false)
@@ -65,11 +66,15 @@ const passwordsMatch = computed(() => !confirmPass.value || newPassword.value ==
 const changePassword = async () => {
   if (!passwordsMatch.value) return
   try {
-    await api.patch('/user/password', { password: newPassword.value })
+    await api.patch('/user/password', { current_password: currentPass.value, password: newPassword.value })
+    currentPass.value = ''
     newPassword.value = ''
     confirmPass.value = ''
     showToast(t('settings.security.passwordChanged'))
-  } catch { showToast(t('common.error'), 'error') }
+  } catch (e) {
+    const msg = apiErrorMessage(e)
+    showToast(msg === 'Current password is incorrect' ? t('settings.security.wrongCurrent') : (msg || t('common.error')), 'error')
+  }
 }
 
 const deleteAccount = async () => {
@@ -183,9 +188,14 @@ const tabs = [
           </div>
 
           <div class="field">
+            <label>{{ t('settings.security.currentPassword') }}</label>
+            <input v-model="currentPass" type="password" autocomplete="current-password" placeholder="••••••••" />
+          </div>
+
+          <div class="field">
             <label>{{ t('settings.security.newPassword') }}</label>
             <div class="input-icon-wrap">
-              <input v-model="newPassword" :type="showPass ? 'text' : 'password'" placeholder="••••••••" />
+              <input v-model="newPassword" :type="showPass ? 'text' : 'password'" autocomplete="new-password" placeholder="••••••••" />
               <button class="input-icon-btn" @click="showPass = !showPass">
                 <svg v-if="!showPass" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -204,7 +214,7 @@ const tabs = [
             <p v-if="!passwordsMatch" class="field-error">{{ t('settings.security.passwordMismatch') }}</p>
           </div>
 
-          <button class="btn-primary" :disabled="!newPassword || !passwordsMatch" @click="changePassword">
+          <button class="btn-primary" :disabled="!currentPass || newPassword.length < 8 || !passwordsMatch" @click="changePassword">
             {{ t('settings.security.updatePassword') }}
           </button>
         </div>
@@ -252,8 +262,8 @@ const tabs = [
   font-weight: 500;
   box-shadow: var(--shadow-lg);
 }
-.toast--success { background: var(--green-bg); border: 1px solid rgba(58,184,122,.3); color: var(--green); }
-.toast--error   { background: var(--red-bg);   border: 1px solid rgba(224,85,85,.3);  color: var(--red); }
+.toast--success { background: var(--green-bg); border: 1px solid rgba(var(--green-rgb), .3); color: var(--green); }
+.toast--error   { background: var(--red-bg);   border: 1px solid rgba(var(--red-rgb), .3);  color: var(--red); }
 
 .toast-slide-enter-active { transition: all .25s cubic-bezier(.2,.8,.3,1); }
 .toast-slide-leave-active { transition: all .15s ease; }
@@ -265,8 +275,8 @@ const tabs = [
 .avatar-block { display: flex; align-items: center; gap: 1rem; }
 .avatar-xl {
   width: 52px; height: 52px;
-  background: linear-gradient(135deg, var(--teal-dark), #0a3a3a);
-  border: 1px solid var(--border-mid);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 1rem; font-weight: 700; color: var(--teal);
@@ -313,7 +323,7 @@ const tabs = [
   flex-direction: column;
   gap: 1.1rem;
 }
-.card--danger { border-color: rgba(224,85,85,.25); }
+.card--danger { border-color: rgba(var(--red-rgb), .25); }
 
 .card-head { display: flex; flex-direction: column; gap: .2rem; }
 .card-title { font-size: .9rem; font-weight: 700; color: var(--text); margin: 0; }
@@ -327,12 +337,10 @@ const tabs = [
 .flex-1 { flex: 1; }
 
 label {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 600;
   color: var(--text-muted);
-  letter-spacing: .05em;
-  text-transform: uppercase;
-}
+  }
 
 input, select {
   background: var(--bg-input);
@@ -351,7 +359,7 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px var(--teal-glow);
 }
 input::placeholder { color: var(--text-muted); opacity: .6; }
-.input-error { border-color: rgba(224,85,85,.5) !important; }
+.input-error { border-color: rgba(var(--red-rgb), .5) !important; }
 .input-mono { font-family: monospace; }
 .field-error { font-size: .72rem; color: var(--red); margin: 0; }
 
@@ -371,7 +379,7 @@ input::placeholder { color: var(--text-muted); opacity: .6; }
   display: inline-flex; align-items: center; gap: .4rem;
   background: var(--teal);
   border: none;
-  color: #0a0a0a;
+  color: var(--accent-text);
   border-radius: var(--r);
   padding: .55rem 1.2rem;
   font-size: .82rem;
@@ -399,8 +407,8 @@ input::placeholder { color: var(--text-muted); opacity: .6; }
 
 .btn-danger {
   display: inline-flex; align-items: center; gap: .4rem;
-  background: rgba(224,85,85,.1);
-  border: 1px solid rgba(224,85,85,.3);
+  background: rgba(var(--red-rgb), .1);
+  border: 1px solid rgba(var(--red-rgb), .3);
   color: var(--red);
   border-radius: var(--r);
   padding: .55rem 1.2rem;
@@ -410,7 +418,7 @@ input::placeholder { color: var(--text-muted); opacity: .6; }
   align-self: flex-start;
   transition: background .15s;
 }
-.btn-danger:hover:not(:disabled) { background: rgba(224,85,85,.2); }
+.btn-danger:hover:not(:disabled) { background: rgba(var(--red-rgb), .2); }
 .btn-danger:disabled { opacity: .3; cursor: not-allowed; }
 
 .spinner {

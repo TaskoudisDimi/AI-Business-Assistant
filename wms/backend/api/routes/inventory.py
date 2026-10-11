@@ -1,23 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 from core.security import get_current_user
 from db.supabase_client import supabase
+from services.permissions import check_business_access as _check_biz
 
 router = APIRouter(prefix="/api/inventory", tags=["Inventory"])
 
 
-def _check_biz(business_id: str, user_id: str):
-    m = supabase.table("business_members") \
-        .select("role").eq("user_id", user_id).eq("business_id", business_id) \
-        .maybe_single().execute()
-    if not m.data:
-        raise HTTPException(403, "Access denied")
-
-
 @router.get("")
-async def list_inventory(business_id: str, user_id: str = Depends(get_current_user)):
+def list_inventory(business_id: str, user_id: str = Depends(get_current_user)):
     _check_biz(business_id, user_id)
     res = supabase.table("inventory_items") \
         .select("*, products(id, sku, name, category, unit, reorder_point, cost_price, sell_price)") \
@@ -29,13 +22,13 @@ class MovementCreate(BaseModel):
     business_id: str
     product_id: str
     type: str
-    quantity: int
+    quantity: int = Field(ge=0)
     reason: Optional[str] = None
     order_id: Optional[str] = None
 
 
 @router.post("/movement")
-async def record_movement(body: MovementCreate, user_id: str = Depends(get_current_user)):
+def record_movement(body: MovementCreate, user_id: str = Depends(get_current_user)):
     _check_biz(body.business_id, user_id)
 
     if body.type not in ("inbound", "outbound", "adjustment"):
@@ -47,7 +40,7 @@ async def record_movement(body: MovementCreate, user_id: str = Depends(get_curre
         .eq("business_id", body.business_id) \
         .maybe_single().execute()
 
-    if not inv.data:
+    if not inv or not inv.data:
         raise HTTPException(404, "Inventory item not found")
 
     current_qty = inv.data["quantity"]
@@ -76,7 +69,7 @@ async def record_movement(body: MovementCreate, user_id: str = Depends(get_curre
 
 
 @router.get("/movements")
-async def list_movements(
+def list_movements(
     business_id: str,
     product_id: Optional[str] = None,
     user_id: str = Depends(get_current_user),
@@ -93,7 +86,7 @@ async def list_movements(
 
 
 @router.get("/reorder-suggestions")
-async def reorder_suggestions(business_id: str, user_id: str = Depends(get_current_user)):
+def reorder_suggestions(business_id: str, user_id: str = Depends(get_current_user)):
     _check_biz(business_id, user_id)
 
     inv_res = supabase.table("inventory_items") \
