@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from core.security import get_current_user
 from db.supabase_client import supabase
-from services.permissions import check_business_access as _check_biz
+from services.permissions import check_business_access
 
 router = APIRouter(prefix="/api/orders", tags=["Orders"])
 
@@ -33,7 +33,7 @@ def list_orders(
     status: Optional[str] = None,
     user_id: str = Depends(get_current_user),
 ):
-    _check_biz(business_id, user_id)
+    check_business_access(user_id, business_id)
     query = supabase.table("orders").select("*") \
         .eq("business_id", business_id).order("created_at", desc=True)
     if type:
@@ -45,7 +45,7 @@ def list_orders(
 
 @router.post("")
 def create_order(body: OrderCreate, user_id: str = Depends(get_current_user)):
-    _check_biz(body.business_id, user_id)
+    check_business_access(user_id, body.business_id)
     if body.type not in ("purchase", "sale"):
         raise HTTPException(400, "Invalid order type")
 
@@ -90,7 +90,7 @@ def get_order(order_id: str, user_id: str = Depends(get_current_user)):
         .eq("id", order_id).maybe_single().execute()
     if not order or not order.data:
         raise HTTPException(404, "Order not found")
-    _check_biz(order.data["business_id"], user_id)
+    check_business_access(user_id, order.data["business_id"])
     items = supabase.table("order_items") \
         .select("*, products(sku, name, unit)") \
         .eq("order_id", order_id).execute()
@@ -109,7 +109,7 @@ def update_status(
         .eq("id", order_id).maybe_single().execute()
     if not order or not order.data:
         raise HTTPException(404, "Order not found")
-    _check_biz(order.data["business_id"], user_id)
+    check_business_access(user_id, order.data["business_id"])
     if order.data["status"] == "completed":
         raise HTTPException(400, "Completed orders can't change status")
     res = supabase.table("orders").update({"status": body.status}).eq("id", order_id).execute()
@@ -122,7 +122,7 @@ def complete_order(order_id: str, user_id: str = Depends(get_current_user)):
         .eq("id", order_id).maybe_single().execute()
     if not order or not order.data:
         raise HTTPException(404, "Order not found")
-    _check_biz(order.data["business_id"], user_id)
+    check_business_access(user_id, order.data["business_id"])
 
     # Claim the order atomically first, so two concurrent requests can't both
     # apply the stock movements

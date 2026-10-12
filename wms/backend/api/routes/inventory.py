@@ -4,14 +4,14 @@ from typing import Optional
 from datetime import datetime, timedelta, timezone
 from core.security import get_current_user
 from db.supabase_client import supabase
-from services.permissions import check_business_access as _check_biz
+from services.permissions import check_business_access
 
 router = APIRouter(prefix="/api/inventory", tags=["Inventory"])
 
 
 @router.get("")
 def list_inventory(business_id: str, user_id: str = Depends(get_current_user)):
-    _check_biz(business_id, user_id)
+    check_business_access(user_id, business_id)
     res = supabase.table("inventory_items") \
         .select("*, products(id, sku, name, category, unit, reorder_point, cost_price, sell_price)") \
         .eq("business_id", business_id).execute()
@@ -29,7 +29,7 @@ class MovementCreate(BaseModel):
 
 @router.post("/movement")
 def record_movement(body: MovementCreate, user_id: str = Depends(get_current_user)):
-    _check_biz(body.business_id, user_id)
+    check_business_access(user_id, body.business_id)
 
     if body.type not in ("inbound", "outbound", "adjustment"):
         raise HTTPException(400, "Invalid movement type")
@@ -74,7 +74,7 @@ def list_movements(
     product_id: Optional[str] = None,
     user_id: str = Depends(get_current_user),
 ):
-    _check_biz(business_id, user_id)
+    check_business_access(user_id, business_id)
     query = supabase.table("inventory_movements") \
         .select("*, products(sku, name)") \
         .eq("business_id", business_id) \
@@ -87,7 +87,7 @@ def list_movements(
 
 @router.get("/reorder-suggestions")
 def reorder_suggestions(business_id: str, user_id: str = Depends(get_current_user)):
-    _check_biz(business_id, user_id)
+    check_business_access(user_id, business_id)
 
     inv_res = supabase.table("inventory_items") \
         .select("quantity, products(id, sku, name, category, unit, reorder_point)") \

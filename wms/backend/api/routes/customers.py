@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
 from core.security import get_current_user
 from db.supabase_client import supabase
-from services.permissions import check_business_access as _check_biz
+from services.permissions import check_business_access
 
 router = APIRouter(prefix="/api/customers", tags=["Customers"])
 
@@ -21,7 +21,7 @@ def _segment(total_orders: int, total_revenue: float, days_since: int, avg_reven
 
 @router.get("/analysis")
 def customer_analysis(business_id: str, user_id: str = Depends(get_current_user)):
-    _check_biz(business_id, user_id)
+    check_business_access(user_id, business_id)
 
     # Fetch all completed sale orders
     orders_res = supabase.table("orders") \
