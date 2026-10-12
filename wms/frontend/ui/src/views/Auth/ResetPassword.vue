@@ -45,7 +45,8 @@ const submit = async () => {
     // token_hash flow signs the user in; implicit flow doesn't
     await auth.fetchUser()
   } catch (e) {
-    error.value = apiErrorMessage(e) || t('common.error')
+    const msg = apiErrorMessage(e)
+    error.value = msg === 'Reset link is invalid or has expired' ? t('auth.reset.invalidSub') : (msg || t('common.error'))
   } finally {
     loading.value = false
   }

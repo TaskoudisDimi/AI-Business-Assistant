@@ -1,4 +1,5 @@
 import logging
+import time
 from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from pydantic import BaseModel, EmailStr, Field
 from db.supabase_client import supabase, new_auth_client
@@ -10,6 +11,8 @@ router = APIRouter(prefix="/api/auth", tags=["Auth"])
 log = logging.getLogger(__name__)
 
 MIN_PASSWORD_LENGTH = 8
+# How long after clicking the email link the new password can still be set
+RECOVERY_WINDOW_SECONDS = 60 * 60
 
 
 class LoginRequest(BaseModel):
@@ -107,16 +110,25 @@ def reset_password(data: ResetPasswordRequest, response: Response):
             user_id = session.user.id if session else None
         elif data.access_token:
             user_res = supabase.auth.get_user(data.access_token)  # verifies the token
-            # Only accept sessions created by a recovery link, not a normal login
-            # session (that would let a stolen cookie change the password)
-            methods = {a.get("method") for a in jwt_claims(data.access_token).get("amr", [])}
-            if user_res and user_res.user and "recovery" in methods:
+            # Only accept sessions created from an emailed link moments ago, not a
+            # normal login session (that would let a stolen cookie change the
+            # password). Supabase records email-link sign-ins as "otp" (implicit
+            # flow) or "recovery" (verify endpoint); password logins as "password".
+            amr = jwt_claims(data.access_token).get("amr", [])
+            fresh_link = any(
+                a.get("method") in ("otp", "recovery")
+                and time.time() - a.get("timestamp", 0) < RECOVERY_WINDOW_SECONDS
+                for a in amr
+            )
+            if user_res and user_res.user and fresh_link:
                 user_id = user_res.user.id
             else:
+                log.warning("reset-password rejected: amr=%s", [a.get("method") for a in amr])
                 user_id = None
         else:
             user_id = None
     except Exception:
+        log.exception("reset-password token check failed")
         user_id = None
 
     if not user_id:
