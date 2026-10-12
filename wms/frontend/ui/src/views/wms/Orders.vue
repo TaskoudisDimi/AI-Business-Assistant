@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { intlLocale } from '@/i18n/format'
 import { api } from '@/services/api'
 
 const auth = useAuthStore()
@@ -109,7 +110,7 @@ async function cancelOrder(id: string) {
 }
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('el-GR', { day: '2-digit', month: 'short', year: '2-digit' })
+  return new Date(iso).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short', year: '2-digit' })
 }
 
 const STATUS_CLASS: Record<string, string> = {

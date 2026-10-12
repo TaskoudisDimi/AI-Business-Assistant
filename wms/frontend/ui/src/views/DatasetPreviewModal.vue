@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { api } from '@/services/api'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // ─── Props / Emits ────────────────────────────────────────────────────────────
 const props = defineProps<{
@@ -48,7 +51,7 @@ watch(
       columns.value = res.data.columns
       rows.value    = res.data.rows
     } catch {
-      errorMsg.value = 'Αδυναμία φόρτωσης δεδομένων'
+      errorMsg.value = t('preview.errorLoad')
     } finally {
       loading.value = false
     }
@@ -88,10 +91,10 @@ const saveChanges = async () => {
     const changed = [...dirtyRows.value].map(i => ({ index: i, row: rows.value[i] }))
     await api.patch(`/datasets/${props.dataset.id}/rows`, { changes: changed })
     dirtyRows.value.clear()
-    successMsg.value = 'Αποθηκεύτηκε!'
+    successMsg.value = t('preview.saved')
     setTimeout(() => (successMsg.value = null), 2500)
   } catch {
-    errorMsg.value = 'Αποτυχία αποθήκευσης'
+    errorMsg.value = t('preview.errorSave')
   } finally {
     saving.value = false
   }
@@ -129,9 +132,9 @@ const close = () => {
               <div>
                 <h2 class="modal-title">{{ dataset.name }}</h2>
                 <p class="modal-subtitle">
-                  {{ rows.length }} γραμμές · {{ columns.length }} στήλες
+                  {{ t('preview.size', { rows: rows.length, cols: columns.length }) }}
                   <span v-if="dirtyRows.size > 0" class="dirty-badge">
-                    {{ dirtyRows.size }} αλλαγές
+                    {{ t('preview.changes', dirtyRows.size) }}
                   </span>
                 </p>
               </div>
@@ -145,7 +148,7 @@ const close = () => {
                 @click="saveChanges"
               >
                 <span v-if="saving" class="spinner" />
-                {{ saving ? 'Αποθήκευση…' : 'Αποθήκευση' }}
+                {{ saving ? t('preview.saving') : t('common.save') }}
               </button>
               <button class="btn-close" @click="close">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -162,11 +165,11 @@ const close = () => {
 
             <div v-if="loading" class="state-center">
               <div class="loader" />
-              <p>Φόρτωση δεδομένων…</p>
+              <p>{{ t('common.loading') }}</p>
             </div>
 
             <div v-else-if="rows.length === 0" class="state-center">
-              <p class="text-muted">Δεν βρέθηκαν δεδομένα.</p>
+              <p class="text-muted">{{ t('common.noData') }}</p>
             </div>
 
             <div v-else class="table-wrapper">
@@ -218,15 +221,15 @@ const close = () => {
               class="btn-page"
               :disabled="page === 1"
               @click="page--"
-            >← Προηγ.</button>
+            >← {{ t('preview.prev') }}</button>
 
-            <span class="page-info">Σελίδα {{ page }} / {{ totalPages }}</span>
+            <span class="page-info">{{ t('preview.page', { page, total: totalPages }) }}</span>
 
             <button
               class="btn-page"
               :disabled="page === totalPages"
               @click="page++"
-            >Επόμ. →</button>
+            >{{ t('preview.next') }} →</button>
           </div>
 
         </div>

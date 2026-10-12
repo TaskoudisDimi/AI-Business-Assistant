@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { intlLocale } from '@/i18n/format'
 import { api } from '@/services/api'
 
 const auth  = useAuthStore()
@@ -59,15 +60,15 @@ onMounted(async () => {
 })
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('el-GR', { day: '2-digit', month: 'short' })
+  return new Date(iso).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short' })
 }
 function fmtRevenue(n: number | null) {
   if (n === null) return '—'
-  return '€' + n.toLocaleString('el-GR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return '€' + n.toLocaleString(intlLocale(), { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
 function fmtNum(n: number | null) {
   if (n === null) return '—'
-  return n.toLocaleString('el-GR')
+  return n.toLocaleString(intlLocale())
 }
 </script>
 
@@ -83,7 +84,7 @@ function fmtNum(n: number | null) {
         <p class="biz-name">{{ auth.currentBusiness?.name }}</p>
       </div>
       <span class="date-chip">
-        {{ new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) }}
+        {{ new Date().toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) }}
       </span>
     </div>
 

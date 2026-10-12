@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { api } from '@/services/api'
+import { useI18n } from 'vue-i18n'
+import { intlLocale } from '@/i18n/format'
+
+const { t } = useI18n()
 
 // ─── State ────────────────────────────────────────────────────────────────────
 const datasets   = ref<any[]>([])
@@ -98,7 +102,7 @@ const runPrediction = async () => {
     result.value = r.data
     await loadHistory()
   } catch (e: any) {
-    errorMsg.value = e.response?.data?.detail || 'Αποτυχία πρόβλεψης'
+    errorMsg.value = e.response?.data?.detail || t('forecast.errorRun')
   } finally {
     running.value = false
   }
@@ -125,9 +129,9 @@ const area     = computed(() =>
 )
 
 const selectedDs = computed(() => datasets.value.find(d => d.id === selectedId.value))
-const fmt     = (v: number) => v?.toLocaleString('el-GR', { maximumFractionDigits: 2 }) ?? '—'
-const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('el-GR', { day: '2-digit', month: 'short' })
-const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+const fmt     = (v: number) => v?.toLocaleString(intlLocale(), { maximumFractionDigits: 2 }) ?? '—'
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short' })
+const fmtFull = (iso: string) => new Date(iso).toLocaleString(intlLocale(), { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 </script>
 
 <template>
@@ -135,34 +139,23 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
 
     <!-- Header -->
     <div class="sf-header">
-      <div class="sf-header-left">
-        <div class="sf-icon">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="sf-title">Sales Forecast</h1>
-          <p class="sf-sub">AI πρόβλεψη μελλοντικών πωλήσεων</p>
-        </div>
-      </div>
-      <div v-if="modelInfo"       class="mbadge mbadge--ok">  <span class="mdot"/> Μοντέλο φορτωμένο</div>
+      <div v-if="modelInfo"       class="mbadge mbadge--ok">  <span class="mdot"/> {{ t('forecast.model.loaded') }}</div>
       <div v-else-if="modelError" class="mbadge mbadge--err">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Μοντέλο δεν βρέθηκε
+        {{ t('forecast.model.missing') }}
       </div>
-      <div v-else                 class="mbadge mbadge--load"><span class="mini-spin"/> Φόρτωση…</div>
+      <div v-else                 class="mbadge mbadge--load"><span class="mini-spin"/> {{ t('common.loading') }}</div>
     </div>
 
     <!-- Tabs -->
     <div class="tabs">
       <button class="tab" :class="{ active: activeTab === 'run' }" @click="activeTab = 'run'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Πρόβλεψη
+        {{ t('forecast.tabs.run') }}
       </button>
       <button class="tab" :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Ιστορικό <span v-if="history.length" class="tab-n">{{ history.length }}</span>
+        {{ t('forecast.tabs.history') }} <span v-if="history.length" class="tab-n">{{ history.length }}</span>
       </button>
     </div>
 
@@ -170,36 +163,39 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
     <template v-if="activeTab === 'run'">
       <div class="card">
         <div class="card-head">
-          <h3 class="ctitle">Παράμετροι</h3>
-          <p class="csub">Επίλεξε dataset και ορίζοντα πρόβλεψης</p>
+          <h3 class="ctitle">{{ t('forecast.params.title') }}</h3>
+          <p class="csub">{{ t('forecast.params.subtitle') }}</p>
         </div>
 
         <!-- Model error -->
         <div v-if="modelError" class="alert alert--warn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Αντίγραψε το <code>sales_model.pkl</code> στον φάκελο <code>models/</code> και επανεκκίνησε τον server.
+          <i18n-t keypath="forecast.model.missingHint" tag="span">
+            <template #file><code>sales_model.pkl</code></template>
+            <template #dir><code>models/</code></template>
+          </i18n-t>
         </div>
 
         <div class="cfg-grid">
           <!-- Dataset -->
           <div class="field">
-            <label>Dataset</label>
+            <label>{{ t('forecast.params.dataset') }}</label>
             <div class="sel-wrap">
               <select v-model="selectedId" :disabled="!datasets.length">
-                <option v-if="!datasets.length" value="">Δεν υπάρχουν datasets</option>
+                <option v-if="!datasets.length" value="">{{ t('forecast.params.noDatasets') }}</option>
                 <option v-for="d in datasets" :key="d.id" :value="d.id">{{ d.name }}</option>
               </select>
               <svg class="sel-arr" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <p v-if="selectedDs" class="field-hint">{{ selectedDs.rows_count ?? '?' }} γραμμές</p>
+            <p v-if="selectedDs" class="field-hint">{{ t('forecast.params.rows', { n: selectedDs.rows_count ?? '?' }) }}</p>
           </div>
 
           <!-- Days -->
           <div class="field">
-            <label>Μέρες πρόβλεψης</label>
+            <label>{{ t('forecast.params.days') }}</label>
             <div class="slider-row">
               <input type="range" v-model.number="futureDays" min="7" max="90" class="slider" />
-              <span class="slider-val">{{ futureDays }}d</span>
+              <span class="slider-val">{{ t('forecast.params.daysShort', { n: futureDays }) }}</span>
             </div>
             <div class="presets">
               <button v-for="d in [7, 14, 30, 60, 90]" :key="d"
@@ -212,27 +208,27 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
         <div class="compat-section">
           <p class="compat-title">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Συμβατότητα dataset
+            {{ t('forecast.compat.title') }}
           </p>
 
           <div v-if="colsLoading" class="compat-row">
-            <span class="mini-spin"/> <span class="compat-muted">Έλεγχος στηλών…</span>
+            <span class="mini-spin"/> <span class="compat-muted">{{ t('forecast.compat.checking') }}</span>
           </div>
 
           <div v-else-if="!selectedId" class="compat-row">
-            <span class="compat-muted">Επίλεξε dataset για έλεγχο</span>
+            <span class="compat-muted">{{ t('forecast.compat.select') }}</span>
           </div>
 
           <!-- ✓ Compatible -->
           <div v-else-if="compatibility?.ok" class="compat-row">
             <div class="cbadge cbadge--ok">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Συμβατό
+              {{ t('forecast.compat.ok') }}
             </div>
             <div class="cpills">
               <span v-for="c in REQUIRED_COLS"                                                         :key="c" class="cpill cpill--ok">{{ c }}</span>
               <span v-for="c in compatibility.hasOptional"                                             :key="c" class="cpill cpill--opt">{{ c }}</span>
-              <span v-for="c in OPTIONAL_COLS.filter(o => !compatibility!.hasOptional.includes(o))"   :key="c" class="cpill cpill--fwd">{{ c }} ·forward-fill</span>
+              <span v-for="c in OPTIONAL_COLS.filter(o => !compatibility!.hasOptional.includes(o))"   :key="c" class="cpill cpill--fwd">{{ c }} · {{ t('forecast.compat.autoFill') }}</span>
             </div>
           </div>
 
@@ -240,30 +236,32 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
           <div v-else-if="compatibility && !compatibility.ok" class="cbox cbox--err">
             <div class="cbox-head">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-              Μη συμβατό dataset
+              {{ t('forecast.compat.bad') }}
             </div>
-            <p class="cbox-body">Το dataset δεν έχει τις απαιτούμενες στήλες για το μοντέλο πωλήσεων.</p>
+            <p class="cbox-body">{{ t('forecast.compat.badBody') }}</p>
 
             <div class="cbox-detail">
               <div class="cdr">
-                <span class="cdl cdl--miss">Λείπουν:</span>
+                <span class="cdl cdl--miss">{{ t('forecast.compat.missing') }}</span>
                 <span v-for="c in compatibility.missing" :key="c" class="cpill cpill--err">{{ c }}</span>
               </div>
               <div class="cdr">
-                <span class="cdl">Βρέθηκαν:</span>
+                <span class="cdl">{{ t('forecast.compat.found') }}</span>
                 <span class="cfound">{{ datasetCols.slice(0, 7).join(', ') }}{{ datasetCols.length > 7 ? ` …+${datasetCols.length - 7}` : '' }}</span>
               </div>
             </div>
 
             <div class="cbox-fix">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-              Ανέβασε CSV με τουλάχιστον <code>date</code> και <code>sales</code>.
-              Προαιρετικά: <code>temperature</code>, <code>promo</code>, <code>marketing_spend</code>.
+              <i18n-t keypath="forecast.compat.fix" tag="span">
+                <template #required><code>date</code>, <code>sales</code></template>
+                <template #optional><code>temperature</code>, <code>promo</code>, <code>marketing_spend</code></template>
+              </i18n-t>
             </div>
 
             <router-link to="/datasets" class="cbox-link">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Πήγαινε στα Datasets →
+              {{ t('forecast.compat.goDatasets') }} →
             </router-link>
           </div>
         </div>
@@ -274,30 +272,30 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
             :style="{ transform: showExtras ? 'rotate(90deg)' : 'none', transition: 'transform .2s' }">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
-          Προαιρετικές παράμετροι
+          {{ t('forecast.extras.title') }}
           <span class="ext-hint">temperature · promo · marketing_spend</span>
         </button>
 
         <Transition name="expand">
           <div v-if="showExtras" class="extras-grid">
             <div class="field">
-              <label>Temperature</label>
-              <input v-model="temperature" type="number" step="0.1" placeholder="Αυτόματο (forward-fill)" />
+              <label>{{ t('forecast.extras.temperature') }}</label>
+              <input v-model="temperature" type="number" step="0.1" :placeholder="t('forecast.extras.autoFill')" />
             </div>
             <div class="field">
-              <label>Promo (0 / 1)</label>
+              <label>{{ t('forecast.extras.promo') }}</label>
               <div class="sel-wrap">
                 <select v-model="promo">
-                  <option value="">Αυτόματο</option>
-                  <option value="0">0 — Χωρίς promo</option>
-                  <option value="1">1 — Με promo</option>
+                  <option value="">{{ t('forecast.extras.auto') }}</option>
+                  <option value="0">{{ t('forecast.extras.promoOff') }}</option>
+                  <option value="1">{{ t('forecast.extras.promoOn') }}</option>
                 </select>
                 <svg class="sel-arr" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
             </div>
             <div class="field">
-              <label>Marketing Spend</label>
-              <input v-model="marketingSpend" type="number" step="1" placeholder="Αυτόματο (forward-fill)" />
+              <label>{{ t('forecast.extras.marketing') }}</label>
+              <input v-model="marketingSpend" type="number" step="1" :placeholder="t('forecast.extras.autoFill')" />
             </div>
           </div>
         </Transition>
@@ -307,13 +305,13 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
           class="btn-predict"
           :disabled="running || !canPredict"
           :title="!canPredict && compatibility && !compatibility.ok
-            ? 'Το dataset χρειάζεται στήλες date και sales'
+            ? t('forecast.compat.needCols')
             : undefined"
           @click="runPrediction"
         >
           <span v-if="running" class="mini-spin white"/>
           <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          {{ running ? 'Εκτέλεση…' : 'Εκτέλεση Predict' }}
+          {{ running ? t('forecast.running') : t('forecast.run') }}
         </button>
 
         <Transition name="msg">
@@ -328,15 +326,15 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
       <Transition name="results-in">
         <div v-if="result" class="results">
           <div class="kpi-row">
-            <div class="kpi"><p class="kpi-l">Σύνολο {{ result.future_days }}d</p><p class="kpi-v kpi-v--teal">{{ fmt(result.summary.total) }}</p></div>
-            <div class="kpi"><p class="kpi-l">Μέσος / ημέρα</p><p class="kpi-v">{{ fmt(result.summary.avg) }}</p></div>
-            <div class="kpi"><p class="kpi-l">Peak</p><p class="kpi-v kpi-v--green">{{ fmtDate(result.summary.peak_date) }}</p></div>
-            <div class="kpi"><p class="kpi-l">Εύρος</p><p class="kpi-v">{{ fmt(result.summary.min) }}–{{ fmt(result.summary.max) }}</p></div>
+            <div class="kpi"><p class="kpi-l">{{ t('forecast.result.total', { n: result.future_days }) }}</p><p class="kpi-v kpi-v--teal">{{ fmt(result.summary.total) }}</p></div>
+            <div class="kpi"><p class="kpi-l">{{ t('forecast.result.avg') }}</p><p class="kpi-v">{{ fmt(result.summary.avg) }}</p></div>
+            <div class="kpi"><p class="kpi-l">{{ t('forecast.result.peak') }}</p><p class="kpi-v kpi-v--green">{{ fmtDate(result.summary.peak_date) }}</p></div>
+            <div class="kpi"><p class="kpi-l">{{ t('forecast.result.range') }}</p><p class="kpi-v">{{ fmt(result.summary.min) }}–{{ fmt(result.summary.max) }}</p></div>
           </div>
 
           <div class="card">
             <div class="card-head">
-              <h3 class="ctitle">Πρόβλεψη — επόμενες {{ result.future_days }} ημέρες</h3>
+              <h3 class="ctitle">{{ t('forecast.result.chartTitle', { n: result.future_days }) }}</h3>
               <p class="csub">{{ result.dataset_name }}</p>
             </div>
             <div class="chart-wrap">
@@ -364,12 +362,12 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
 
           <div class="card">
             <div class="card-head">
-              <h3 class="ctitle">Αναλυτικά</h3>
-              <p class="csub">Πρώτες 10 από {{ result.results.length }} ημέρες</p>
+              <h3 class="ctitle">{{ t('forecast.result.detail') }}</h3>
+              <p class="csub">{{ t('forecast.result.firstN', { n: 10, total: result.results.length }) }}</p>
             </div>
             <div class="tbl-wrap">
               <table class="ptbl">
-                <thead><tr><th>#</th><th>Ημερομηνία</th><th>Πρόβλεψη</th><th></th></tr></thead>
+                <thead><tr><th>#</th><th>{{ t('forecast.result.date') }}</th><th>{{ t('forecast.result.prediction') }}</th><th></th></tr></thead>
                 <tbody>
                   <tr v-for="(row, i) in result.results.slice(0, 10)" :key="i">
                     <td class="td-n">{{ Number(i) + 1 }}</td>
@@ -390,16 +388,16 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
       <div class="card">
         <div v-if="!history.length" class="empty">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <p>Δεν υπάρχει ιστορικό ακόμα</p>
+          <p>{{ t('forecast.history.empty') }}</p>
         </div>
         <div v-else class="hist-list">
           <div v-for="h in history" :key="h.id" class="hist-item">
             <div class="hist-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg></div>
             <div class="hist-info">
-              <p class="hist-type">Sales Forecast</p>
+              <p class="hist-type">{{ t('nav.salesForecast') }}</p>
               <p class="hist-date">{{ fmtFull(h.created_at) }}</p>
             </div>
-            <span v-if="h.result?.summary?.total" class="hist-tag">{{ fmt(h.result.summary.total) }} total</span>
+            <span v-if="h.result?.summary?.total" class="hist-tag">{{ t('forecast.history.total', { v: fmt(h.result.summary.total) }) }}</span>
           </div>
         </div>
       </div>
@@ -412,7 +410,7 @@ const fmtFull = (iso: string) => new Date(iso).toLocaleString('el-GR', { day: '2
 .sf-page { padding: 2rem; background: var(--bg); display: flex; flex-direction: column; gap: 1.5rem; }
 
 /* Header — matches CustomerAnalysis / Datasets pattern */
-.sf-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.sf-header { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 1rem; }
 .sf-header-left { display: flex; align-items: center; gap: .85rem; }
 .sf-icon {
   width: 40px; height: 40px;

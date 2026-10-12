@@ -13,12 +13,14 @@
     "analytics": "Analytics",
     "warehouse": "Warehouse",
     "data": "Data",
-    "system": "System"
+    "system": "System",
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar"
   },
   "topbar": {
     "sub": {
       "dashboard": "Business overview",
-      "sales": "Sales prediction",
+      "sales": "Projected sales from your data",
       "customers": "Customer analytics",
       "datasets": "Datasets & History",
       "settings": "Account settings",
@@ -44,7 +46,8 @@
     "add": "Add",
     "confirm": "Confirm",
     "complete": "Complete",
-    "cancel_action": "Cancel Order"
+    "cancel_action": "Cancel Order",
+    "search": "Search…"
   },
   "auth": {
     "login": "Sign in",
@@ -164,7 +167,9 @@
       "title": "Rename",
       "body": "New name for {name}",
       "placeholder": "Dataset name…"
-    }
+    },
+    "prediction": "Prediction",
+    "avgValue": "avg {v}"
   },
   "history": {
     "all": "All",
@@ -209,10 +214,13 @@
     },
     "insight": {
       "title": "Insight",
-      "atRisk": "{count} customers haven't ordered in 60+ days. Consider a re-engagement campaign.",
+      "atRisk": "{n} customer hasn't ordered in 60+ days. Consider reaching out. | {n} customers haven't ordered in 60+ days. Consider a re-engagement campaign.",
       "healthy": "Customer base is healthy. Focus on converting New customers to Loyal.",
       "noOrders": "No completed sale orders yet. Start selling to see analytics here."
-    }
+    },
+    "errorLoad": "Failed to load customer data",
+    "qty": "{n} pcs",
+    "daysAgo": "{n}d ago"
   },
   "wms": {
     "errorLoad": "Failed to load data",
@@ -271,7 +279,8 @@
         "noHistory": "No sales history",
         "currentStock": "Stock",
         "reorderPoint": "Reorder at"
-      }
+      },
+      "moveBtn": "Move"
     },
     "orders": {
       "subtitle": "Purchase & sales orders",
@@ -365,6 +374,79 @@
       "system": "Theme: system",
       "light": "Theme: light",
       "dark": "Theme: dark"
+    }
+  },
+  "preview": {
+    "errorLoad": "Failed to load data",
+    "errorSave": "Failed to save",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "size": "{rows} rows · {cols} columns",
+    "changes": "{n} change | {n} changes",
+    "prev": "Prev",
+    "next": "Next",
+    "page": "Page {page} / {total}"
+  },
+  "forecast": {
+    "errorRun": "Forecast failed",
+    "model": {
+      "loaded": "Model loaded",
+      "missing": "Model not found",
+      "missingHint": "Copy {file} into the {dir} folder and restart the server."
+    },
+    "tabs": {
+      "run": "Forecast",
+      "history": "History"
+    },
+    "params": {
+      "title": "Parameters",
+      "subtitle": "Choose a dataset and a forecast horizon",
+      "dataset": "Dataset",
+      "noDatasets": "No datasets yet",
+      "rows": "{n} rows",
+      "days": "Days to forecast",
+      "daysShort": "{n}d"
+    },
+    "compat": {
+      "title": "Dataset compatibility",
+      "checking": "Checking columns…",
+      "select": "Select a dataset to check",
+      "ok": "Compatible",
+      "autoFill": "auto-filled",
+      "bad": "Incompatible dataset",
+      "badBody": "This dataset doesn't have the columns the sales model needs.",
+      "missing": "Missing:",
+      "found": "Found:",
+      "fix": "Upload a CSV with at least {required}. Optional: {optional}.",
+      "goDatasets": "Go to Datasets",
+      "needCols": "The dataset needs date and sales columns"
+    },
+    "extras": {
+      "title": "Optional parameters",
+      "temperature": "Temperature",
+      "promo": "Promotion (0 / 1)",
+      "auto": "Automatic",
+      "autoFill": "Automatic (last known value)",
+      "promoOff": "0 — No promotion",
+      "promoOn": "1 — Promotion",
+      "marketing": "Marketing spend"
+    },
+    "run": "Run forecast",
+    "running": "Running…",
+    "result": {
+      "total": "Total ({n} days)",
+      "avg": "Average / day",
+      "peak": "Peak day",
+      "range": "Range",
+      "chartTitle": "Forecast — next {n} days",
+      "detail": "Breakdown",
+      "firstN": "First {n} of {total} days",
+      "date": "Date",
+      "prediction": "Forecast"
+    },
+    "history": {
+      "empty": "No forecasts yet",
+      "total": "{v} total"
     }
   }
 }

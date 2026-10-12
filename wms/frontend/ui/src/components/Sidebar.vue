@@ -120,7 +120,7 @@ const menuGroups = [
       <router-link to="/dashboard" class="brand-link" :aria-label="t('nav.dashboard')">
         <BrandMark :size="26" :with-name="!collapsed" />
       </router-link>
-      <button class="collapse-btn" :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'" :aria-expanded="!collapsed" @click="toggle">
+      <button class="collapse-btn" :aria-label="collapsed ? t('sidebar.expand') : t('sidebar.collapse')" :aria-expanded="!collapsed" @click="toggle">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16"/>
         </svg>

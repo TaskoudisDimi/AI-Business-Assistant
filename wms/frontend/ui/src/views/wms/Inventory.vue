@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { intlLocale } from '@/i18n/format'
 import { api } from '@/services/api'
 
 const auth = useAuthStore()
@@ -80,7 +81,7 @@ async function saveMovement() {
 }
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('el-GR', { day: '2-digit', month: 'short' })
+  return new Date(iso).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short' })
 }
 
 const movTypes = ['inbound', 'outbound', 'adjustment'] as const
@@ -177,7 +178,7 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
-                    Mov
+                    {{ t('wms.inventory.moveBtn') }}
                   </button>
                 </div>
               </td>

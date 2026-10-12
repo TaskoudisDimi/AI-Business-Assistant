@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { intlLocale } from '@/i18n/format'
 import { api } from '@/services/api'
 
 const auth = useAuthStore()
@@ -47,7 +48,7 @@ async function load() {
   try {
     const r = await api.get('/customers/analysis', { params: { business_id: businessId.value } })
     data.value = r.data
-  } catch { error.value = 'Failed to load customer data' }
+  } catch { error.value = t('customers.errorLoad') }
   finally { loading.value = false }
 }
 
@@ -97,13 +98,13 @@ const segmentList = computed(() => {
     .sort((a, b) => b.count - a.count)
 })
 
-function fmt(n: number) { return n.toLocaleString('el-GR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) }
+function fmt(n: number) { return n.toLocaleString(intlLocale(), { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 }) }
 
 const insightText = computed(() => {
   if (!data.value) return ''
   if (data.value.summary.total_customers === 0) return t('customers.insight.noOrders')
   if (data.value.summary.at_risk_count > 0)
-    return t('customers.insight.atRisk', { count: data.value.summary.at_risk_count })
+    return t('customers.insight.atRisk', data.value.summary.at_risk_count)
   return t('customers.insight.healthy')
 })
 </script>
@@ -219,7 +220,7 @@ const insightText = computed(() => {
                 <span class="prod-name">{{ p.name }}</span>
               </div>
               <div class="prod-stats">
-                <span class="prod-qty">{{ p.total_qty }} pcs</span>
+                <span class="prod-qty">{{ t('customers.qty', { n: p.total_qty }) }}</span>
                 <span class="prod-rev">€{{ fmt(p.total_revenue) }}</span>
               </div>
             </div>
@@ -239,7 +240,7 @@ const insightText = computed(() => {
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input v-model="search" class="search-input" placeholder="Search…" />
+            <input v-model="search" class="search-input" :placeholder="t('common.search')" />
           </div>
         </div>
         <div class="tbl-wrap">
@@ -277,7 +278,7 @@ const insightText = computed(() => {
                 <td class="num muted">€{{ fmt(c.avg_order_value) }}</td>
                 <td class="num">
                   <span :class="['days-badge', c.days_since_last_order > 60 ? 'days--warn' : c.days_since_last_order > 30 ? 'days--mid' : 'days--ok']">
-                    {{ c.days_since_last_order }}d ago
+                    {{ t('customers.daysAgo', { n: c.days_since_last_order }) }}
                   </span>
                 </td>
                 <td>
@@ -298,7 +299,7 @@ const insightText = computed(() => {
       <div class="insight">
         <div class="insight-icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/>
           </svg>
         </div>
         <div>
@@ -461,14 +462,14 @@ const insightText = computed(() => {
 /* Insight */
 .insight {
   display: flex; align-items: flex-start; gap: .8rem;
-  background: rgba(var(--accent-rgb), .04); border: 1px solid rgba(var(--accent-rgb), .15);
+  background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: 1.1rem 1.25rem;
 }
 .insight-icon {
-  width: 28px; height: 28px; background: rgba(var(--accent-rgb), .1);
+  width: 28px; height: 28px; background: var(--bg-hover);
   border-radius: var(--r); display: flex; align-items: center; justify-content: center;
-  color: var(--teal); flex-shrink: 0; margin-top: .05rem;
+  color: var(--text-sub); flex-shrink: 0; margin-top: .05rem;
 }
-.insight-title { font-size: .78rem; font-weight: 600; color: var(--teal); margin: 0 0 .25rem; }
-.insight-body  { font-size: .8rem; color: var(--text-sub); margin: 0; line-height: 1.6; }
+.insight-title { font-size: .875rem; font-weight: 600; color: var(--text); margin: 0 0 .25rem; }
+.insight-body  { font-size: .85rem; color: var(--text-sub); margin: 0; line-height: 1.6; }
 </style>

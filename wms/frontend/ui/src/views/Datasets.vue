@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { api } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
+import { intlLocale } from '@/i18n/format'
 import DatasetPreviewModal from '@/views/DatasetPreviewModal.vue'
 
 const authStore = useAuthStore()
@@ -135,16 +136,16 @@ const switchTab = (tab: 'datasets' | 'history') => {
 
 // ── Formatters ─────────────────────────────────────────────────────────────
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('el-GR', { day: '2-digit', month: 'short', year: 'numeric' })
+  new Date(iso).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short', year: 'numeric' })
 
 const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' })
+  new Date(iso).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
 
 const fmtNum = (v: number) =>
-  v?.toLocaleString('el-GR', { maximumFractionDigits: 2 }) ?? '—'
+  v?.toLocaleString(intlLocale(), { maximumFractionDigits: 2 }) ?? '—'
 
 const fmtDateTime = (iso: string) =>
-  new Date(iso).toLocaleString('el-GR', {
+  new Date(iso).toLocaleString(intlLocale(), {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
@@ -280,7 +281,7 @@ onMounted(loadDatasets)
                   <span class="muted mono">{{ formatTime(d.created_at) }}</span>
                 </div>
               </td>
-              <td><span class="mono muted">{{ d.rows_count != null ? d.rows_count.toLocaleString('el-GR') : '—' }}</span></td>
+              <td><span class="mono muted">{{ d.rows_count != null ? d.rows_count.toLocaleString(intlLocale()) : '—' }}</span></td>
               <td>
                 <span class="badge badge--green">
                   <span class="badge-dot"/>
@@ -323,7 +324,7 @@ onMounted(loadDatasets)
     <template v-else>
       <div class="hist-filters">
         <button class="fil-btn" :class="{ active: histFilter === 'all' }" @click.stop="histFilter = 'all'">{{ t('history.all') }}</button>
-        <button class="fil-btn" :class="{ active: histFilter === 'sales_forecast' }" @click.stop="histFilter = 'sales_forecast'">Sales Forecast</button>
+        <button class="fil-btn" :class="{ active: histFilter === 'sales_forecast' }" @click.stop="histFilter = 'sales_forecast'">{{ t('nav.salesForecast') }}</button>
       </div>
 
       <div class="card">
@@ -347,12 +348,12 @@ onMounted(loadDatasets)
               </svg>
             </div>
             <div class="hist-info">
-              <p class="hist-type">{{ h.type?.replace('_', ' ') ?? 'Prediction' }}</p>
+              <p class="hist-type">{{ h.type === 'sales_forecast' ? t('nav.salesForecast') : t('datasets.prediction') }}</p>
               <p class="hist-date mono">{{ fmtDateTime(h.created_at) }}</p>
             </div>
             <div class="hist-tags">
-              <span v-if="h.result?.summary" class="badge badge--teal">avg {{ fmtNum(h.result.summary.avg) }}</span>
-              <span v-if="h.result?.summary?.total" class="badge badge--teal">{{ fmtNum(h.result.summary.total) }} total</span>
+              <span v-if="h.result?.summary" class="badge badge--teal">{{ t('datasets.avgValue', { v: fmtNum(h.result.summary.avg) }) }}</span>
+              <span v-if="h.result?.summary?.total" class="badge badge--teal">{{ t('forecast.history.total', { v: fmtNum(h.result.summary.total) }) }}</span>
             </div>
           </div>
         </div>
