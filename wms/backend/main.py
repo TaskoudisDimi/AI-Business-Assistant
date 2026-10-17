@@ -5,7 +5,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import auth, user, business, datasets, predictions, products, inventory, orders, customers
+from api.routes import (auth, user, business, datasets, predictions, products, inventory, orders, customers,
+                        alerts, integrations, ai)
 from core.middleware import RefreshSessionMiddleware
 
 app = FastAPI()
@@ -30,6 +31,14 @@ app.include_router(products.router)
 app.include_router(inventory.router)
 app.include_router(orders.router)
 app.include_router(customers.router)
+app.include_router(alerts.router)
+app.include_router(integrations.router)
+app.include_router(ai.router)
+
+
+@app.get("/api/health", include_in_schema=False)
+def health():
+    return {"ok": True}
 
 
 # ─── Frontend (production) ───────────────────────────────────────────────────

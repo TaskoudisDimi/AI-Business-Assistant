@@ -1,9 +1,11 @@
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from core.security import get_current_user
 from db.supabase_client import supabase
 from services.permissions import check_business_access
+from services.stock import apply_movement
 
 router = APIRouter(prefix="/api/orders", tags=["Orders"])
 
@@ -12,6 +14,8 @@ class OrderItemIn(BaseModel):
     product_id: str
     quantity: int = Field(gt=0)
     unit_price: Optional[float] = Field(default=None, ge=0)
+    lot_code: Optional[str] = Field(default=None, max_length=80)
+    expiry_date: Optional[date] = None
 
 
 class OrderCreate(BaseModel):
@@ -77,6 +81,8 @@ def create_order(body: OrderCreate, user_id: str = Depends(get_current_user)):
                 "product_id": item.product_id,
                 "quantity": item.quantity,
                 "unit_price": item.unit_price,
+                "lot_code": item.lot_code,
+                "expiry_date": item.expiry_date.isoformat() if item.expiry_date else None,
             }
             for item in body.items
         ]).execute()
@@ -131,33 +137,15 @@ def complete_order(order_id: str, user_id: str = Depends(get_current_user)):
     if not claimed.data:
         raise HTTPException(400, "Order is already completed or cancelled")
 
-    items = supabase.table("order_items").select("product_id, quantity") \
+    items = supabase.table("order_items").select("product_id, quantity, lot_code, expiry_date") \
         .eq("order_id", order_id).execute()
 
     movement_type = "inbound" if order.data["type"] == "purchase" else "outbound"
-    business_id = order.data["business_id"]
-
     for item in (items.data or []):
-        supabase.table("inventory_movements").insert({
-            "product_id": item["product_id"],
-            "business_id": business_id,
-            "type": movement_type,
-            "quantity": item["quantity"],
-            "reason": f"Order #{order_id[:8]}",
-            "order_id": order_id,
-            "created_by": user_id,
-        }).execute()
-
-        inv = supabase.table("inventory_items") \
-            .select("id, quantity") \
-            .eq("product_id", item["product_id"]) \
-            .eq("business_id", business_id) \
-            .maybe_single().execute()
-
-        if inv and inv.data:
-            current = inv.data["quantity"]
-            new_qty = current + item["quantity"] if movement_type == "inbound" else max(0, current - item["quantity"])
-            supabase.table("inventory_items") \
-                .update({"quantity": new_qty}).eq("id", inv.data["id"]).execute()
+        apply_movement(
+            business_id=order.data["business_id"], product_id=item["product_id"], type=movement_type,
+            quantity=item["quantity"], user_id=user_id, reason=f"Order #{order_id[:8]}", order_id=order_id,
+            lot_code=item.get("lot_code"), expiry_date=item.get("expiry_date"),
+        )
 
     return claimed.data[0]

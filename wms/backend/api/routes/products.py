@@ -1,32 +1,59 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from core.security import get_current_user
 from db.supabase_client import supabase
 from services.permissions import check_business_access
+from services.stock import apply_movement
 
 router = APIRouter(prefix="/api/products", tags=["Products"])
 
+EDITABLE = ("sku", "name", "category", "unit", "reorder_point", "cost_price", "sell_price",
+            "barcode", "supplier", "lead_time_days", "track_expiry")
 
-class ProductCreate(BaseModel):
+
+class ProductFields(BaseModel):
+    sku: str = Field(min_length=1, max_length=64)
+    name: str = Field(min_length=1, max_length=200)
+    category: Optional[str] = Field(default=None, max_length=100)
+    unit: str = Field(default="τεμ", max_length=20)
+    reorder_point: int = Field(default=0, ge=0)
+    cost_price: Optional[float] = Field(default=None, ge=0)
+    sell_price: Optional[float] = Field(default=None, ge=0)
+    barcode: Optional[str] = Field(default=None, max_length=64)
+    supplier: Optional[str] = Field(default=None, max_length=120)
+    lead_time_days: int = Field(default=7, ge=1, le=365)
+    track_expiry: bool = False
+
+
+class ProductCreate(ProductFields):
     business_id: str
-    sku: str
-    name: str
-    category: Optional[str] = None
-    unit: str = "τεμ"
-    reorder_point: int = 0
-    cost_price: Optional[float] = None
-    sell_price: Optional[float] = None
 
 
 class ProductUpdate(BaseModel):
-    sku: Optional[str] = None
-    name: Optional[str] = None
+    sku: Optional[str] = Field(default=None, min_length=1, max_length=64)
+    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
     category: Optional[str] = None
     unit: Optional[str] = None
-    reorder_point: Optional[int] = None
-    cost_price: Optional[float] = None
-    sell_price: Optional[float] = None
+    reorder_point: Optional[int] = Field(default=None, ge=0)
+    cost_price: Optional[float] = Field(default=None, ge=0)
+    sell_price: Optional[float] = Field(default=None, ge=0)
+    barcode: Optional[str] = None
+    supplier: Optional[str] = None
+    lead_time_days: Optional[int] = Field(default=None, ge=1, le=365)
+    track_expiry: Optional[bool] = None
+
+
+def _clean(fields: dict) -> dict:
+    """Trim strings; empty optional strings become NULL."""
+    out = {}
+    for k, v in fields.items():
+        if isinstance(v, str):
+            v = v.strip()
+            if v == "" and k not in ("sku", "name"):
+                v = None
+        out[k] = v
+    return out
 
 
 @router.get("")
@@ -37,19 +64,24 @@ def list_products(business_id: str, user_id: str = Depends(get_current_user)):
     return res.data or []
 
 
+@router.get("/lookup")
+def lookup_product(business_id: str, code: str, user_id: str = Depends(get_current_user)):
+    """Find a product by scanned barcode, falling back to SKU."""
+    check_business_access(user_id, business_id)
+    code = code.strip()
+    for column in ("barcode", "sku"):
+        res = supabase.table("products").select("*") \
+            .eq("business_id", business_id).eq(column, code).limit(1).execute()
+        if res.data:
+            return res.data[0]
+    raise HTTPException(404, "No product with this code")
+
+
 @router.post("")
 def create_product(body: ProductCreate, user_id: str = Depends(get_current_user)):
     check_business_access(user_id, body.business_id)
-    res = supabase.table("products").insert({
-        "business_id": body.business_id,
-        "sku": body.sku,
-        "name": body.name,
-        "category": body.category,
-        "unit": body.unit,
-        "reorder_point": body.reorder_point,
-        "cost_price": body.cost_price,
-        "sell_price": body.sell_price,
-    }).execute()
+    fields = _clean(body.model_dump(include=set(EDITABLE)))
+    res = supabase.table("products").insert({"business_id": body.business_id, **fields}).execute()
     if not res.data:
         raise HTTPException(500, "Failed to create product")
     product = res.data[0]
@@ -59,6 +91,64 @@ def create_product(body: ProductCreate, user_id: str = Depends(get_current_user)
         "quantity": 0,
     }).execute()
     return product
+
+
+class ImportRow(ProductFields):
+    initial_stock: Optional[int] = Field(default=None, ge=0)
+
+
+class ImportRequest(BaseModel):
+    business_id: str
+    rows: list[ImportRow] = Field(min_length=1, max_length=5000)
+    update_existing: bool = True
+
+
+@router.post("/import")
+def import_products(body: ImportRequest, user_id: str = Depends(get_current_user)):
+    """Bulk create/update products by SKU (from a CSV/Excel file parsed in the browser).
+    `initial_stock` sets the counted quantity through a stock adjustment."""
+    check_business_access(user_id, body.business_id)
+
+    seen, rows = set(), []
+    for r in body.rows:  # last row wins for duplicate SKUs in the file
+        key = r.sku.strip().lower()
+        if key in seen:
+            rows = [x for x in rows if x.sku.strip().lower() != key]
+        seen.add(key)
+        rows.append(r)
+
+    existing = {p["sku"].lower(): p for p in (supabase.table("products").select("id, sku")
+                .eq("business_id", body.business_id).execute().data or [])}
+    to_create, to_update, skipped = [], [], 0
+    for r in rows:
+        fields = _clean(r.model_dump(include=set(EDITABLE)))
+        match = existing.get(r.sku.strip().lower())
+        if match and not body.update_existing:
+            skipped += 1
+        elif match:
+            fields.pop("sku")  # keep the existing SKU's casing; it's the identity
+            to_update.append((match["id"], fields, r.initial_stock))
+        else:
+            to_create.append((fields, r.initial_stock))
+
+    created_ids = []
+    for i in range(0, len(to_create), 500):
+        chunk = to_create[i:i + 500]
+        res = supabase.table("products").insert(
+            [{"business_id": body.business_id, **f} for f, _ in chunk]).execute()
+        supabase.table("inventory_items").insert(
+            [{"product_id": p["id"], "business_id": body.business_id, "quantity": 0} for p in res.data]).execute()
+        created_ids += [(p["id"], stock) for p, (_, stock) in zip(res.data, chunk)]
+
+    for pid, fields, _ in to_update:
+        supabase.table("products").update(fields).eq("id", pid).execute()
+
+    for pid, stock in created_ids + [(pid, stock) for pid, _, stock in to_update]:
+        if stock is not None:
+            apply_movement(business_id=body.business_id, product_id=pid, type="adjustment",
+                           quantity=stock, user_id=user_id, reason="Import")
+
+    return {"created": len(to_create), "updated": len(to_update), "skipped": skipped}
 
 
 @router.patch("/{product_id}")
@@ -72,11 +162,7 @@ def update_product(
     if not p or not p.data:
         raise HTTPException(404, "Not found")
     check_business_access(user_id, p.data["business_id"])
-    fields = {k: v for k, v in {
-        "sku": body.sku, "name": body.name, "category": body.category,
-        "unit": body.unit, "reorder_point": body.reorder_point,
-        "cost_price": body.cost_price, "sell_price": body.sell_price,
-    }.items() if v is not None}
+    fields = _clean(body.model_dump(exclude_unset=True))
     if not fields:
         raise HTTPException(400, "No fields to update")
     res = supabase.table("products").update(fields).eq("id", product_id).execute()
