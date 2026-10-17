@@ -23,6 +23,8 @@ const link = {
   token_hash:   query.get('token_hash') ?? undefined,
 }
 const hasToken  = !!(link.access_token || link.token_hash)
+// Team invites land here too (#type=invite): same form, friendlier wording
+const isInvite  = (hash.get('type') ?? query.get('type')) === 'invite'
 if (window.location.hash || window.location.search) window.history.replaceState(null, '', window.location.pathname)
 
 const password = ref('')
@@ -71,7 +73,8 @@ const next = () => router.push(auth.isAuthenticated ? '/dashboard' : '/login')
     </button>
   </AuthShell>
 
-  <AuthShell v-else :title="t('auth.reset.title')" :subtitle="t('auth.reset.subtitle')">
+  <AuthShell v-else :title="isInvite ? t('auth.reset.inviteTitle') : t('auth.reset.title')"
+    :subtitle="isInvite ? t('auth.reset.inviteSubtitle') : t('auth.reset.subtitle')">
     <form class="form" novalidate @submit.prevent="submit">
       <div class="ui-field">
         <label class="ui-label" for="password">{{ t('auth.reset.newPassword') }}</label>

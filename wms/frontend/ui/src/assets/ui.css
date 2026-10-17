@@ -70,3 +70,58 @@
   animation: ui-spin .6s linear infinite;
 }
 @keyframes ui-spin { to { transform: rotate(360deg); } }
+
+/* ── App building blocks (used by newer screens) ─────────────────────────── */
+.ui-page { padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; }
+@media (max-width: 640px) { .ui-page { padding: 1rem; } }
+.ui-toolbar { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.ui-toolbar .spacer { flex: 1; }
+
+.ui-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.ui-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-light); }
+.ui-card-title { font-size: .95rem; font-weight: 600; }
+.ui-card-sub { font-size: .82rem; color: var(--text-muted); margin-top: .15rem; }
+.ui-card-body { padding: 1rem 1.25rem; }
+
+.ui-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.ui-table th { text-align: left; font-weight: 550; font-size: .78rem; color: var(--text-muted); padding: .6rem 1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.ui-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+.ui-table tr:last-child td { border-bottom: 0; }
+.ui-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.ui-table .muted { color: var(--text-muted); }
+.ui-table-wrap { overflow-x: auto; }
+
+.ui-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .1rem .5rem; border-radius: 99px; font-size: .75rem; font-weight: 550; white-space: nowrap; background: var(--bg-hover); color: var(--text-sub); }
+.ui-badge--red    { background: var(--red-bg); color: var(--red); }
+.ui-badge--amber  { background: rgba(var(--amber-rgb), .12); color: var(--amber); }
+.ui-badge--green  { background: var(--green-bg); color: var(--green); }
+.ui-badge--accent { background: var(--accent-soft); color: var(--accent); }
+.ui-badge--blue   { background: rgba(var(--blue-rgb), .1); color: var(--blue); }
+
+.ui-tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); overflow-x: auto; }
+.ui-tab { background: none; padding: .6rem .8rem; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--text-sub); font-size: .875rem; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.ui-tab:hover { color: var(--text); }
+.ui-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+.ui-btn--sm { height: 32px; padding: 0 .7rem; font-size: .83rem; }
+.ui-btn--danger { background: transparent; color: var(--red); border: 1px solid rgba(var(--red-rgb), .35); }
+.ui-btn--danger:hover:not(:disabled) { background: var(--red-bg); }
+.ui-icon-btn { width: 32px; height: 32px; display: inline-grid; place-items: center; border-radius: var(--r); background: transparent; color: var(--text-muted); cursor: pointer; }
+.ui-icon-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+.ui-select, .ui-textarea { width: 100%; padding: .55rem .8rem; background: var(--bg-input); border: 1px solid var(--border-mid); border-radius: var(--r); font-size: .9rem; color: var(--text); }
+.ui-select { height: 40px; padding-top: 0; padding-bottom: 0; }
+.ui-textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+.ui-select:focus, .ui-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); outline: none; }
+.ui-input--sm { height: 32px; font-size: .85rem; padding-top: 0; padding-bottom: 0; }
+.ui-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+@media (max-width: 560px) { .ui-grid-2 { grid-template-columns: 1fr; } }
+.ui-check { display: flex; align-items: center; gap: .55rem; font-size: .88rem; color: var(--text-sub); cursor: pointer; }
+.ui-check input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+.ui-empty { padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); font-size: .9rem; }
+.ui-empty strong { display: block; color: var(--text); font-size: 1rem; margin-bottom: .3rem; }
+.ui-muted { color: var(--text-muted); }
+.ui-mono { font-family: 'Geist Mono Variable', ui-monospace, monospace; font-size: .82em; }
+.ui-alert--warn { background: rgba(var(--amber-rgb), .1); color: var(--amber); }
+.ui-alert--info { background: var(--accent-soft); color: var(--accent); }

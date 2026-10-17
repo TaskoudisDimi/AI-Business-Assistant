@@ -15,7 +15,7 @@ html, body, #app {
 }
 
 body {
-  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.45;
   color: var(--text);
@@ -29,7 +29,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* Figures line up in tables and KPIs */
 table, .tabular { font-variant-numeric: tabular-nums; }
-code, .mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+code, .mono { font-family: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace; }
 
 /* ─── Design tokens ─────────────────────────────────────────────────────────
    Light by default. <html data-theme="dark"> switches to dark; it is set before

@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { intlLocale } from '@/i18n/format'
 import { api } from '@/services/api'
+import DraftMessageModal from '@/components/customers/DraftMessageModal.vue'
 
 const auth = useAuthStore()
 const { t } = useI18n()
@@ -75,6 +76,8 @@ function setSort(key: keyof Customer) {
 }
 
 const totalCustomers = computed(() => data.value?.summary.total_customers ?? 0)
+
+const draftFor = ref<string | null>(null)
 
 const segmentColors: Record<string, string> = {
   high_value: 'var(--teal)',
@@ -268,6 +271,7 @@ const insightText = computed(() => {
                   <span class="sort-arrow" v-if="sortKey === 'days_since_last_order'">{{ sortAsc ? '↑' : '↓' }}</span>
                 </th>
                 <th>{{ t('customers.table.segment') }}</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -282,13 +286,18 @@ const insightText = computed(() => {
                   </span>
                 </td>
                 <td>
-                  <span class="seg-badge" :style="{ color: segmentColors[c.segment], borderColor: segmentColors[c.segment] + '44', background: segmentColors[c.segment] + '14' }">
+                  <span class="seg-badge" :style="{ color: segmentColors[c.segment], borderColor: `color-mix(in srgb, ${segmentColors[c.segment]} 30%, transparent)`, background: `color-mix(in srgb, ${segmentColors[c.segment]} 8%, transparent)` }">
                     {{ t(`customers.segments.${c.segment}`) }}
                   </span>
                 </td>
+                <td class="num">
+                  <button v-if="c.segment === 'at_risk' || c.segment === 'dormant'" class="ui-btn ui-btn--ghost ui-btn--sm" @click="draftFor = c.name">
+                    {{ t('draft.button') }}
+                  </button>
+                </td>
               </tr>
               <tr v-if="filteredCustomers.length === 0">
-                <td colspan="6" class="tbl-empty">{{ t('common.noData') }}</td>
+                <td colspan="7" class="tbl-empty">{{ t('common.noData') }}</td>
               </tr>
             </tbody>
           </table>
@@ -309,6 +318,7 @@ const insightText = computed(() => {
       </div>
 
     </template>
+    <DraftMessageModal v-if="draftFor" :business-id="businessId" :customer="draftFor" @close="draftFor = null" />
   </div>
 </template>
 
@@ -405,7 +415,7 @@ const insightText = computed(() => {
 .prod-row:hover { background: var(--bg-hover); }
 .prod-rank { font-size: .7rem; font-weight: 700; color: var(--text-muted); width: 16px; text-align: center; flex-shrink: 0; }
 .prod-info { display: flex; align-items: center; gap: .45rem; flex: 1; min-width: 0; }
-.prod-sku  { font-size: .68rem; color: var(--text-sub); font-family: 'Geist Mono', ui-monospace, monospace; font-weight: 600; flex-shrink: 0; }
+.prod-sku  { font-size: .68rem; color: var(--text-sub); font-family: 'Geist Mono Variable', ui-monospace, monospace; font-weight: 600; flex-shrink: 0; }
 .prod-name { font-size: .78rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prod-stats { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
 .prod-qty  { font-size: .72rem; color: var(--text-muted); }

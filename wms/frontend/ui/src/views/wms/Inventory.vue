@@ -4,6 +4,11 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { intlLocale } from '@/i18n/format'
 import { api } from '@/services/api'
+import { apiErrorMessage } from '@/stores/auth'
+import { useRoute, useRouter } from 'vue-router'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import BarcodeScanner from '@/components/BarcodeScanner.vue'
+import ForecastModal from '@/components/inventory/ForecastModal.vue'
 
 const auth = useAuthStore()
 const { t } = useI18n()
@@ -15,7 +20,13 @@ interface InvItem {
   products: {
     id: string; sku: string; name: string
     category: string | null; unit: string; reorder_point: number
+    track_expiry?: boolean
   }
+}
+
+interface Lot {
+  id: string; lot_code: string | null; expiry_date: string | null; quantity: number
+  products: { sku: string; name: string; unit: string }
 }
 
 interface Suggestion {
@@ -24,6 +35,7 @@ interface Suggestion {
   current_stock: number; reorder_point: number
   avg_daily_outbound: number; days_until_stockout: number | null
   urgency: 'critical' | 'warning'
+  suggested_qty: number; reorder_by: string | null; supplier: string | null; on_order: number
 }
 
 const items       = ref<InvItem[]>([])
@@ -38,7 +50,58 @@ const movForm = ref({
   type: 'inbound' as 'inbound' | 'outbound' | 'adjustment',
   quantity: 1,
   reason: '',
+  lot_code: '',
+  expiry_date: '',
 })
+const router = useRouter()
+const route = useRoute()
+const tab = ref<'stock' | 'lots'>(route.query.tab === 'lots' ? 'lots' : 'stock')
+const lots = ref<Lot[]>([])
+const showScan = ref(false)
+const scanError = ref('')
+const forecastFor = ref<InvItem | null>(null)
+const creatingPOs = ref(false)
+const poResult = ref<{ count: number } | null>(null)
+const poError = ref('')
+
+async function loadLots() {
+  try {
+    const r = await api.get('/inventory/lots', { params: { business_id: businessId.value } })
+    lots.value = r.data
+  } catch { lots.value = [] }
+}
+
+function daysLeft(iso: string | null) {
+  if (!iso) return null
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000)
+}
+
+async function onScanned(code: string) {
+  scanError.value = ''
+  const local = items.value.find(i => i.products.sku.toLowerCase() === code.toLowerCase())
+  if (local) { showScan.value = false; openMovement(local); return }
+  try {
+    const r = await api.get('/products/lookup', { params: { business_id: businessId.value, code } })
+    const item = items.value.find(i => i.products.id === r.data.id)
+    if (item) { showScan.value = false; openMovement(item) }
+  } catch {
+    scanError.value = t('scanner.notFound', { code })
+  }
+}
+
+async function createPurchaseOrders() {
+  creatingPOs.value = true; poError.value = ''
+  try {
+    const r = await api.post('/inventory/reorder/purchase-orders', { business_id: businessId.value })
+    poResult.value = { count: r.data.length }
+  } catch (e) {
+    poError.value = apiErrorMessage(e) || t('common.error')
+  } finally { creatingPOs.value = false }
+}
+
+function fmtDay(iso: string | null) {
+  return iso ? new Date(iso).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' }) : '—'
+}
 
 const businessId = computed(() => auth.currentBusiness?.id ?? '')
 
@@ -56,11 +119,11 @@ async function load() {
   finally { loading.value = false }
 }
 
-onMounted(load)
+onMounted(() => { load(); loadLots() })
 
 function openMovement(item: InvItem) {
   movTarget.value = item
-  movForm.value = { type: 'inbound', quantity: 1, reason: '' }
+  movForm.value = { type: 'inbound', quantity: 1, reason: '', lot_code: '', expiry_date: '' }
   showMovementModal.value = true
 }
 
@@ -74,9 +137,11 @@ async function saveMovement() {
       type: movForm.value.type,
       quantity: Number(movForm.value.quantity),
       reason: movForm.value.reason || null,
+      lot_code: movForm.value.type === 'inbound' ? movForm.value.lot_code || null : null,
+      expiry_date: movForm.value.type === 'inbound' ? movForm.value.expiry_date || null : null,
     })
     showMovementModal.value = false
-    await load()
+    await Promise.all([load(), loadLots()])
   } finally { saving.value = false }
 }
 
@@ -90,6 +155,20 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 <template>
   <div class="page">
 
+    <div class="ui-toolbar">
+      <div class="ui-tabs">
+        <button class="ui-tab" :class="{ active: tab === 'stock' }" @click="tab = 'stock'">{{ t('wms.inventory.tabs.stock') }}</button>
+        <button class="ui-tab" :class="{ active: tab === 'lots' }" @click="tab = 'lots'">
+          {{ t('wms.inventory.tabs.lots') }}
+          <span v-if="lots.some(l => (daysLeft(l.expiry_date) ?? 99) <= 14)" class="ui-badge ui-badge--amber">!</span>
+        </button>
+      </div>
+      <span class="spacer" />
+      <router-link to="/stocktake" class="ui-btn ui-btn--ghost ui-btn--sm">{{ t('nav.stocktake') }}</router-link>
+      <button class="ui-btn ui-btn--primary ui-btn--sm" @click="showScan = true; scanError = ''">{{ t('wms.inventory.scanMove') }}</button>
+    </div>
+
+    <template v-if="tab === 'stock'">
     <!-- Reorder alerts -->
     <div v-if="suggestions.length > 0" class="ai-panel">
       <div class="ai-panel-head">
@@ -125,8 +204,23 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
             <span v-else class="stat-pill stat-pill--muted">
               {{ t('wms.inventory.ai.noHistory') }}
             </span>
+            <span v-if="s.suggested_qty" class="stat-pill stat-pill--order">
+              {{ t('wms.inventory.ai.order', { qty: s.suggested_qty, unit: s.unit ?? '' }) }}
+              <template v-if="s.reorder_by"> · {{ t('wms.inventory.ai.by', { date: fmtDay(s.reorder_by) }) }}</template>
+            </span>
           </div>
         </div>
+      </div>
+      <div class="po-row">
+        <p v-if="poResult" class="ui-alert ui-alert--success po-msg">
+          {{ t('wms.inventory.ai.poCreated', { n: poResult.count }) }}
+          <button class="link" @click="router.push('/orders')">{{ t('wms.inventory.ai.viewOrders') }}</button>
+        </p>
+        <p v-else-if="poError" class="ui-alert ui-alert--error po-msg">{{ poError }}</p>
+        <span v-else class="ui-hint">{{ t('wms.inventory.ai.poHint') }}</span>
+        <button v-if="!poResult" class="ui-btn ui-btn--primary ui-btn--sm" :disabled="creatingPOs" @click="createPurchaseOrders">
+          <span v-if="creatingPOs" class="ui-spinner" />{{ t('wms.inventory.ai.createPOs') }}
+        </button>
       </div>
     </div>
 
@@ -174,6 +268,9 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
               <td class="muted">{{ fmtDate(item.last_updated) }}</td>
               <td class="act">
                 <div class="row-actions">
+                  <button class="btn-sm btn-sm--ghost" :title="t('forecastModal.title')" @click="forecastFor = item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
+                  </button>
                   <button class="btn-sm" @click="openMovement(item)">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -187,6 +284,45 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
         </table>
       </div>
     </div>
+
+    </template>
+
+    <!-- Lots & expiry -->
+    <div v-else class="ui-card">
+      <div v-if="lots.length === 0" class="ui-empty">
+        <strong>{{ t('wms.inventory.lots.emptyTitle') }}</strong>{{ t('wms.inventory.lots.emptyHint') }}
+      </div>
+      <div v-else class="ui-table-wrap">
+        <table class="ui-table">
+          <thead><tr>
+            <th>{{ t('wms.inventory.table.name') }}</th><th>{{ t('wms.inventory.lots.lot') }}</th>
+            <th>{{ t('wms.inventory.lots.expiry') }}</th><th class="num">{{ t('wms.inventory.table.quantity') }}</th>
+          </tr></thead>
+          <tbody>
+            <tr v-for="l in lots" :key="l.id">
+              <td><span class="ui-mono ui-muted">{{ l.products.sku }}</span> {{ l.products.name }}</td>
+              <td class="ui-mono">{{ l.lot_code || '—' }}</td>
+              <td>
+                {{ l.expiry_date ? new Date(l.expiry_date).toLocaleDateString(intlLocale()) : '—' }}
+                <span v-if="daysLeft(l.expiry_date) !== null"
+                  class="ui-badge" :class="daysLeft(l.expiry_date)! < 0 ? 'ui-badge--red' : daysLeft(l.expiry_date)! <= 14 ? 'ui-badge--amber' : ''">
+                  {{ daysLeft(l.expiry_date)! < 0 ? t('wms.inventory.lots.expired') : t('wms.inventory.lots.inDays', { n: daysLeft(l.expiry_date) }) }}
+                </span>
+              </td>
+              <td class="num">{{ l.quantity }} <span class="ui-muted">{{ l.products.unit }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <BaseModal v-if="showScan" :title="t('wms.inventory.scanMove')" :subtitle="t('wms.inventory.scanHint')" @close="showScan = false">
+      <BarcodeScanner @detected="onScanned" />
+      <p v-if="scanError" class="ui-alert ui-alert--error">{{ scanError }}</p>
+    </BaseModal>
+
+    <ForecastModal v-if="forecastFor" :business-id="businessId" :product-id="forecastFor.products.id"
+      :product-name="forecastFor.products.name" @close="forecastFor = null" />
 
     <!-- Movement Modal -->
     <Teleport to="body">
@@ -219,6 +355,16 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
                 <label class="label">{{ t('wms.inventory.movement.quantity') }}</label>
                 <input v-model="movForm.quantity" class="input" type="number" min="1" />
               </div>
+              <div v-if="movForm.type === 'inbound'" class="form-2col">
+                <div class="form-row">
+                  <label class="label">{{ t('wms.inventory.lots.lot') }}</label>
+                  <input v-model="movForm.lot_code" class="input" :placeholder="t('common.optional')" />
+                </div>
+                <div class="form-row">
+                  <label class="label">{{ t('wms.inventory.lots.expiry') }}{{ movTarget?.products.track_expiry ? ' *' : '' }}</label>
+                  <input v-model="movForm.expiry_date" class="input" type="date" />
+                </div>
+              </div>
               <div class="form-row">
                 <label class="label">{{ t('wms.inventory.movement.reason') }}</label>
                 <input v-model="movForm.reason" class="input" :placeholder="t('wms.inventory.movement.reasonPlaceholder')" />
@@ -226,7 +372,7 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
             </div>
             <div class="modal-foot">
               <button class="btn-ghost" @click="showMovementModal = false">{{ t('common.cancel') }}</button>
-              <button class="btn-primary" :disabled="saving" @click="saveMovement">
+              <button class="btn-primary" :disabled="saving || (movForm.type === 'inbound' && !!movTarget?.products.track_expiry && !movForm.expiry_date)" @click="saveMovement">
                 {{ saving ? t('common.loading') : t('common.save') }}
               </button>
             </div>
@@ -239,6 +385,12 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 </template>
 
 <style scoped>
+.po-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.po-msg { flex: 1; margin: 0; }
+.link { background: none; color: inherit; text-decoration: underline; cursor: pointer; margin-left: .35rem; }
+.stat-pill--order { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+.btn-sm--ghost { background: transparent; }
+.form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
 .page {
   padding: 2rem;
   background: var(--bg);
@@ -289,7 +441,7 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 .urgency--warning  { background: rgba(var(--amber-rgb), .1); color: var(--amber); border: 1px solid rgba(var(--amber-rgb), .25); }
 
 .ai-item-info { display: flex; align-items: center; gap: .5rem; flex: 1; min-width: 0; }
-.ai-item-sku  { font-size: .7rem; color: var(--text-sub); font-family: 'Geist Mono', ui-monospace, monospace; font-weight: 600; }
+.ai-item-sku  { font-size: .7rem; color: var(--text-sub); font-family: 'Geist Mono Variable', ui-monospace, monospace; font-weight: 600; }
 .ai-item-name { font-size: .8rem; color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .ai-item-stats { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
@@ -338,7 +490,7 @@ const movTypes = ['inbound', 'outbound', 'adjustment'] as const
 .sku-badge {
   display: inline-block;  
   color: var(--text-sub); font-size: .71rem; font-weight: 600; padding: .1rem .45rem;
-  border-radius: var(--r); font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: .03em;
+  border-radius: var(--r); font-family: 'Geist Mono Variable', ui-monospace, monospace; letter-spacing: .03em;
 }
 
 .qty-val { font-weight: 600; color: var(--text); }

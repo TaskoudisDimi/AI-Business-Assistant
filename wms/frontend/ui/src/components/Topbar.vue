@@ -22,6 +22,8 @@ const pageTitle = computed(() => {
     '/inventory': t('nav.inventory'),
     '/products':  t('nav.products'),
     '/orders':    t('nav.orders'),
+    '/stocktake': t('nav.stocktake'),
+    '/assistant': t('nav.assistant'),
   }
   return map[route.path] || ''
 })
@@ -36,6 +38,8 @@ const pageSub = computed(() => {
     '/inventory': t('topbar.sub.inventory'),
     '/products':  t('topbar.sub.products'),
     '/orders':    t('topbar.sub.orders'),
+    '/stocktake': t('topbar.sub.stocktake'),
+    '/assistant': t('topbar.sub.assistant'),
   }
   return map[route.path] || ''
 })
@@ -81,8 +85,16 @@ const goSettings = () => { showUserMenu.value = false; router.push('/settings') 
             <div class="menu-user">
               <p class="menu-name">{{ auth.user?.full_name }}</p>
               <p class="menu-email">{{ auth.user?.email }}</p>
-              <p v-if="auth.currentBusiness" class="menu-biz">{{ auth.currentBusiness.name }}</p>
+              <p v-if="auth.currentBusiness && auth.businesses.length < 2" class="menu-biz">{{ auth.currentBusiness.name }}</p>
             </div>
+            <template v-if="auth.businesses.length > 1">
+              <p class="menu-label">{{ t('topbar.switchBusiness') }}</p>
+              <button v-for="b in auth.businesses" :key="b.id" class="menu-item" role="menuitemradio"
+                :aria-checked="b.id === auth.currentBusiness?.id" @click="auth.switchBusiness(b.id); showUserMenu = false">
+                <span class="check">{{ b.id === auth.currentBusiness?.id ? '✓' : '' }}</span>{{ b.name }}
+              </button>
+              <div class="menu-sep" />
+            </template>
             <button class="menu-item" role="menuitem" @click="goSettings">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
               {{ t('nav.settings') }}
@@ -147,6 +159,9 @@ const goSettings = () => { showUserMenu.value = false; router.push('/settings') 
   background: transparent; font-size: .875rem; color: var(--text-sub); text-align: left; cursor: pointer;
 }
 .menu-item:hover { background: var(--bg-hover); color: var(--text); }
+.menu-label { font-size: .75rem; color: var(--text-muted); padding: .35rem .6rem .2rem; }
+.menu-sep { height: 1px; background: var(--border-light); margin: .3rem 0; }
+.check { width: 14px; color: var(--accent); font-weight: 700; }
 .menu-item--danger:hover { background: var(--red-bg); color: var(--red); }
 
 .pop-enter-active, .pop-leave-active { transition: opacity .12s, transform .12s; transform-origin: top right; }

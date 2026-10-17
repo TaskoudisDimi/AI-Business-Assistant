@@ -24,6 +24,9 @@ const recentOrders = ref<Order[]>([])
 const criticalItems = ref<{ sku: string; name: string; quantity: number; reorder_point: number }[]>([])
 const ordersLoaded = ref(false)
 
+interface Anomaly { kind: 'sales_drop' | 'sales_spike' | 'stock_loss' | 'revenue_drop'; severity: string; name?: string; sku?: string; actual: number; expected: number }
+const anomalies = ref<Anomaly[]>([])
+
 const businessId = computed(() => auth.currentBusiness?.id ?? '')
 
 onMounted(async () => {
@@ -34,6 +37,9 @@ onMounted(async () => {
     api.get('/orders', { params: { business_id: businessId.value } }),
     api.get('/inventory/reorder-suggestions', { params: { business_id: businessId.value } }),
   ])
+  api.get('/inventory/anomalies', { params: { business_id: businessId.value } })
+    .then(r => { anomalies.value = r.data })
+    .catch(() => { anomalies.value = [] })
 
   if (customersRes.status === 'fulfilled') {
     totalRevenue.value = customersRes.value.data.summary?.total_revenue ?? 0
@@ -66,6 +72,13 @@ function fmtRevenue(n: number | null) {
   if (n === null) return '—'
   return '€' + n.toLocaleString(intlLocale(), { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
+function anomalyText(a: Anomaly) {
+  return t(`dashboard.anomaly.${a.kind}`, {
+    name: a.name ?? '', actual: a.kind === 'revenue_drop' ? fmtRevenue(a.actual) : a.actual,
+    expected: a.kind === 'revenue_drop' ? fmtRevenue(a.expected) : Math.round(a.expected),
+  })
+}
+
 function fmtNum(n: number | null) {
   if (n === null) return '—'
   return n.toLocaleString(intlLocale())
@@ -208,10 +221,31 @@ function fmtNum(n: number | null) {
 
     </div>
 
+
+    <!-- Unusual activity -->
+    <div v-if="anomalies.length" class="panel anomalies">
+      <div class="panel-head">
+        <span class="panel-title">{{ t('dashboard.unusual') }}</span>
+        <router-link to="/assistant" class="panel-link">{{ t('dashboard.askAssistant') }} →</router-link>
+      </div>
+      <ul class="anomaly-list">
+        <li v-for="(a, i) in anomalies.slice(0, 6)" :key="i">
+          <span class="dot" :class="`dot--${a.severity}`" />
+          <span>{{ anomalyText(a) }}</span>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.anomalies { margin-top: 1rem; }
+.anomaly-list { list-style: none; display: flex; flex-direction: column; }
+.anomaly-list li { display: flex; gap: .65rem; align-items: baseline; padding: .6rem 1.25rem; border-top: 1px solid var(--border-light); font-size: .875rem; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transform: translateY(-1px); background: var(--text-muted); }
+.dot--critical { background: var(--red); }
+.dot--warning { background: var(--amber); }
+.dot--info { background: var(--blue); }
 .dash {
   padding: 2rem;
   display: flex;
@@ -411,7 +445,7 @@ function fmtNum(n: number | null) {
 .stock-row:last-child { border-bottom: none; }
 .stock-row:hover { background: var(--bg-hover); }
 .stock-info { display: flex; align-items: center; gap: .55rem; min-width: 0; }
-.stock-sku  { font-size: .68rem; color: var(--text-sub); font-family: 'Geist Mono', ui-monospace, monospace; font-weight: 600; flex-shrink: 0; }
+.stock-sku  { font-size: .68rem; color: var(--text-sub); font-family: 'Geist Mono Variable', ui-monospace, monospace; font-weight: 600; flex-shrink: 0; }
 .stock-name { font-size: .78rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stock-qty  { display: flex; align-items: center; gap: .2rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .qty-num    { font-size: .8rem; font-weight: 600; color: var(--text); }

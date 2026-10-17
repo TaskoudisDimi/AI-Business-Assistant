@@ -172,8 +172,9 @@ const faqCount = (tm('landing.faq.items') as unknown[]).length
       <BrandMark :size="20" />
       <span class="muted">© {{ new Date().getFullYear() }} TaskCode</span>
       <nav>
+        <router-link to="/privacy">{{ t('legal.privacyTitle') }}</router-link>
+        <router-link to="/terms">{{ t('legal.termsTitle') }}</router-link>
         <router-link to="/login">{{ t('auth.signIn') }}</router-link>
-        <router-link to="/register">{{ t('landing.cta.start') }}</router-link>
       </nav>
     </footer>
   </div>
@@ -246,7 +247,7 @@ h3 { font-size: 1.05rem; font-weight: 620; letter-spacing: -.01em; }
   display: flex; flex-direction: column; justify-content: center; gap: 8px; font-size: .82rem;
 }
 .mv { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; color: var(--text-sub); }
-.mv b { font-family: 'Geist Mono', monospace; font-weight: 500; font-size: .76rem; color: var(--text-muted); }
+.mv b { font-family: 'Geist Mono Variable', monospace; font-weight: 500; font-size: .76rem; color: var(--text-muted); }
 .mv-in, .mv-out { font-weight: 650; font-variant-numeric: tabular-nums; }
 .mv-in { color: var(--green); } .mv-out { color: var(--text); }
 .stock { display: grid; grid-template-columns: 1fr 64px; gap: 12px; align-items: center; }
@@ -279,7 +280,7 @@ h3 { font-size: 1.05rem; font-weight: 620; letter-spacing: -.01em; }
 @media (max-width: 760px) { .steps { grid-template-columns: 1fr; gap: 24px; } }
 .step { display: flex; flex-direction: column; gap: 8px; padding-top: 18px; border-top: 2px solid var(--text); }
 .step p { color: var(--text-sub); line-height: 1.55; }
-.step-n { font-family: 'Geist Mono', monospace; font-size: .85rem; color: var(--text-muted); }
+.step-n { font-family: 'Geist Mono Variable', monospace; font-size: .85rem; color: var(--text-muted); }
 
 .audience { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 960px) { .audience { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

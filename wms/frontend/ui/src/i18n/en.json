@@ -7,7 +7,9 @@
     "settings": "Settings",
     "inventory": "Inventory",
     "products": "Products",
-    "orders": "Orders"
+    "orders": "Orders",
+    "assistant": "Assistant",
+    "stocktake": "Stock-take"
   },
   "sidebar": {
     "analytics": "Analytics",
@@ -26,8 +28,11 @@
       "settings": "Account settings",
       "inventory": "Stock levels & movements",
       "products": "SKU catalog & pricing",
-      "orders": "Purchase & sales orders"
-    }
+      "orders": "Purchase & sales orders",
+      "assistant": "Ask about your sales, stock and customers",
+      "stocktake": "Count stock and fix differences"
+    },
+    "switchBusiness": "Switch business"
   },
   "common": {
     "save": "Save",
@@ -47,7 +52,9 @@
     "confirm": "Confirm",
     "complete": "Complete",
     "cancel_action": "Cancel Order",
-    "search": "Search…"
+    "search": "Search…",
+    "close": "Close",
+    "optional": "optional"
   },
   "auth": {
     "login": "Sign in",
@@ -98,7 +105,9 @@
       "continue": "Continue to dashboard",
       "invalidTitle": "This link has expired",
       "invalidSub": "Reset links work once and expire after an hour. Request a new one to continue.",
-      "requestNew": "Request a new link"
+      "requestNew": "Request a new link",
+      "inviteTitle": "Welcome to the team",
+      "inviteSubtitle": "Choose a password to finish setting up your account."
     },
     "showcase": {
       "eyebrow": "Warehouse management",
@@ -127,7 +136,15 @@
     "viewAll": "View all",
     "noOrders": "No orders yet",
     "createOrder": "Create first order",
-    "allStocked": "All items well-stocked"
+    "allStocked": "All items well-stocked",
+    "unusual": "Unusual activity",
+    "askAssistant": "Ask the assistant",
+    "anomaly": {
+      "sales_drop": "{name}: {actual} sold in the last 2 weeks, usually ~{expected}",
+      "sales_spike": "{name}: {actual} sold in the last 2 weeks, well above the usual ~{expected}",
+      "stock_loss": "{name}: {actual} units lost in recounts over the last 30 days",
+      "revenue_drop": "Revenue this week {actual}, usually ~{expected}"
+    }
   },
   "datasets": {
     "uploadBtn": "Upload CSV",
@@ -234,7 +251,10 @@
         "unit": "Unit",
         "reorderPoint": "Reorder Point",
         "costPrice": "Cost",
-        "sellPrice": "Price"
+        "sellPrice": "Price",
+        "barcode": "Barcode",
+        "supplier": "Supplier",
+        "leadTime": "Lead time (days)"
       },
       "empty": {
         "title": "No products yet",
@@ -243,7 +263,9 @@
       "modal": {
         "createTitle": "Add Product",
         "editTitle": "Edit Product"
-      }
+      },
+      "search": "Search products",
+      "trackExpiry": "Track lots and expiry dates"
     },
     "inventory": {
       "subtitle": "Stock levels & movements",
@@ -278,9 +300,29 @@
         "daysLeft": "{days}d left",
         "noHistory": "No sales history",
         "currentStock": "Stock",
-        "reorderPoint": "Reorder at"
+        "reorderPoint": "Reorder at",
+        "order": "Order {qty} {unit}",
+        "by": "by {date}",
+        "createPOs": "Create purchase orders",
+        "poHint": "Creates draft purchase orders with the suggested quantities, one per supplier.",
+        "poCreated": "{n} draft purchase order(s) created.",
+        "viewOrders": "View orders"
       },
-      "moveBtn": "Move"
+      "moveBtn": "Move",
+      "scanMove": "Scan",
+      "scanHint": "Scan a product to record a movement",
+      "tabs": {
+        "stock": "Stock",
+        "lots": "Lots & expiry"
+      },
+      "lots": {
+        "lot": "Lot",
+        "expiry": "Expiry date",
+        "expired": "expired",
+        "inDays": "in {n} days",
+        "emptyTitle": "No lots yet",
+        "emptyHint": "Add a lot code or expiry date when you receive stock to track it here."
+      }
     },
     "orders": {
       "subtitle": "Purchase & sales orders",
@@ -332,7 +374,11 @@
     "title": "Settings",
     "tabs": {
       "account": "Account",
-      "security": "Security"
+      "security": "Security",
+      "team": "Team",
+      "alerts": "Notifications",
+      "integrations": "Integrations",
+      "privacy": "Data & privacy"
     },
     "account": {
       "fullName": "Full Name",
@@ -577,5 +623,192 @@
       "title": "Start with your top 20 products today.",
       "body": "Add them, record this week's orders, and by Friday you'll know what to reorder."
     }
+  },
+  "scanner": {
+    "title": "Scan barcode",
+    "camera": "Camera",
+    "stop": "Stop",
+    "placeholder": "Scan or type a barcode / SKU",
+    "hint": "Use the phone camera, a USB scanner, or type the code and press Enter.",
+    "noCamera": "This browser can't use the camera. Type the code instead.",
+    "denied": "Camera access was blocked. Allow it in the browser settings or type the code.",
+    "notFound": "No product with code {code}"
+  },
+  "import": {
+    "button": "Import",
+    "title": "Import products",
+    "subtitle": "From a CSV or Excel (.xlsx) file. Existing SKUs are updated.",
+    "choose": "Choose file",
+    "change": "Choose another file",
+    "rows": "{n} rows",
+    "template": "Download template",
+    "mapping": "Match your columns",
+    "summary": "{ok} products ready to import",
+    "invalid": "{n} rows without SKU or name will be skipped",
+    "updateExisting": "Update products whose SKU already exists",
+    "submit": "Import {n} products",
+    "done": "Done: {created} created, {updated} updated, {skipped} skipped.",
+    "errors": {
+      "empty": "The file has no data rows.",
+      "read": "Couldn't read this file. Save it as CSV or .xlsx and try again."
+    },
+    "fields": {
+      "sku": "SKU",
+      "name": "Name",
+      "category": "Category",
+      "unit": "Unit",
+      "barcode": "Barcode",
+      "supplier": "Supplier",
+      "cost_price": "Cost price",
+      "sell_price": "Sell price",
+      "reorder_point": "Reorder point",
+      "lead_time_days": "Lead time (days)",
+      "initial_stock": "Stock"
+    }
+  },
+  "forecastModal": {
+    "title": "Demand forecast",
+    "past": "Sold (last 4 weeks)",
+    "next": "Forecast (next 4 weeks)",
+    "perDay": "Expected per day",
+    "next30": "Next 30 days",
+    "runsOut": "Runs out",
+    "inDays": "in {n} days",
+    "orderBy": "Order by",
+    "suggested": "Suggested order",
+    "safety": "Safety stock",
+    "how": "Based on the last 12 weeks of sales, weekday patterns and a {lead}-day supplier lead time, with a buffer for normal ups and downs.",
+    "littleHistory": "Less than 4 weeks of sales so far, so the forecast is rough. It gets better as orders come in."
+  },
+  "stocktake": {
+    "addTitle": "Count products",
+    "addSub": "Scan each unit, or search and type the counted quantity.",
+    "search": "Search by name, SKU or barcode",
+    "inSystem": "{n} in system",
+    "countTitle": "Counted",
+    "countSub": "{n} counted · {d} differences",
+    "clear": "Clear",
+    "confirmClear": "Clear this count?",
+    "empty": "Nothing counted yet. Your progress is saved on this device until you apply it.",
+    "system": "System",
+    "counted": "Counted",
+    "diff": "Difference",
+    "note": "Note (optional), e.g. Monthly count",
+    "apply": "Apply {n} differences",
+    "applied": "Stock updated for {n} products."
+  },
+  "scanInvoice": {
+    "button": "Scan invoice",
+    "title": "Scan an invoice or delivery note",
+    "subtitle": "Take a photo or upload a PDF. The lines are read and matched to your products.",
+    "choose": "Take photo / choose file",
+    "another": "Choose another",
+    "reading": "Reading the document… this takes up to a minute.",
+    "supplier": "Supplier",
+    "number": "No.",
+    "onDocument": "On the document",
+    "product": "Your product",
+    "price": "Unit price",
+    "noMatch": "— not matched —",
+    "guess": "matched by name, check",
+    "include": "Include",
+    "review": "Check the matches before creating the order. Nothing changes in your stock until you complete it.",
+    "create": "Create purchase order ({n} lines)",
+    "noteRef": "Invoice {n}"
+  },
+  "assistant": {
+    "title": "Ask about your business",
+    "intro": "Answers come from your own sales, stock and customer data.",
+    "placeholder": "Ask a question…",
+    "send": "Send",
+    "newChat": "New conversation",
+    "disclaimer": "Answers are generated automatically and may contain mistakes.",
+    "disabled": "The assistant isn't set up on this server yet (missing AI key).",
+    "suggestions": [
+      "What sold most last month?",
+      "Which customers are buying less than before?",
+      "What should I reorder this week?",
+      "How did revenue change compared to last month?"
+    ]
+  },
+  "draft": {
+    "button": "Message",
+    "title": "Message to customer",
+    "email": "Email",
+    "sms": "SMS",
+    "offer": "Offer to mention (optional)",
+    "regenerate": "Rewrite",
+    "writing": "Writing…",
+    "copy": "Copy",
+    "copied": "Copied",
+    "hint": "Edit it as you like, then copy it into your email or messaging app."
+  },
+  "team": {
+    "title": "Team",
+    "sub": "People who can access this business.",
+    "you": "you",
+    "pending": "invite pending",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "rolesHelp": "Members manage products, stock and orders. Admins can also manage the team, notifications and integrations.",
+    "emailPlaceholder": "colleague{'@'}company.com",
+    "invite": "Invite",
+    "remove": "Remove",
+    "leave": "Leave",
+    "invited": "Invite sent to {email}.",
+    "added": "{email} already had an account and was added.",
+    "already": "Already a member.",
+    "confirmRemove": "Remove {name} from this business?",
+    "confirmLeave": "Leave this business? You'll lose access to it."
+  },
+  "alerts": {
+    "title": "Email notifications",
+    "sub": "A daily email to owners and admins when something needs attention.",
+    "enable": "Send daily alerts for this business",
+    "today": "If sent today, it would include:",
+    "reorder": "{n} products to reorder",
+    "expiring": "{n} lots expiring within 14 days",
+    "anomalies": "{n} unusual changes",
+    "test": "Send me a test email",
+    "sent": "Sent to {email}.",
+    "noSmtp": "Email sending isn't configured on the server yet, so no alerts are sent."
+  },
+  "integrations": {
+    "title": "E-shop integrations",
+    "sub": "Orders from your e-shop take stock out automatically, matched by SKU.",
+    "connect": "Connect",
+    "active": "Active",
+    "paused": "Paused",
+    "pause": "Pause",
+    "resume": "Resume",
+    "disconnect": "Disconnect",
+    "url": "Webhook URL",
+    "secret": "Secret",
+    "lastOrder": "Last order received {when}",
+    "shopifySecret": "Paste the webhook signing secret from Shopify",
+    "confirmRemove": "Disconnect this integration? Orders will stop syncing.",
+    "skuNote": "Products are matched by SKU, so use the same SKUs in the shop and here. Lines with unknown SKUs are skipped and noted on the order.",
+    "about": {
+      "woocommerce": "Connect, then add a webhook in WooCommerce with the URL and secret shown here.",
+      "shopify": "In Shopify: Settings → Notifications → Webhooks → Create webhook (Order payment, JSON). Copy the signing secret shown at the bottom of that page and paste it here."
+    },
+    "steps": {
+      "woocommerce": "WooCommerce → Settings → Advanced → Webhooks → Add webhook: status Active, topic “Order updated”, delivery URL and secret from above.",
+      "shopify": "In Shopify, the webhook “Order payment” should point to the URL above. Each paid order reduces your stock here."
+    }
+  },
+  "privacy": {
+    "exportTitle": "Download your data",
+    "exportSub": "Everything in your account and the businesses you own, as a JSON file.",
+    "export": "Download"
+  },
+  "legal": {
+    "privacyTitle": "Privacy policy",
+    "termsTitle": "Terms of service",
+    "updated": "Last updated {date}",
+    "consent": "By creating an account you agree to the {terms} and the {privacy}."
   }
 }

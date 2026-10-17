@@ -62,6 +62,10 @@ const submit = async () => {
         <span v-if="loading" class="ui-spinner" />
         {{ loading ? t('auth.creatingAccount') : t('auth.signUp') }}
       </button>
+      <i18n-t keypath="legal.consent" tag="p" class="ui-hint consent">
+        <template #terms><router-link to="/terms" target="_blank">{{ t('legal.termsTitle') }}</router-link></template>
+        <template #privacy><router-link to="/privacy" target="_blank">{{ t('legal.privacyTitle') }}</router-link></template>
+      </i18n-t>
     </form>
 
     <template #footer>
@@ -85,5 +89,7 @@ const submit = async () => {
 <style scoped>
 .form { display: flex; flex-direction: column; gap: 1.1rem; }
 .cta { margin-top: 1.75rem; }
+.consent { text-align: center; }
+.consent a { color: var(--text-sub); text-decoration: underline; }
 .sent { margin: .4rem 0 .75rem; color: var(--text-sub); font-size: .92rem; }
 </style>

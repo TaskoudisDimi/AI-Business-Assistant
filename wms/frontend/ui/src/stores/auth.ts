@@ -15,7 +15,11 @@ export interface Business {
   industry?: string
   owner_id: string
   created_at: string
+  alert_email_enabled?: boolean
 }
+
+export type Role = 'owner' | 'admin' | 'member'
+const BUSINESS_KEY = 'business_id'
 
 /** FastAPI returns `detail` as a string, or as a list of validation errors (422) */
 export function apiErrorMessage(err: unknown): string | null {
@@ -35,6 +39,8 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user:       null as User | null,
     business:   null as Business | null,
+    businesses: [] as Business[],
+    memberships: [] as { business_id: string; role: Role }[],
     loading:    true,
     error:      null as string | null,
   }),
@@ -42,6 +48,9 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state): boolean => !!state.user,
     currentBusiness: (state): Business | null => state.business,
+    role: (state): Role | null =>
+      state.memberships.find(m => m.business_id === state.business?.id)?.role ?? null,
+    isAdmin(): boolean { return this.role === 'owner' || this.role === 'admin' },
   },
 
   actions: {
@@ -57,8 +66,12 @@ export const useAuthStore = defineStore('auth', {
     async fetchUser(): Promise<void> {
       try {
         const { data } = await api.get<AuthResponse>('/auth/me')
-        this.user     = data.user
-        this.business = data.businesses?.[0] ?? null
+        this.user        = data.user
+        this.businesses  = data.businesses ?? []
+        this.memberships = (data.memberships ?? []) as { business_id: string; role: Role }[]
+        let saved: string | null = null
+        try { saved = localStorage.getItem(BUSINESS_KEY) } catch { /* storage unavailable */ }
+        this.business = this.businesses.find(b => b.id === saved) ?? this.businesses[0] ?? null
       } catch {
         this.resetAuth()
       }
@@ -101,6 +114,13 @@ export const useAuthStore = defineStore('auth', {
         this.resetAuth()
         if (router) router.push('/login')
       }
+    },
+
+    switchBusiness(id: string): void {
+      const next = this.businesses.find(b => b.id === id)
+      if (!next) return
+      this.business = next
+      try { localStorage.setItem(BUSINESS_KEY, id) } catch { /* storage unavailable */ }
     },
 
     resetAuth(): void {

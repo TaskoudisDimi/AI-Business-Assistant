@@ -8,6 +8,8 @@ const routes = [
   { path: '/forgot-password', component: () => import('@/views/Auth/ForgotPassword.vue'), meta: { guestOnly: true } },
   // Reachable while signed in too: the recovery link may be opened in a browser with an active session
   { path: '/reset-password',  component: () => import('@/views/Auth/ResetPassword.vue') },
+  { path: '/privacy',         component: () => import('@/views/legal/LegalPage.vue'),        props: { doc: 'privacy' } },
+  { path: '/terms',           component: () => import('@/views/legal/LegalPage.vue'),        props: { doc: 'terms' } },
 
   {
     path: '/',
@@ -22,6 +24,8 @@ const routes = [
       { path: 'inventory',  component: () => import('@/views/wms/Inventory.vue') },
       { path: 'products',   component: () => import('@/views/wms/Products.vue') },
       { path: 'orders',     component: () => import('@/views/wms/Orders.vue') },
+      { path: 'stocktake',  component: () => import('@/views/wms/StocktakePage.vue') },
+      { path: 'assistant',  component: () => import('@/views/AssistantPage.vue') },
     ],
   },
 

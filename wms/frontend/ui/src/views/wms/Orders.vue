@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { intlLocale } from '@/i18n/format'
 import { api } from '@/services/api'
+import ScanInvoiceModal from '@/components/orders/ScanInvoiceModal.vue'
 
 const auth = useAuthStore()
 const { t } = useI18n()
@@ -25,6 +26,7 @@ const tab       = ref<'all' | 'purchase' | 'sale'>('all')
 const showModal = ref(false)
 const saving    = ref(false)
 const completing = ref<string | null>(null)
+const showScan  = ref(false)
 
 const form = ref({
   type: 'purchase' as 'purchase' | 'sale',
@@ -125,6 +127,10 @@ const STATUS_CLASS: Record<string, string> = {
   <div class="page">
 
     <div class="page-header">
+      <button class="ui-btn ui-btn--ghost ui-btn--sm" @click="showScan = true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+        {{ t('scanInvoice.button') }}
+      </button>
       <button class="btn-primary" @click="openCreate">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -280,6 +286,7 @@ const STATUS_CLASS: Record<string, string> = {
       </Transition>
     </Teleport>
 
+    <ScanInvoiceModal v-if="showScan" :business-id="businessId" :products="products" @close="showScan = false" @created="load" />
   </div>
 </template>
 
@@ -292,7 +299,7 @@ const STATUS_CLASS: Record<string, string> = {
   gap: 1.5rem;
 }
 
-.page-header { display: flex; align-items: center; justify-content: flex-end; }
+.page-header { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; }
 .header-icon {
   width: 40px; height: 40px;
   background: rgba(var(--accent-rgb), .08); border: 1px solid rgba(var(--accent-rgb), .18);

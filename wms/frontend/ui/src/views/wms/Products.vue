@@ -3,6 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/services/api'
+import ImportProductsModal from '@/components/products/ImportProductsModal.vue'
+import BarcodeScanner from '@/components/BarcodeScanner.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 const auth = useAuthStore()
 const { t } = useI18n()
@@ -16,6 +19,10 @@ interface Product {
   reorder_point: number
   cost_price: number | null
   sell_price: number | null
+  barcode: string | null
+  supplier: string | null
+  lead_time_days: number
+  track_expiry: boolean
 }
 
 const products   = ref<Product[]>([])
@@ -25,11 +32,30 @@ const showModal  = ref(false)
 const editId     = ref<string | null>(null)
 const saving     = ref(false)
 const deleteTarget = ref<string | null>(null)
+const showImport = ref(false)
+const scanFor    = ref<'search' | 'form' | null>(null)
+const search     = ref('')
 
-const form = ref({
+const filtered = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return products.value
+  return products.value.filter(p =>
+    p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) ||
+    (p.barcode ?? '').includes(q) || (p.supplier ?? '').toLowerCase().includes(q))
+})
+
+function onScanned(code: string) {
+  if (scanFor.value === 'form') form.value.barcode = code
+  else search.value = code
+  scanFor.value = null
+}
+
+const emptyForm = () => ({
   sku: '', name: '', category: '', unit: 'τεμ',
   reorder_point: 0, cost_price: '', sell_price: '',
+  barcode: '', supplier: '', lead_time_days: 7, track_expiry: false,
 })
+const form = ref(emptyForm())
 
 const businessId = computed(() => auth.currentBusiness?.id ?? '')
 
@@ -47,7 +73,7 @@ onMounted(load)
 
 function openCreate() {
   editId.value = null
-  form.value = { sku: '', name: '', category: '', unit: 'τεμ', reorder_point: 0, cost_price: '', sell_price: '' }
+  form.value = emptyForm()
   showModal.value = true
 }
 
@@ -58,6 +84,8 @@ function openEdit(p: Product) {
     unit: p.unit, reorder_point: p.reorder_point,
     cost_price: p.cost_price != null ? String(p.cost_price) : '',
     sell_price: p.sell_price != null ? String(p.sell_price) : '',
+    barcode: p.barcode ?? '', supplier: p.supplier ?? '',
+    lead_time_days: p.lead_time_days ?? 7, track_expiry: !!p.track_expiry,
   }
   showModal.value = true
 }
@@ -74,6 +102,10 @@ async function save() {
       reorder_point: Number(form.value.reorder_point) || 0,
       cost_price: form.value.cost_price !== '' ? Number(form.value.cost_price) : null,
       sell_price: form.value.sell_price !== '' ? Number(form.value.sell_price) : null,
+      barcode: form.value.barcode || null,
+      supplier: form.value.supplier || null,
+      lead_time_days: Math.max(1, Number(form.value.lead_time_days) || 7),
+      track_expiry: form.value.track_expiry,
     }
     if (editId.value) {
       await api.patch(`/products/${editId.value}`, payload)
@@ -97,13 +129,16 @@ async function confirmDelete(id: string) {
 <template>
   <div class="page">
 
-    <div class="page-header">
-      <button class="btn-primary" @click="openCreate">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        {{ t('wms.products.addBtn') }}
-      </button>
+    <div class="ui-toolbar">
+      <div class="search">
+        <input v-model="search" class="ui-input ui-input--sm" :placeholder="t('wms.products.search')" />
+        <button class="ui-icon-btn" :title="t('scanner.title')" :aria-label="t('scanner.title')" @click="scanFor = 'search'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M14 8v8M17 8v8"/></svg>
+        </button>
+      </div>
+      <span class="spacer" />
+      <button class="ui-btn ui-btn--ghost ui-btn--sm" @click="showImport = true">{{ t('import.button') }}</button>
+      <button class="ui-btn ui-btn--primary ui-btn--sm" @click="openCreate">{{ t('wms.products.addBtn') }}</button>
     </div>
 
     <div v-if="loading" class="state-msg">{{ t('common.loading') }}</div>
@@ -117,7 +152,10 @@ async function confirmDelete(id: string) {
       </div>
       <p class="empty-title">{{ t('wms.products.empty.title') }}</p>
       <p class="empty-hint">{{ t('wms.products.empty.hint') }}</p>
-      <button class="btn-primary" @click="openCreate">{{ t('wms.products.addBtn') }}</button>
+      <div class="empty-actions">
+        <button class="ui-btn ui-btn--ghost ui-btn--sm" @click="showImport = true">{{ t('import.button') }}</button>
+        <button class="btn-primary" @click="openCreate">{{ t('wms.products.addBtn') }}</button>
+      </div>
     </div>
 
     <div v-else class="card">
@@ -128,7 +166,7 @@ async function confirmDelete(id: string) {
               <th>{{ t('wms.products.table.sku') }}</th>
               <th>{{ t('wms.products.table.name') }}</th>
               <th>{{ t('wms.products.table.category') }}</th>
-              <th>{{ t('wms.products.table.unit') }}</th>
+              <th>{{ t('wms.products.table.supplier') }}</th>
               <th class="num">{{ t('wms.products.table.reorderPoint') }}</th>
               <th class="num">{{ t('wms.products.table.costPrice') }}</th>
               <th class="num">{{ t('wms.products.table.sellPrice') }}</th>
@@ -136,11 +174,11 @@ async function confirmDelete(id: string) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in products" :key="p.id">
+            <tr v-for="p in filtered" :key="p.id">
               <td><span class="sku-badge">{{ p.sku }}</span></td>
               <td class="fw">{{ p.name }}</td>
               <td class="muted">{{ p.category || '—' }}</td>
-              <td class="muted">{{ p.unit }}</td>
+              <td class="muted">{{ p.supplier || '—' }}</td>
               <td class="num">{{ p.reorder_point }}</td>
               <td class="num muted">{{ p.cost_price != null ? '€' + p.cost_price : '—' }}</td>
               <td class="num muted">{{ p.sell_price != null ? '€' + p.sell_price : '—' }}</td>
@@ -208,9 +246,29 @@ async function confirmDelete(id: string) {
                 </div>
               </div>
               <div class="form-row">
+                <label class="label">{{ t('wms.products.table.barcode') }}</label>
+                <div class="with-btn">
+                  <input v-model="form.barcode" class="input" inputmode="numeric" />
+                  <button class="ui-icon-btn" type="button" :aria-label="t('scanner.title')" @click="scanFor = 'form'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M11 8v8M14 8v8M17 8v8"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="form-2col">
+                <div class="form-row">
+                  <label class="label">{{ t('wms.products.table.supplier') }}</label>
+                  <input v-model="form.supplier" class="input" />
+                </div>
+                <div class="form-row">
+                  <label class="label">{{ t('wms.products.table.leadTime') }}</label>
+                  <input v-model="form.lead_time_days" class="input" type="number" min="1" />
+                </div>
+              </div>
+              <div class="form-row">
                 <label class="label">{{ t('wms.products.table.reorderPoint') }}</label>
                 <input v-model="form.reorder_point" class="input" type="number" min="0" />
               </div>
+              <label class="ui-check"><input v-model="form.track_expiry" type="checkbox" /> {{ t('wms.products.trackExpiry') }}</label>
               <div class="form-2col">
                 <div class="form-row">
                   <label class="label">{{ t('wms.products.table.costPrice') }}</label>
@@ -233,10 +291,20 @@ async function confirmDelete(id: string) {
       </Transition>
     </Teleport>
 
+    <ImportProductsModal v-if="showImport" :business-id="businessId" @close="showImport = false" @imported="load" />
+
+    <BaseModal v-if="scanFor" :title="t('scanner.title')" @close="scanFor = null">
+      <BarcodeScanner @detected="onScanned" />
+    </BaseModal>
   </div>
 </template>
 
 <style scoped>
+.search { display: flex; align-items: center; gap: .25rem; width: min(360px, 100%); }
+.search .ui-input { flex: 1; }
+.with-btn { display: flex; gap: .4rem; align-items: center; }
+.with-btn .input { flex: 1; }
+.empty-actions { display: flex; gap: .5rem; justify-content: center; }
 .page {
   padding: 2rem;
   background: var(--bg);
@@ -317,7 +385,7 @@ async function confirmDelete(id: string) {
    
   color: var(--text-sub); font-size: .71rem; font-weight: 600;
   padding: .1rem .45rem; border-radius: var(--r);
-  font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: .03em;
+  font-family: 'Geist Mono Variable', ui-monospace, monospace; letter-spacing: .03em;
 }
 
 .row-actions {

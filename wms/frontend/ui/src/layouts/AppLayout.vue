@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import Sidebar from '@/components/Sidebar.vue'
 import Topbar  from '@/components/Topbar.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 </script>
 
 <template>
@@ -9,7 +12,7 @@ import Topbar  from '@/components/Topbar.vue'
     <div class="main">
       <Topbar />
       <div class="content">
-        <router-view />
+        <router-view :key="auth.currentBusiness?.id" />
       </div>
     </div>
   </div>

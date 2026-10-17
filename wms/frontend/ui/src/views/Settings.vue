@@ -3,14 +3,23 @@ import { ref, computed, watch } from 'vue'
 import { useAuthStore, apiErrorMessage } from '@/stores/auth'
 import { api } from '@/services/api'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { setLocale } from '@/i18n'
+import TeamSettings from '@/components/settings/TeamSettings.vue'
+import AlertSettings from '@/components/settings/AlertSettings.vue'
+import IntegrationSettings from '@/components/settings/IntegrationSettings.vue'
+import PrivacySettings from '@/components/settings/PrivacySettings.vue'
 
 const auth  = useAuthStore()
 const { t } = useI18n()
 
 const loading   = ref(false)
 const toast     = ref<{ msg: string; type: 'success' | 'error' } | null>(null)
-const activeTab = ref<'account' | 'security'>('account')
+type TabKey = 'account' | 'security' | 'team' | 'alerts' | 'integrations' | 'privacy'
+const TAB_KEYS: TabKey[] = ['account', 'security', 'team', 'alerts', 'integrations', 'privacy']
+const route = useRoute()
+// ?tab=team etc. opens a tab directly (links from emails and other pages)
+const activeTab = ref<TabKey>(TAB_KEYS.includes(route.query.tab as TabKey) ? route.query.tab as TabKey : 'account')
 
 const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
   toast.value = { msg, type }
@@ -87,10 +96,15 @@ const initials = computed(() =>
   (auth.user?.full_name ?? 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 )
 
-const tabs = [
-  { key: 'account',  label: t('settings.tabs.account'),  icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>` },
-  { key: 'security', label: t('settings.tabs.security'), icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>` },
-]
+// Labels are resolved in the template so they follow language changes
+const tabs = computed(() => [
+  { key: 'account' as const },
+  { key: 'security' as const },
+  { key: 'team' as const },
+  { key: 'alerts' as const },
+  ...(auth.isAdmin ? [{ key: 'integrations' as const }] : []),
+  { key: 'privacy' as const },
+])
 </script>
 
 <template>
@@ -117,16 +131,9 @@ const tabs = [
     </div>
 
     <!-- Tabs -->
-    <div class="tabs">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        class="tab-btn"
-        :class="{ 'tab-btn--active': activeTab === tab.key }"
-        @click="activeTab = tab.key as any"
-      >
-        <span v-html="tab.icon" />
-        {{ tab.label }}
+    <div class="ui-tabs">
+      <button v-for="tab in tabs" :key="tab.key" class="ui-tab" :class="{ active: activeTab === tab.key }" @click="activeTab = tab.key">
+        {{ t(`settings.tabs.${tab.key}`) }}
       </button>
     </div>
 
@@ -234,6 +241,11 @@ const tabs = [
         </div>
 
       </div>
+
+      <div v-else-if="activeTab === 'team'" key="team" class="tab-panel"><TeamSettings /></div>
+      <div v-else-if="activeTab === 'alerts'" key="alerts" class="tab-panel"><AlertSettings /></div>
+      <div v-else-if="activeTab === 'integrations'" key="integrations" class="tab-panel"><IntegrationSettings /></div>
+      <div v-else-if="activeTab === 'privacy'" key="privacy" class="tab-panel"><PrivacySettings /></div>
     </Transition>
 
   </div>

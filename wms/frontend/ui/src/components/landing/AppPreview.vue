@@ -123,7 +123,7 @@ const forecast = '56,40 64,44 72,36 80,38 88,30 100,28'
 
 .alert-row { display: grid; grid-template-columns: 50px 1fr auto; gap: 8px; align-items: center; padding: 4px 0; }
 .alert-row + .alert-row { border-top: 1px solid var(--border-light); }
-.sku { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--text-muted); }
+.sku { font-family: 'Geist Mono Variable', monospace; font-size: 10.5px; color: var(--text-muted); }
 .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .days { font-size: 11px; font-weight: 550; color: var(--amber); }
 .days.crit { color: var(--red); }
