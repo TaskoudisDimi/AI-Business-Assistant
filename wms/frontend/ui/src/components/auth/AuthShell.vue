@@ -20,7 +20,7 @@ const sampleStock = [
   <div class="shell">
     <section class="form-col">
       <header class="top">
-        <router-link to="/login" :aria-label="t('auth.signIn')"><BrandMark /></router-link>
+        <router-link to="/" aria-label="WMS"><BrandMark /></router-link>
         <PrefsToggles />
       </header>
 

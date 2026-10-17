@@ -448,5 +448,134 @@
       "empty": "No forecasts yet",
       "total": "{v} total"
     }
+  },
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "how": "How it works",
+      "who": "Who it's for",
+      "faq": "FAQ"
+    },
+    "cta": {
+      "start": "Create free account",
+      "tour": "See what it does"
+    },
+    "hero": {
+      "eyebrow": "For shops, wholesalers and e-shops",
+      "title": "Stock, orders and sales forecasts in one place.",
+      "lead": "WMS keeps your inventory in sync with every order, warns you days before a product runs out, and forecasts next month's sales from your own numbers.",
+      "fine": "Runs in the browser · Greek and English"
+    },
+    "preview": {
+      "label": "Preview of the WMS dashboard",
+      "kpi": {
+        "revenue": "Revenue",
+        "orders": "Orders",
+        "low": "Low stock"
+      },
+      "actual": "Actual",
+      "forecast": "Forecast"
+    },
+    "visual": {
+      "inbound": "Inbound",
+      "outbound": "Outbound"
+    },
+    "features": {
+      "title": "Everything a small warehouse needs, nothing it doesn't.",
+      "sub": "Built around the questions you ask every day: what do I have, what's running out, and what will I sell next month.",
+      "inventory": {
+        "title": "Inventory that updates itself",
+        "body": "Complete a purchase or sale order and stock moves on its own. Every change is kept in a movement log, so you always know why a number changed."
+      },
+      "reorder": {
+        "title": "Reorder alerts before you run out",
+        "body": "Based on the last 30 days of outgoing stock, WMS estimates how many days each product has left and flags the ones that need ordering now."
+      },
+      "forecast": {
+        "title": "Sales forecast from your own data",
+        "body": "Upload a CSV with your daily sales and get a 7 to 90-day forecast, with optional factors like promotions, temperature and marketing spend."
+      },
+      "customers": {
+        "title": "Know which customers matter",
+        "body": "Customers are grouped automatically into high value, loyal, new and at risk, based on how recently, how often and how much they buy."
+      }
+    },
+    "extras": {
+      "orders": {
+        "title": "Purchase & sale orders",
+        "body": "Draft, confirm, complete or cancel, with line items and prices."
+      },
+      "datasets": {
+        "title": "Edit data in the browser",
+        "body": "Upload CSV files, preview them and fix rows without Excel."
+      },
+      "language": {
+        "title": "Greek & English",
+        "body": "Switch language or light/dark theme at any time."
+      },
+      "access": {
+        "title": "Your data stays yours",
+        "body": "Each business is visible only to its own members."
+      }
+    },
+    "how": {
+      "title": "Up and running in an afternoon.",
+      "products": {
+        "title": "Add your products",
+        "body": "SKU, name, prices and the stock level at which you want to reorder."
+      },
+      "orders": {
+        "title": "Record orders as they happen",
+        "body": "Purchases bring stock in, sales take it out. Completing an order updates inventory."
+      },
+      "insights": {
+        "title": "Act on alerts and forecasts",
+        "body": "See what to reorder this week and what demand to expect next month."
+      }
+    },
+    "who": {
+      "title": "Made for businesses that keep stock.",
+      "retail": {
+        "title": "Retail shops",
+        "body": "Hardware, pharmacy, cosmetics or pet shops with hundreds of SKUs on the shelf."
+      },
+      "wholesale": {
+        "title": "Wholesalers & distributors",
+        "body": "Supply many customers and need to see who buys what, and when."
+      },
+      "eshop": {
+        "title": "E-shops",
+        "body": "Keep stock accurate across orders and plan purchases ahead of peaks."
+      },
+      "food": {
+        "title": "Cafés, bakeries & kitchens",
+        "body": "Track consumables and raw materials so you never run short mid-week."
+      }
+    },
+    "faq": {
+      "title": "Questions, answered.",
+      "items": [
+        {
+          "q": "Do I need to install anything?",
+          "a": "No. WMS runs in the browser on any computer, tablet or phone. Sign up and start adding products."
+        },
+        {
+          "q": "Is it available in Greek?",
+          "a": "Yes. The whole app works in Greek and English and you can switch at any time."
+        },
+        {
+          "q": "What do I need for the sales forecast?",
+          "a": "A CSV file with a date column and a sales column, one row per day, covering at least the last two months. Temperature, promotions and marketing spend are optional and improve the forecast."
+        },
+        {
+          "q": "Who can see my data?",
+          "a": "Only the members of your business. Sessions are kept in secure cookies, and you can reset your password by email if you forget it."
+        }
+      ]
+    },
+    "closing": {
+      "title": "Start with your top 20 products today.",
+      "body": "Add them, record this week's orders, and by Friday you'll know what to reorder."
+    }
   }
 }

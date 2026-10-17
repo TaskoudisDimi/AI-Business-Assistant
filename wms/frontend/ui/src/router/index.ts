@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
+  { path: '/',                component: () => import('@/views/LandingPage.vue'),         meta: { guestOnly: true } },
   { path: '/login',           component: () => import('@/views/Auth/Login.vue'),          meta: { guestOnly: true } },
   { path: '/register',        component: () => import('@/views/Auth/Register.vue'),       meta: { guestOnly: true } },
   { path: '/forgot-password', component: () => import('@/views/Auth/ForgotPassword.vue'), meta: { guestOnly: true } },
@@ -13,7 +14,6 @@ const routes = [
     component: () => import('@/layouts/AppLayout.vue'),
     meta: { requiresAuth: true },
     children: [
-      { path: '',           redirect: 'dashboard' },
       { path: 'dashboard',  component: () => import('@/views/Dashboard.vue') },
       { path: 'sales',      component: () => import('@/views/SalesForecast.vue') },
       { path: 'customers',  component: () => import('@/views/CustomerAnalysis.vue') },

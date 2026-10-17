@@ -38,29 +38,34 @@ code, .mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, mo
 :root {
   color-scheme: light;
 
-  /* Accent — signal orange, used for primary actions and the active state only */
-  --accent-rgb:   229, 84, 27;
+  /* Brand — the two teals from the logo */
+  --brand-light: #40bcab;
+  --brand-dark:  #1c5b5c;
+
+  /* Accent — primary actions and the active state. A deeper teal than the logo's
+     so white button text keeps ~5:1 contrast. */
+  --accent-rgb:   16, 125, 113;
   --accent:       rgb(var(--accent-rgb));
-  --accent-hover: #c9460f;
+  --accent-hover: #0c665d;
   --accent-text:  #ffffff;
   --accent-soft:  rgba(var(--accent-rgb), .09);
   --accent-line:  rgba(var(--accent-rgb), .28);
 
-  /* Surfaces — warm neutrals */
-  --bg:         #f6f6f3;
-  --bg-sidebar: #f6f6f3;
+  /* Surfaces — cool neutrals with a hint of the brand teal */
+  --bg:         #f5f7f7;
+  --bg-sidebar: #f5f7f7;
   --bg-card:    #ffffff;
-  --bg-hover:   #efeeea;
+  --bg-hover:   #eceff0;
   --bg-input:   #ffffff;
-  --bg-sunken:  #f1f0ec;
+  --bg-sunken:  #eef2f2;
 
-  --border:       #e4e3de;
-  --border-mid:   #d6d5cf;
-  --border-light: #eeede9;
+  --border:       #e1e6e6;
+  --border-mid:   #d0d7d7;
+  --border-light: #ebefef;
 
-  --text:       #1b1b19;
-  --text-sub:   #5c5b56;
-  --text-muted: #8c8b85;
+  --text:       #152121;
+  --text-sub:   #536160;
+  --text-muted: #85918f;
 
   /* Status */
   --green-rgb: 22, 136, 77;
@@ -74,7 +79,7 @@ code, .mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, mo
   --blue-rgb:  37, 99, 235;
   --blue:      rgb(var(--blue-rgb));
 
-  --overlay: rgba(20, 20, 18, .38);
+  --overlay: rgba(10, 24, 24, .38);
 
   /* Radii */
   --r:    6px;
@@ -82,8 +87,8 @@ code, .mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, mo
   --r-xl: 14px;
 
   /* Shadows — soft, low-contrast */
-  --shadow:    0 1px 2px rgba(20, 20, 18, .05), 0 1px 1px rgba(20, 20, 18, .03);
-  --shadow-lg: 0 12px 32px -8px rgba(20, 20, 18, .18), 0 2px 6px rgba(20, 20, 18, .06);
+  --shadow:    0 1px 2px rgba(10, 24, 24, .05), 0 1px 1px rgba(10, 24, 24, .03);
+  --shadow-lg: 0 12px 32px -8px rgba(10, 24, 24, .18), 0 2px 6px rgba(10, 24, 24, .06);
 
   /* Legacy aliases */
   --teal:      var(--accent);
@@ -95,26 +100,28 @@ code, .mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, mo
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --accent-rgb:   255, 112, 56;
-  --accent-hover: #ff8a5c;
-  --accent-text:  #1a0d06;
+  --brand-dark:  #2f8a86;   /* the logo's dark teal is too dark on a dark background */
+
+  --accent-rgb:   64, 188, 171;
+  --accent-hover: #5fcfbf;
+  --accent-text:  #06201d;
   --accent-soft:  rgba(var(--accent-rgb), .12);
   --accent-line:  rgba(var(--accent-rgb), .34);
 
-  --bg:         #121211;
-  --bg-sidebar: #121211;
-  --bg-card:    #1a1a19;
-  --bg-hover:   #232321;
-  --bg-input:   #161615;
-  --bg-sunken:  #161615;
+  --bg:         #0f1414;
+  --bg-sidebar: #0f1414;
+  --bg-card:    #161c1c;
+  --bg-hover:   #1f2727;
+  --bg-input:   #131919;
+  --bg-sunken:  #131919;
 
-  --border:       #2a2a27;
-  --border-mid:   #363632;
-  --border-light: #222220;
+  --border:       #253030;
+  --border-mid:   #313d3d;
+  --border-light: #1d2525;
 
-  --text:       #ecebe7;
-  --text-sub:   #a7a6a0;
-  --text-muted: #73726c;
+  --text:       #e7eeed;
+  --text-sub:   #a0acaa;
+  --text-muted: #6b7776;
 
   --green-rgb: 74, 194, 128;
   --green-bg:  rgba(var(--green-rgb), .1);

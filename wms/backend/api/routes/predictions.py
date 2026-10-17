@@ -72,8 +72,9 @@ def _predict_future(df: pd.DataFrame, artifact: dict, future_days: int, override
     df = _lag_feats(df, target_col)
     df = df.dropna().reset_index(drop=True)
 
+    # lag_30 / rolling_mean_30 use up the first 30 days, so ~60 days of input are needed
     if len(df) < 30:
-        raise HTTPException(400, "Χρειάζονται τουλάχιστον 30 γραμμές για πρόβλεψη")
+        raise HTTPException(400, "Χρειάζονται τουλάχιστον 60 ημέρες δεδομένων για πρόβλεψη")
 
     last_date  = pd.to_datetime(df[date_col].max())
     last_sales = list(df[target_col].values[-30:])
