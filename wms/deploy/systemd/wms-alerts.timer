@@ -1,0 +1,9 @@
+[Unit]
+Description=Send WMS alert emails every morning
+
+[Timer]
+OnCalendar=*-*-* 07:30:00 Europe/Athens
+Persistent=true
+
+[Install]
+WantedBy=timers.target

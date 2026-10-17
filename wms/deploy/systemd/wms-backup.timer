@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up WMS every night
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 Europe/Athens
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

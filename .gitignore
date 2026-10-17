@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 wms/backend/ai-bus-assistant/
 .claude/
+wms/backend/venv/
+.deploy.env

@@ -1,0 +1,7 @@
+[Unit]
+Description=WMS daily alert emails
+
+[Service]
+Type=oneshot
+WorkingDirectory=@BACKEND_DIR@
+ExecStart=@BACKEND_DIR@/venv/bin/python scripts/send_alerts.py
