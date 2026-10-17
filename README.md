@@ -1,379 +1,221 @@
-# AI Business Assistant
+# WMS
 
-A full-stack business management platform combining warehouse management (WMS), customer analytics with RFM segmentation, and AI-powered sales forecasting.
+Warehouse management for small businesses: stock, purchase and sale orders, forecast-based
+reorder planning, customer analytics, e-shop sync and AI helpers. Greek and English.
 
 **Live:** https://wms.task-code.com
 
 ---
 
-## Tech Stack
+## Features
+
+**Warehouse**
+- Products with SKU, barcode, supplier, lead time, prices; bulk **import from CSV/Excel**
+- Stock levels and movement log; **lots and expiry dates** (stock leaves earliest-expiring first)
+- Purchase and sale orders; completing an order moves stock
+- **Barcode scanning** with the phone camera or a USB scanner
+- **Stock-take**: count by scanning, apply only the differences
+
+**Planning & insights**
+- Per-product **demand forecast** from the app's own sales (weekday pattern, safety stock)
+- **Reorder suggestions** with quantity and order-by date → draft purchase orders per supplier
+- **Unusual activity**: sudden sales drops/spikes, stock lost in recounts, revenue drop
+- Customer analysis (RFM segments) and CSV-based sales forecast (Random Forest)
+- **Daily alert emails** to owners/admins
+
+**AI (Claude API, optional)**
+- **Scan an invoice / delivery note** (photo or PDF) → lines matched to products → purchase order
+- **Assistant**: ask questions about sales, customers and stock in plain language
+- **Message drafts** for customers who stopped buying
+
+**Team & integrations**
+- Roles: owner / admin / member, invites by email, switch between businesses
+- **WooCommerce and Shopify**: paid orders take stock out automatically (by SKU)
+
+**Account & compliance**
+- Email/password auth with confirmation and password reset (Supabase Auth, httpOnly cookies)
+- Privacy policy and terms (el/en), data export, account deletion, self-hosted fonts
+- Nightly database + file backups
+
+---
+
+## Tech stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | Vue 3 + TypeScript + Vite |
-| State management | Pinia |
-| Routing | Vue Router |
-| i18n | vue-i18n (English / Greek) |
+| Frontend | Vue 3, TypeScript, Vite, Pinia, vue-i18n |
 | Backend | FastAPI (Python 3.12) |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth — JWT stored in httponly cookies |
-| ML | scikit-learn, pandas, numpy (Random Forest) |
-| Production server | Hetzner VPS — Traefik v3 reverse proxy + systemd |
+| Database / auth / files | Supabase (PostgreSQL, Auth, Storage) |
+| AI | Anthropic Claude API (`claude-opus-5-5`) |
+| Forecasting | statistical model in `services/forecasting.py`; scikit-learn Random Forest for CSV forecasts |
+| Hosting | Hetzner VPS, Traefik v3, systemd |
 
 ---
 
-## Features
+## Quick start (local)
 
-### Warehouse Management (WMS)
-- **Products** — SKU catalog with reorder points, cost/sell prices, categories
-- **Inventory** — Real-time stock levels, movement log (inbound / outbound / adjustment)
-- **Orders** — Purchase and sale orders with line items; completing an order automatically updates stock
-- **AI Reorder Suggestions** — Calculates days-until-stockout per product based on last 30 days of outbound movements; flags critical and warning items
-
-### Analytics
-- **Customer Analysis** — RFM segmentation (High Value, Loyal, At Risk, New, Dormant) derived from completed sale orders; top products by revenue
-- **Sales Forecast** — Upload a CSV dataset, run predictions using a pre-trained Random Forest model, view results per day for up to N future days
-- **Dashboard** — Live KPIs (revenue, orders, customers, critical stock), recent orders panel, critical stock alerts
-
-### Auth
-- Email/password registration with email confirmation
-- Forgot / reset password via emailed recovery link (`/forgot-password` → `/reset-password`)
-- Secure httponly cookies (access + refresh tokens, 7-day / 30-day TTL)
-- Auto-refresh via middleware on every request
-- A default business is auto-created for new users on first login
-
----
-
-## Project Structure
-
-```
-WMS/
-├── wms/                           # main app directory
-│   ├── backend/
-│   │   ├── main.py                # FastAPI app, CORS, middleware, routers, static file serving
-│   │   ├── requirements.txt
-│   │   ├── models/
-│   │   │   └── sales_model.pkl    # pre-trained Random Forest artifact
-│   │   ├── api/routes/
-│   │   │   ├── auth.py            # /api/auth — login, register, logout, /me
-│   │   │   ├── user.py            # /api/users
-│   │   │   ├── business.py        # /api/business
-│   │   │   ├── products.py        # /api/products — SKU catalog
-│   │   │   ├── inventory.py       # /api/inventory — stock, movements, reorder suggestions
-│   │   │   ├── orders.py          # /api/orders — purchase & sale orders
-│   │   │   ├── customers.py       # /api/customers/analysis — RFM
-│   │   │   ├── datasets.py        # /api/datasets — CSV upload to Supabase Storage
-│   │   │   └── predictions.py     # /api/predictions — sales forecast
-│   │   ├── core/
-│   │   │   ├── security.py        # get_current_user() — reads JWT from cookie
-│   │   │   ├── middleware.py      # RefreshSessionMiddleware — auto-refresh tokens
-│   │   │   ├── config.py
-│   │   │   └── exceptions.py
-│   │   ├── db/
-│   │   │   └── supabase_client.py
-│   │   └── services/
-│   │       └── permissions.py     # check_business_access()
-│   │
-│   └── frontend/ui/
-│       ├── src/
-│       │   ├── views/
-│       │   │   ├── Dashboard.vue
-│       │   │   ├── CustomerAnalysis.vue
-│       │   │   ├── SalesForecast.vue
-│       │   │   ├── Datasets.vue
-│       │   │   ├── Settings.vue
-│       │   │   ├── wms/
-│       │   │   │   ├── Products.vue
-│       │   │   │   ├── Inventory.vue
-│       │   │   │   └── Orders.vue
-│       │   │   └── Auth/
-│       │   │       ├── Login.vue
-│       │   │       └── Register.vue
-│       │   ├── components/
-│       │   │   ├── Sidebar.vue
-│       │   │   ├── Topbar.vue
-│       │   │   └── StatCard.vue
-│       │   ├── layouts/
-│       │   │   ├── AppLayout.vue
-│       │   │   └── AuthLayout.vue
-│       │   ├── stores/
-│       │   │   └── auth.ts        # user + business state (Pinia)
-│       │   ├── services/
-│       │   │   └── api.ts         # axios instance — baseURL from VITE_API_URL
-│       │   ├── router/index.ts
-│       │   └── i18n/
-│       │       ├── en.json
-│       │       └── el.json
-│       ├── vite.config.ts
-│       └── package.json
-└── start.sh                       # dev: starts backend + frontend together
-```
-
----
-
-## Database Schema (Supabase)
-
-Run in the Supabase SQL Editor:
-
-```sql
--- Products / SKU catalog
-create table products (
-  id            uuid primary key default gen_random_uuid(),
-  business_id   uuid not null references businesses(id) on delete cascade,
-  sku           text not null,
-  name          text not null,
-  category      text,
-  unit          text default 'τεμ',
-  reorder_point integer default 0,
-  cost_price    numeric(10,2),
-  sell_price    numeric(10,2),
-  created_at    timestamptz default now(),
-  unique(business_id, sku)
-);
-
--- Current stock levels (one row per product)
-create table inventory_items (
-  id           uuid primary key default gen_random_uuid(),
-  product_id   uuid not null references products(id) on delete cascade,
-  business_id  uuid not null,
-  quantity     integer not null default 0,
-  last_updated timestamptz default now()
-);
-
--- Movement log — immutable audit trail
-create table inventory_movements (
-  id          uuid primary key default gen_random_uuid(),
-  product_id  uuid not null references products(id) on delete cascade,
-  business_id uuid not null,
-  type        text not null check (type in ('inbound','outbound','adjustment')),
-  quantity    integer not null,
-  reason      text,
-  order_id    uuid,
-  created_by  uuid,
-  created_at  timestamptz default now()
-);
-
--- Orders (purchase = inbound stock, sale = outbound stock)
-create table orders (
-  id          uuid primary key default gen_random_uuid(),
-  business_id uuid not null references businesses(id) on delete cascade,
-  type        text not null check (type in ('purchase','sale')),
-  status      text not null default 'draft' check (status in ('draft','confirmed','completed','cancelled')),
-  party_name  text,
-  notes       text,
-  created_by  uuid,
-  created_at  timestamptz default now()
-);
-
--- Order line items
-create table order_items (
-  id         uuid primary key default gen_random_uuid(),
-  order_id   uuid not null references orders(id) on delete cascade,
-  product_id uuid not null references products(id),
-  quantity   integer not null,
-  unit_price numeric(10,2)
-);
-```
-
----
-
-## Environment Variables
-
-### Backend — `backend/.env`
-
-```env
-SUPABASE_URL=https://xxxx.supabase.co
-SUPABASE_KEY=your-service-role-key
-COOKIE_SECURE=true          # set to false for local dev (no HTTPS)
-FRONTEND_URL=https://wms.task-code.com   # used in confirmation / password-reset email links
-SALES_MODEL_PATH=models/sales_model.pkl
-```
-
-### Supabase Auth settings
-
-In **Authentication → URL Configuration**, add `<FRONTEND_URL>/reset-password` and
-`<FRONTEND_URL>/login` to **Redirect URLs** (for local dev also `http://localhost:5173/...`).
-Without this, Supabase ignores the link target and password-reset emails point to the Site URL.
-
-Optional — the reset page also accepts the token-hash style link. To use it, change the
-**Reset Password** email template link to
-`{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery`; the user is then
-signed in automatically after choosing a new password.
-
-### Frontend — `frontend/ui/.env.local` (gitignored)
-
-```env
-VITE_API_URL=http://localhost:8000/api
-```
-
-In production this variable is not set — the frontend defaults to `/api` (same-origin, proxied by Traefik).
-
----
-
-## Local Development
-
-**Requirements:** Python 3.12, Node 20, a Supabase project
+Requirements: Python 3.12, Node 20+, a Supabase project.
 
 ```bash
-# 1. Backend
-cd wms/backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env          # fill in SUPABASE_URL and SUPABASE_KEY
-uvicorn main:app --reload --port 8000
-
-# 2. Frontend (separate terminal)
-cd wms/frontend/ui
-npm install
-# create .env.local with: VITE_API_URL=http://localhost:8000/api
-npm run dev
+cp wms/backend/.env.example wms/backend/.env   # fill in SUPABASE_URL / SUPABASE_KEY at least
+./run-local.sh                                 # backend :8000 + frontend :5173, Ctrl+C stops both
 ```
 
-Or use the helper script from the root:
+`run-local.sh` creates `wms/backend/venv`, installs Python and npm packages when they change,
+and writes `frontend/ui/.env.local`. Other modes:
 
 ```bash
-./start.sh
+./run-local.sh --test      # backend tests + frontend type-check
+./run-local.sh --migrate   # apply pending database migrations, then start
 ```
 
-Frontend runs on http://localhost:5173, backend on http://localhost:8000.
+> Local and production use the same Supabase project unless your `.env` points elsewhere.
+
+Demo data for testing or recording a video: see [TESTING.md](TESTING.md).
 
 ---
 
-## Production Deployment (Hetzner + Traefik)
-
-The server runs Traefik v3 in Docker as the single entry point for all traffic. The backend runs as a systemd service directly on the host.
-
-### Architecture
-
-```
-Browser → wms.task-code.com:443
-                │
-          [Traefik container]          # owns ports 80 & 443
-          reads /opt/taskcode/traefik-conf/wms.yml
-                │
-          [UFW firewall]               # allows 172.18.0.0/16 → port 8001
-                │
-          [uvicorn :8001]              # systemd service on host
-                │
-          [FastAPI]
-          ├── /api/...  →  Python routes
-          └── /         →  Vue dist/ (index.html + assets)
-```
-
-### 1. Build the frontend
+## Deploying
 
 ```bash
-cd wms/frontend/ui
-npm run build-only        # outputs to dist/
+./deploy.sh                # tests + build locally → push → update the server → health check
+./deploy.sh --skip-checks
 ```
 
-### 2. systemd service — `/etc/systemd/system/wms-backend.service`
+On the server it pulls, installs dependencies, **applies database migrations**, builds the
+frontend, installs the systemd units in `wms/deploy/systemd/` and restarts the backend.
+It refuses to start (and changes nothing) if migrations can't run.
 
-```ini
-[Unit]
-Description=WMS Backend
-After=network.target
-
-[Service]
-User=root
-WorkingDirectory=/var/www/AI-Business-Assistant/wms/backend
-ExecStart=/var/www/AI-Business-Assistant/wms/backend/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=multi-user.target
-```
+Override the target with `DEPLOY_HOST` / `DEPLOY_DIR`, or a git-ignored `.deploy.env`:
 
 ```bash
-systemctl daemon-reload
-systemctl enable --now wms-backend
+DEPLOY_HOST=root@188.245.64.189
+DEPLOY_DIR=/var/www/wms
 ```
 
-### 3. Traefik config — `/opt/taskcode/traefik-conf/wms.yml`
+### One-time server setup
+
+1. **Postgres client** (for migrations and backups) — `pg_dump` must be at least the Supabase
+   Postgres major version (Supabase → Settings → Infrastructure):
+   ```bash
+   apt install -y postgresql-common && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+   apt install -y postgresql-client-17
+   ```
+2. **`wms/backend/.env`** on the server — see [`.env.example`](wms/backend/.env.example):
+   `DATABASE_URL`, `FRONTEND_URL=https://wms.task-code.com`, `COOKIE_SECURE=true`,
+   `SMTP_*`, `ANTHROPIC_API_KEY`.
+3. **Supabase dashboard**
+   - Authentication → URL Configuration: Site URL `https://wms.task-code.com`; Redirect URLs
+     `https://wms.task-code.com/login` and `https://wms.task-code.com/reset-password`
+     (plus the `http://localhost:5173/...` equivalents for development).
+   - Authentication → Emails → SMTP Settings: your SMTP provider (e.g. Resend). The built-in
+     sender only delivers to your own team and is rate-limited.
+4. **Legal details** — fill in `wms/frontend/ui/src/config/site.ts` (legal name, VAT number,
+   address, contact email) and have the texts in `src/legal/documents.ts` reviewed.
+5. Run `./deploy.sh`.
+
+### What runs on the server
+
+| Unit | What |
+|---|---|
+| `wms-backend.service` | uvicorn on port 8001 (API + built frontend) |
+| `wms-alerts.timer` | 07:30 Athens — daily alert emails (`scripts/send_alerts.py`) |
+| `wms-backup.timer` | 03:15 Athens — `scripts/backup_db.sh` → `/var/backups/wms`, 14 days kept |
+
+```bash
+systemctl status wms-backend
+journalctl -u wms-backend -n 50
+systemctl list-timers 'wms-*'
+```
+
+Restore a backup into a fresh project: `pg_restore --no-owner --dbname "$DATABASE_URL" db-<stamp>.dump`,
+then extract `storage-<stamp>.tar.gz` and upload the files back to the `datasets` bucket.
+
+### Infrastructure
+
+```
+Browser → wms.task-code.com:443 → Traefik (Docker) → 172.18.0.1:8001 → uvicorn (systemd)
+                                                         ├── /api/...  FastAPI
+                                                         └── /         Vue build (dist/)
+```
+
+Traefik — `/opt/taskcode/traefik-conf/wms.yml`:
 
 ```yaml
 http:
   routers:
     wms:
       rule: "Host(`wms.task-code.com`)"
-      entrypoints:
-        - websecure
+      entrypoints: [websecure]
       service: wms-svc
-      tls:
-        certresolver: le        # auto SSL from Let's Encrypt
-
+      tls: { certresolver: le }
   services:
     wms-svc:
       loadBalancer:
         servers:
-          - url: "http://172.18.0.1:8001"   # host machine as seen from Docker
+          - url: "http://172.18.0.1:8001"
 ```
 
-Traefik picks this up automatically — no restart needed.
+Firewall: `ufw allow from 172.18.0.0/16 to any port 8001`. DNS (Cloudflare): A record
+`wms` → `188.245.64.189`, DNS only.
 
-### 4. Firewall
+---
 
-```bash
-ufw allow from 172.18.0.0/16 to any port 8001
+## E-shop integrations
+
+Settings → Integrations shows a webhook URL per shop.
+
+- **WooCommerce** → Settings → Advanced → Webhooks → Add: topic *Order updated*, the URL and the
+  secret shown in WMS. Orders in *processing / completed / on-hold* take stock out.
+- **Shopify** → Settings → Notifications → Webhooks → Create: *Order payment*, JSON. Paste
+  Shopify's signing secret into WMS.
+
+Line items are matched by SKU; unknown SKUs are skipped and listed on the created order.
+Each shop order is processed once even if the webhook is retried.
+
+---
+
+## Project structure
+
 ```
-
-### 5. DNS (Cloudflare)
-
-Add an A record: `wms` → `188.245.64.189` (DNS only, not proxied).
-
-### Common commands
-
-```bash
-systemctl status wms-backend          # check if running
-systemctl restart wms-backend         # restart after code changes
-journalctl -u wms-backend -n 50       # view logs
-curl http://172.18.0.1:8001/          # test backend reachable from host
+run-local.sh · deploy.sh · TESTING.md
+wms/
+├── backend/
+│   ├── main.py                    FastAPI app, routers, serves frontend/ui/dist
+│   ├── api/routes/                auth, user, business (team), products, inventory, orders,
+│   │                              customers, datasets, predictions, alerts, integrations, ai
+│   ├── services/                  stock (every stock change), forecasting, permissions,
+│   │                              mailer, alerts, ai
+│   ├── migrations/                SQL, applied by scripts/migrate.sh
+│   ├── scripts/                   migrate.sh, backup_db.sh, send_alerts.py, seed_demo.py
+│   └── tests/                     pytest (no network; fake Supabase)
+├── frontend/ui/src/
+│   ├── views/                     pages (Landing, Auth, Dashboard, wms/*, Assistant, legal)
+│   ├── components/                ui/BaseModal, BarcodeScanner, settings/*, products/* …
+│   ├── i18n/                      el.json, en.json
+│   └── config/site.ts             legal details shown on /privacy and /terms
+├── deploy/systemd/                backend, alerts and backup units
+└── testdata/                      CSV files for the sales forecast
 ```
 
 ---
 
-## API Overview
+## API overview
 
-All endpoints require authentication via the `access_token` cookie (set at login).
+Every endpoint needs the `access_token` cookie except auth and the e-shop webhook.
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/auth/register` | Create account |
-| POST | `/api/auth/login` | Login — sets cookies |
-| POST | `/api/auth/logout` | Clear cookies |
-| POST | `/api/auth/forgot-password` | Email a password-reset link |
-| POST | `/api/auth/reset-password` | Set a new password from a reset link |
-| GET | `/api/auth/me` | Current user + business |
-| GET | `/api/products` | List SKUs |
-| POST | `/api/products` | Create SKU |
-| PATCH | `/api/products/{id}` | Update SKU |
-| DELETE | `/api/products/{id}` | Delete SKU |
-| GET | `/api/inventory` | Stock levels |
-| POST | `/api/inventory/movement` | Record stock movement |
-| GET | `/api/inventory/movements` | Movement history |
-| GET | `/api/inventory/reorder-suggestions` | AI reorder alerts |
-| GET | `/api/orders` | List orders |
-| POST | `/api/orders` | Create order |
-| GET | `/api/orders/{id}` | Order detail |
-| PATCH | `/api/orders/{id}/status` | Update status |
-| POST | `/api/orders/{id}/complete` | Complete order (updates stock) |
-| GET | `/api/customers/analysis` | RFM customer analysis |
-| GET | `/api/datasets` | List uploaded datasets |
-| POST | `/api/datasets` | Upload CSV |
-| POST | `/api/predictions/run` | Run sales forecast |
-| GET | `/api/predictions` | List past predictions |
+| Area | Endpoints |
+|---|---|
+| Auth | `POST /api/auth/register · login · logout · forgot-password · reset-password`, `GET /api/auth/me` |
+| Account | `PATCH /api/user`, `/user/email`, `/user/password`, `GET /api/user/export`, `DELETE /api/user` |
+| Team | `GET/POST /api/businesses/{id}/members`, `PATCH/DELETE /api/businesses/{id}/members/{user}` |
+| Products | `GET/POST /api/products`, `POST /api/products/import`, `GET /api/products/lookup`, `PATCH/DELETE /api/products/{id}` |
+| Inventory | `GET /api/inventory`, `POST /api/inventory/movement`, `GET /api/inventory/movements · lots · anomalies`, `GET /api/inventory/reorder-suggestions`, `GET /api/inventory/forecast/{product}`, `POST /api/inventory/reorder/purchase-orders`, `POST /api/inventory/stocktake` |
+| Orders | `GET/POST /api/orders`, `GET /api/orders/{id}`, `PATCH /api/orders/{id}/status`, `POST /api/orders/{id}/complete` |
+| Analytics | `GET /api/customers/analysis`, `/api/datasets…`, `/api/predictions…` |
+| Alerts | `GET /api/alerts/preview`, `POST /api/alerts/test` |
+| Integrations | `GET/POST /api/integrations`, `PATCH/DELETE /api/integrations/{id}`, `POST /api/integrations/webhook/{id}` (HMAC) |
+| AI | `GET /api/ai/status`, `POST /api/ai/scan-invoice · chat · draft-message` |
+| Health | `GET /api/health` |
 
----
-
-## ML Model
-
-The sales forecast uses a pre-trained Random Forest model (`models/sales_model.pkl`). The artifact contains:
-
-- `model` — the fitted estimator
-- `date_col`, `target_col` — column names expected in the uploaded CSV
-- `extra_features` — optional override features (`temperature`, `promo`, `marketing_spend`)
-- `feature_names` — ordered list of features the model expects
-
-Features engineered at inference time: day-of-week, month, quarter, is_weekend, is_month_end, lag_1/3/7/14/30, rolling_mean_7/30, rolling_std_7.
+Interactive docs: http://localhost:8000/docs when running locally.
